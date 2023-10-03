@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1695934528587,
+      "tag": "0000_married_ted_forrester",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1696006073771,
+      "tag": "0001_slimy_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1696346266656,
+      "tag": "0002_classy_yellow_claw",
+      "breakpoints": true
+    }
+  ]
+}

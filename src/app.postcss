@@ -1,0 +1,25 @@
+/* Write your global styles here, in PostCSS syntax */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  @apply h-full overflow-hidden;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"] {
+  @apply px-3 py-1 focus:ring-2 ring-opacity-50 focus:ring-blue-500 focus:outline-none;
+}
+
+.polka-dots {
+  background-image: radial-gradient(rgb(226 232 240) 20%, transparent 20%);
+  background-position: 0 0, 50px 50px;
+  background-size: 10px 10px;
+}
