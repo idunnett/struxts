@@ -16,13 +16,16 @@ export const load: PageServerLoad = async (event) => {
   if (isNaN(struxtId))
     throw redirect('/', { message: 'Invalid struxt id', type: 'error' }, event)
 
-  const struxt = await db.query.profileStruxtsTable.findFirst({
+  const profileStruxt = await db.query.profileStruxtsTable.findFirst({
     where: and(
       eq(profileStruxtsTable.struxtId, struxtId),
       eq(profileStruxtsTable.userId, session.user.id)
     ),
+    with: {
+      struxt: true,
+    },
   })
-  if (!struxt)
+  if (!profileStruxt)
     throw redirect(
       '/',
       {
@@ -38,7 +41,7 @@ export const load: PageServerLoad = async (event) => {
     .where(eq(nodesTable.struxtId, struxtId))
   const newNodeForm = await superValidate(newNodeSchema)
   return {
-    struxtId,
+    struxt: profileStruxt.struxt,
     nodes,
     newNodeForm,
   }

@@ -49,6 +49,8 @@ export const struxtsTable = pgTable('struxts', {
   description: text('description').notNull(),
 })
 
+export type Struxt = InferSelectModel<typeof struxtsTable>
+
 export const nodeTypeEnum = pgEnum('node_type', ['node', 'group'])
 
 export const nodesTable = pgTable('nodes', {

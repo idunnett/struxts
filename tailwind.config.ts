@@ -18,7 +18,23 @@ const config = {
     ),
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        'fade-in': 'fade-in 0.1s ease-out',
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': {
+            transform: 'translateY(-4px)',
+            opacity: '0',
+          },
+          '100%': {
+            transform: 'translateY(0)',
+            opacity: '1',
+          },
+        },
+      },
+    },
   },
   plugins: [
     // 4. Append the Skeleton plugin (after other plugins)

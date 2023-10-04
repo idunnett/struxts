@@ -1,5 +1,6 @@
 <script lang="ts">
   import CgArrowsH from 'svelte-icons-pack/cg/CgArrowsH'
+  import RiSystemCloseLine from 'svelte-icons-pack/ri/RiSystemCloseLine'
   import { ProgressRadial, getDrawerStore } from '@skeletonlabs/skeleton'
   import type { SuperValidated } from 'sveltekit-superforms'
   import { superForm } from 'sveltekit-superforms/client'
@@ -14,12 +15,17 @@
   import { onMount } from 'svelte'
   import type EditorJS from '@editorjs/editorjs'
   import Icon from '../Icon.svelte'
+  import _ from 'lodash'
 
   const drawerStore = getDrawerStore()
   const superValidatedForm = $drawerStore.meta
     .superValidatedForm as SuperValidated<typeof newNodeSchema>
   let editor: EditorJS | undefined
   let resizing: 'x' | 'y' | 'w' | 'h' | null = null
+
+  $: oldNode = $nodes.find((node) => node.id === $activeEditingNode?.id)
+  $: hasChanges =
+    oldNode && $activeEditingNode && !_.isEqual(oldNode, $activeEditingNode)
 
   const { form, submitting, enhance } = superForm(superValidatedForm, {
     onSubmit: () => {
@@ -28,14 +34,30 @@
       if (!node) return
       node.title = $form.title
       node.description = $form.description
+      node.x = $form.x
+      node.y = $form.y
+      node.w = $form.w
+      node.h = $form.h
       $nodes[nodeIndex] = node
     },
     onResult: ({ result }) => {
+      $activeEditingNode = null
       if (result.type === 'success') drawerStore.close()
     },
   })
 
   onMount(async () => {
+    const drawerBackdrop = document.querySelector(
+      '.drawer-backdrop'
+    ) as HTMLDivElement
+    drawerBackdrop.classList.remove('left-0')
+    // replace the element with a copy of itself
+    // and nuke all the event listeners
+    // drawerBackdrop.replaceWith(drawerBackdrop.cloneNode(true))
+
+    const codexEditor = document.querySelector('#editor > .codex-editor')
+    if (codexEditor) return
+
     const EditorJS = (await import('@editorjs/editorjs')).default
     // @ts-ignore
     const Header = (await import('@editorjs/header')).default
@@ -94,16 +116,39 @@
     resizing = dimension
   }
 
+  function closeDrawer() {
+    if (
+      hasChanges &&
+      !confirm(
+        'Are you sure you want to close node without saving? All changes will be lost.'
+      )
+    )
+      return
+    $activeEditingNode = null
+    drawerStore.close()
+  }
+
   function setFormValues(node: Node) {
     $form.title = node.title ?? ''
     $form.id = node.id
     $form.description = node.description ?? ''
     $form.x = node.x
     $form.y = node.y
+    $form.w = node.w
+    $form.h = node.h
   }
   $: $activeEditingNode && setFormValues($activeEditingNode)
 </script>
 
+<div class="pl-2 pt-2">
+  <button
+    class="btn variant-soft-surface w-8 h-8 px-0 text-surface-900"
+    type="button"
+    on:click={closeDrawer}
+  >
+    <Icon src={RiSystemCloseLine} />
+  </button>
+</div>
 {#if $activeEditingNode}
   <form
     method="post"

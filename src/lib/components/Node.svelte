@@ -8,6 +8,8 @@
     activeEditingNode,
     offset,
     activeNode,
+    defaultNodeWidths,
+    defaultNodeHeights,
   } from '../../nodeStore'
   import type { Node } from '../server/db/schema'
   import type { newNodeSchema } from './NodeEditDrawer/schemas'
@@ -59,8 +61,8 @@
       type: 'node',
       parentId: null,
       struxtId,
-      w: 0,
-      h: 0,
+      w: $defaultNodeWidths['node'],
+      h: $defaultNodeHeights['node'],
     }
   }
 
@@ -93,7 +95,7 @@
 
 <div
   on:dblclick|stopPropagation={() => {
-    $activeEditingNode = opts
+    $activeEditingNode = { ...opts }
     drawerStore.open(drawerSettings)
   }}
   on:click|stopPropagation={() => ($activeNode = opts.id)}

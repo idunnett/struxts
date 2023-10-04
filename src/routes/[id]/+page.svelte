@@ -17,10 +17,13 @@
   } from '../../nodeStore'
   import type { PageServerData } from './$types'
   import { getXPosRelativeToScrollContainer } from '$lib/utils/nodeUtils'
+  import { activeStruxt } from '../../struxtStore'
+  import type { Node as NodeType } from '$lib/server/db/schema'
 
   export let data: PageServerData
 
-  $: struxtId = data.struxtId
+  $: struxtId = data.struxt.id
+  $: $activeStruxt = data.struxt
 
   let scrollContainer: HTMLDivElement
 
@@ -92,8 +95,11 @@
     $linkingFromNode = null
   }
 
-  function getParentNode(id: number) {
-    return $nodes.find((node) => node.id === id)
+  function getParentNode(id: number, activeEditingNode: NodeType | null) {
+    const parentNode = $nodes.find((node) => node.id === id)
+    if (activeEditingNode?.id === parentNode?.id)
+      return activeEditingNode ?? undefined
+    return parentNode
   }
 
   async function onKeyDown(e: KeyboardEvent) {
@@ -146,7 +152,7 @@
       <Node bind:opts={node} superValidatedForm={data.newNodeForm} {struxtId} />
       {#if node.parentId}
         <NodeLink
-          from={getParentNode(node.parentId)}
+          from={getParentNode(node.parentId, $activeEditingNode)}
           to={$activeEditingNode?.id === node.id ? $activeEditingNode : node}
         />
       {/if}

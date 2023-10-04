@@ -16,10 +16,12 @@
   } from '../../../nodeStore'
   import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/stores'
+  import { activeStruxt } from '../../../struxtStore'
 
   export let session: AuthSession
 
   let showUserMenu = false
+  let showStruxtMenu = false
 
   $: struxtId = $page.params.id ? parseInt($page.params.id) : undefined
 
@@ -50,13 +52,22 @@
 
   let userMenuDiv: HTMLDivElement
   let userMenuBtn: HTMLButtonElement
+  let struxtMenuDiv: HTMLDivElement
+  let struxtMenuBtn: HTMLButtonElement
 
-  $: {
-    if (showUserMenu && userMenuBtn && userMenuDiv) {
-      const { x, y, width } = userMenuBtn.getBoundingClientRect()
-      userMenuDiv.style.bottom = `0px`
-      userMenuDiv.style.left = `${x + width}px`
-    }
+  $: showUserMenu && userMenuBtn && userMenuDiv && positionUserMenu()
+  $: showStruxtMenu && struxtMenuBtn && struxtMenuDiv && positionStruxtMenu()
+
+  function positionUserMenu() {
+    const { x, width, height } = userMenuBtn.getBoundingClientRect()
+    userMenuDiv.style.bottom = '0px'
+    userMenuDiv.style.left = `${x + width}px`
+  }
+
+  function positionStruxtMenu() {
+    const { x, y } = struxtMenuBtn.getBoundingClientRect()
+    struxtMenuDiv.style.top = `${y}px`
+    struxtMenuDiv.style.left = `${x}px`
   }
 
   async function onMouseUp() {
@@ -118,7 +129,7 @@
 </script>
 
 <div
-  class="fixed z-10 card ml-5 p-2 rounded-lg w-56 flex flex-col gap-1 my-4 shadow-lg {showUserMenu
+  class="fixed bg-white z-10 card ml-5 p-2 rounded-lg w-56 flex flex-col gap-1 my-4 shadow-lg {showUserMenu
     ? 'block'
     : 'hidden'}"
   bind:this={userMenuDiv}
@@ -162,7 +173,26 @@
     </div>
   </button>
 </div>
-<AppRail>
+{#if $activeStruxt}
+  <div
+    class="fixed pl-12 bg-transparent cursor-default animate-fade-in z-10 {showStruxtMenu
+      ? 'block'
+      : 'hidden'}"
+    bind:this={struxtMenuDiv}
+    on:mouseleave={() => (showStruxtMenu = false)}
+    role="button"
+    tabindex="0"
+  >
+    <div
+      class="bg-white z-10 card pt-1.5 px-3 rounded-md h-10 flex flex-col gap-1 shadow-lg"
+    >
+      <span class="text-black whitespace-nowrap text-xl">
+        {$activeStruxt.title}
+      </span>
+    </div>
+  </div>
+{/if}
+<AppRail background="bg-white">
   <h1 slot="lead" class="text-center pt-2 pb-4 font-bold h6 text-primary-500">
     Struxts
   </h1>
@@ -172,8 +202,19 @@
     <AppRailAnchor href="/about" selected={$page.url.pathname === '/about'}>
       (icon)
     </AppRailAnchor> -->
-  {#if session}
+  {#if session && $activeStruxt}
     <div class="w-full flex flex-col items-center gap-1 py-2">
+      <div class="pb-6">
+        <button
+          class="relative btn text-2xl w-10 h-10 flex justify-center items-center variant-filled-primary rounded-md"
+          bind:this={struxtMenuBtn}
+          on:mouseenter={() => (showStruxtMenu = true)}
+        >
+          <span>
+            {$activeStruxt.title.charAt(0).toUpperCase()}
+          </span>
+        </button>
+      </div>
       <div
         class="select-none cursor-move bg-white border-2 w-14 m-auto h-7 flex items-center rounded-md"
         role="button"
@@ -192,11 +233,11 @@
       <span class="text-xs text-surface-900 select-none">Group</span>
     </div>
   {/if}
-  <div slot="trail" class="flex items-center justify-center pb-2">
+  <div slot="trail" class="flex justify-center py-1 px-3 relative w-full">
     <button
       bind:this={userMenuBtn}
       on:click={() => (showUserMenu = !showUserMenu)}
-      class="relative btn flex items-center justify-start px-2 gap-1 text-surface-900 hover:text-primary-500 hover:bg-surface-400/50 w-full min-w-0"
+      class="relative btn flex items-center justify-start gap-1 p-2 text-surface-900 hover:text-primary-500 hover:bg-surface-400/50 w-full min-w-0"
     >
       <Avatar
         initials={getInitials(session?.user.email ?? '')}
@@ -207,7 +248,4 @@
   </div>
 </AppRail>
 
-<svelte:window
-  on:click|capture={() => (showUserMenu = false)}
-  on:mouseup={onMouseUp}
-/>
+<svelte:window on:click={() => (showUserMenu = false)} on:mouseup={onMouseUp} />

@@ -12,6 +12,10 @@ body {
   @apply px-3 py-1 focus:ring-2 ring-opacity-50 focus:ring-blue-500 focus:outline-none bg-surface-50/50;
 }
 
+.btn:hover {
+  --tw-brightness: brightness(1.05);
+}
+
 .polka-dots {
   background-image: radial-gradient(rgb(226 232 240) 20%, transparent 20%);
   background-position: 0 0, 50px 50px;
@@ -47,4 +51,8 @@ h6 {
 
 .ce-block {
   cursor: text;
+}
+
+aside#sidebar-left {
+  @apply shadow-md bg-white z-20;
 }
