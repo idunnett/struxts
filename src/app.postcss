@@ -8,14 +8,8 @@ body {
   @apply h-full overflow-hidden;
 }
 
-input[type="text"],
-input[type="password"],
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="tel"],
-input[type="url"] {
-  @apply px-3 py-1 focus:ring-2 ring-opacity-50 focus:ring-blue-500 focus:outline-none;
+.input {
+  @apply px-3 py-1 focus:ring-2 ring-opacity-50 focus:ring-blue-500 focus:outline-none bg-surface-50/50;
 }
 
 .polka-dots {
@@ -44,7 +38,7 @@ h6 {
 }
 
 .codex-editor__redactor {
-  padding-bottom: 100px !important;
+  padding-bottom: 20px !important;
 }
 
 .ce-popover .cdx-search-field{

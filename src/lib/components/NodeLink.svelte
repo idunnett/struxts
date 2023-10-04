@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    activeNodeLink,
-    nodeHeights,
-    nodeWidths,
-    offset,
-  } from '../../nodeStore'
+  import { activeNodeLink, offset } from '../../nodeStore'
   import type { Node } from '../server/db/schema'
 
   export let from: Node | undefined
@@ -16,9 +11,9 @@
   function adjustBezierCurve(fromNode: Node, toNode: Node): void {
     const bezierWeight: number = 0.675
 
-    const fromNodeWidthHalf = $nodeWidths[fromNode.type] / 2
-    const toNodeWidthHalf = $nodeWidths[toNode.type] / 2
-    const fromNodeHeight = $nodeHeights[fromNode.type]
+    const fromNodeWidthHalf = fromNode.w / 2
+    const toNodeWidthHalf = toNode.w / 2
+    const fromNodeHeight = fromNode.h
 
     let x1: number = fromNode.x + fromNodeWidthHalf + $offset
     let y1: number = fromNode.y + fromNodeHeight

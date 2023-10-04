@@ -55,6 +55,8 @@ export const nodesTable = pgTable('nodes', {
   id: serial('id').primaryKey(),
   x: integer('x').notNull(),
   y: integer('y').notNull(),
+  w: integer('w').notNull().default(128),
+  h: integer('h').notNull().default(40),
   title: text('title').default(''),
   description: text('description').default(''),
   type: nodeTypeEnum('type').notNull(),

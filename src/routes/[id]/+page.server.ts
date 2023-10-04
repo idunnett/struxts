@@ -73,6 +73,10 @@ export const actions: Actions = {
     const id = form.data.id
     const title = form.data.title
     const description = form.data.description
+    const x = form.data.x
+    const y = form.data.y
+    const w = form.data.w
+    const h = form.data.h
 
     const node = await db.query.nodesTable.findFirst({
       where: eq(nodesTable.id, id),
@@ -85,6 +89,10 @@ export const actions: Actions = {
       .set({
         title,
         description,
+        x,
+        y,
+        w,
+        h,
       })
       .where(eq(nodesTable.id, id))
 

@@ -3,12 +3,15 @@
   import NodeLink from '$lib/components/NodeLink.svelte'
   import { onMount } from 'svelte'
   import {
+    activeEditingNode,
     activeNode,
     activeNodeLink,
     draggingNewNode,
     hoveringNode,
     linkingFromNode,
     linkingToMouse,
+    defaultNodeHeights,
+    defaultNodeWidths,
     nodes,
     offset,
   } from '../../nodeStore'
@@ -42,6 +45,8 @@
         parentId: null,
         description: '',
         struxtId,
+        w: $defaultNodeWidths['node'],
+        h: $defaultNodeHeights['node'],
       },
     ]
 
@@ -140,7 +145,10 @@
     {#each $nodes as node}
       <Node bind:opts={node} superValidatedForm={data.newNodeForm} {struxtId} />
       {#if node.parentId}
-        <NodeLink from={getParentNode(node.parentId)} to={node} />
+        <NodeLink
+          from={getParentNode(node.parentId)}
+          to={$activeEditingNode?.id === node.id ? $activeEditingNode : node}
+        />
       {/if}
     {/each}
     {#if $linkingFromNode && $linkingToMouse}

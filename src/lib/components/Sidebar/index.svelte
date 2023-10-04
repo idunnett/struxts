@@ -7,7 +7,13 @@
   import { AppRail, Avatar } from '@skeletonlabs/skeleton'
   import { getInitials } from '$lib/utils/avatarUtils'
   import { getXPosRelativeToScrollContainer } from '$lib/utils/nodeUtils'
-  import { draggingNewNode, draggingNodeId, nodes } from '../../../nodeStore'
+  import {
+    draggingNewNode,
+    draggingNodeId,
+    defaultNodeHeights,
+    defaultNodeWidths,
+    nodes,
+  } from '../../../nodeStore'
   import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/stores'
 
@@ -63,6 +69,8 @@
         id: 0,
         x: draggingNewNodeCopy.x,
         y: draggingNewNodeCopy.y,
+        w: draggingNewNodeCopy.w,
+        h: draggingNewNodeCopy.h,
         title: '',
         type: draggingNewNodeCopy.type,
         parentId: null,
@@ -97,6 +105,8 @@
       id: -1,
       x,
       y: clientY - 20,
+      w: $defaultNodeWidths[type],
+      h: $defaultNodeHeights[type],
       title: '',
       type,
       parentId: null,

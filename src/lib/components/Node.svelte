@@ -59,6 +59,8 @@
       type: 'node',
       parentId: null,
       struxtId,
+      w: 0,
+      h: 0,
     }
   }
 
@@ -68,12 +70,24 @@
     opts.y += e.movementY
   }
 
-  function getNodeWidth(type: 'node' | 'group') {
-    return type === 'node' ? 128 : 256
+  function getNodeWidth(activeEditingNode: Node | null) {
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.w
+    return opts.w
   }
 
-  function getNodeHeight(type: 'node' | 'group') {
-    return type === 'node' ? 40 : 256
+  function getNodeHeight(activeEditingNode: Node | null) {
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.h
+    return opts.h
+  }
+
+  function getNodeLeft(opts: Node, activeEditingNode: Node | null) {
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.x + $offset
+    return opts.x + $offset
+  }
+
+  function getNodeTop(opts: Node, activeEditingNode: Node | null) {
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.y
+    return opts.y
   }
 </script>
 
@@ -92,11 +106,12 @@
   on:mousedown={onMouseDown}
   on:mouseenter={() => ($hoveringNode = opts)}
   on:mouseleave={() => ($hoveringNode = null)}
-  style="left: {opts.x + $offset}px; top: {opts.y}px; width: {getNodeWidth(
-    opts.type
-  )}px; height: {getNodeHeight(opts.type)}px; z-index: {opts.type === 'node'
-    ? 10
-    : -10}"
+  style="left: {getNodeLeft(opts, $activeEditingNode)}px; top: {getNodeTop(
+    opts,
+    $activeEditingNode
+  )}px; width: {getNodeWidth($activeEditingNode)}px; height: {getNodeHeight(
+    $activeEditingNode
+  )}px; z-index: {opts.type === 'node' ? 10 : -10}"
   class="select-none shadow-sm cursor-move {opts.type === 'node'
     ? 'bg-white'
     : 'bg-surface-300'} border-2 {$activeNode === opts.id

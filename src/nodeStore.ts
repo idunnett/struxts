@@ -19,16 +19,27 @@ type NodeWidthsOrHeights = {
   group: number
 }
 
-export const nodeWidths = readable<{
+export const defaultNodeWidths = readable<{
   [key in keyof NodeWidthsOrHeights]: number
 }>({
   node: 128,
   group: 256,
 })
-
-export const nodeHeights = readable<{
+export const defaultNodeHeights = readable<{
   [key in keyof NodeWidthsOrHeights]: number
 }>({
   node: 40,
   group: 256,
+})
+export const minNodeWidths = readable<{
+  [key in keyof NodeWidthsOrHeights]: number
+}>({
+  node: 40,
+  group: 128,
+})
+export const minNodeHeights = readable<{
+  [key in keyof NodeWidthsOrHeights]: number
+}>({
+  node: 40,
+  group: 128,
 })
