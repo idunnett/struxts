@@ -18,6 +18,4 @@ export const load: PageServerLoad = async (event) => {
     const struxtId = userStruxts[0].struxtId
     throw redirect(`/${struxtId}`, undefined, event)
   }
-
-  return
 }

@@ -22,11 +22,16 @@
   })
 </script>
 
-<div class="container mx-auto flex justify-center items-center h-full">
+<div
+  class="container mx-auto flex flex-col gap-16 justify-center items-center h-full"
+>
   <div class="flex flex-col items-center">
     <span class="text-xl font-normal mb-3">Welcome to</span>
-    <h3 class="h2">
-      <span class="text-primary-500">Struxts</span>
-    </h3>
+    <h1
+      class="h1 bg-gradient-to-br text-transparent bg-clip-text to-primary-500 from-primary-400 font-black"
+    >
+      Struxts
+    </h1>
   </div>
+  <a href="/auth/login" class="btn variant-filled-primary">Login</a>
 </div>
