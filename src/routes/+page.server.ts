@@ -1,43 +1,23 @@
 import { db } from '$lib/server/db'
-import { nodesTable } from '$lib/server/db/schema'
 import { eq } from 'drizzle-orm'
-import type { Actions, PageServerLoad } from './$types'
-import { fail, redirect } from '@sveltejs/kit'
-import { superValidate } from 'sveltekit-superforms/server'
-import { newNodeSchema } from '$lib/components/NodeEditDrawer/schemas'
+import type { PageServerLoad } from './$types'
+import { profileStruxtsTable } from '$lib/server/db/schema'
+import { redirect } from 'sveltekit-flash-message/server'
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async (event) => {
+  const { locals } = event
   const session = await locals.getSession()
-  if (!session) throw redirect(303, '/login')
-  const nodes = await db.select().from(nodesTable)
-  const newNodeForm = await superValidate(newNodeSchema)
-  return {
-    nodes,
-    newNodeForm,
+  if (!session) return
+
+  const userStruxts = await db.query.profileStruxtsTable.findMany({
+    where: eq(profileStruxtsTable.userId, session.user.id),
+  })
+
+  if (userStruxts.length === 0) throw redirect('/new', undefined, event)
+  else {
+    const struxtId = userStruxts[0].struxtId
+    throw redirect(`/${struxtId}`, undefined, event)
   }
-}
 
-export const actions: Actions = {
-  update: async ({ request }) => {
-    const form = await superValidate(request, newNodeSchema)
-    if (!form.valid) return fail(400, { form })
-
-    const id = form.data.id
-    const title = form.data.title
-
-    const node = await db.query.nodesTable.findFirst({
-      where: eq(nodesTable.id, id),
-    })
-
-    if (!node) return fail(404)
-
-    await db
-      .update(nodesTable)
-      .set({
-        title,
-      })
-      .where(eq(nodesTable.id, id))
-
-    return
-  },
+  return
 }

@@ -10,6 +10,7 @@ export const linkingToMouse = writable<Node | null>(null)
 export const draggingNodeId = writable<number | null>(null)
 export const draggingNewNode = writable<Node | null>(null)
 export const activeNodeLink = writable<number | null>(null)
+export const activeNode = writable<number | null>(null)
 
 export const offset = readable(8000)
 

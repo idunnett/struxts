@@ -65,15 +65,14 @@
 {#if from}
   <svg class="absolute z-0" bind:this={svg}>
     <path
-      class="fill-none cursor-pointer {$activeNodeLink === from.id
+      class="fill-none cursor-pointer {$activeNodeLink === to.id
         ? 'stroke-[3] stroke-secondary-400'
         : 'stroke-primary-500 stroke-2'}"
       role="button"
       tabindex="0"
       bind:this={path}
-      on:click|stopPropagation={() => from && ($activeNodeLink = from.id)}
-      on:keypress={(e) =>
-        e.key === 'Enter' && from && ($activeNodeLink = from.id)}
+      on:click|stopPropagation={() => to && ($activeNodeLink = to.id)}
+      on:keypress={(e) => e.key === 'Enter' && to && ($activeNodeLink = to.id)}
     />
   </svg>
 {/if}

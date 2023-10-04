@@ -9,10 +9,13 @@
   import { getXPosRelativeToScrollContainer } from '$lib/utils/nodeUtils'
   import { draggingNewNode, draggingNodeId, nodes } from '../../../nodeStore'
   import { goto, invalidateAll } from '$app/navigation'
+  import { page } from '$app/stores'
 
   export let session: AuthSession
 
   let showUserMenu = false
+
+  $: struxtId = $page.params.id ? parseInt($page.params.id) : undefined
 
   async function handleSignOut() {
     await fetch('/api/auth/logout', {
@@ -20,7 +23,7 @@
       body: JSON.stringify({}),
     })
     await invalidateAll()
-    await goto('/login')
+    await goto('/auth/login')
   }
   // async function getProfile(session: AuthSession) {
   //   const { user } = session
@@ -51,7 +54,7 @@
   }
 
   async function onMouseUp() {
-    if (!$draggingNewNode) return
+    if (!$draggingNewNode || !struxtId) return
     const draggingNewNodeCopy = $draggingNewNode
     $draggingNewNode = null
     $nodes = [
@@ -63,9 +66,11 @@
         title: '',
         type: draggingNewNodeCopy.type,
         parentId: null,
+        description: '',
+        struxtId,
       },
     ]
-    const res = await fetch('/api/nodes', {
+    const res = await fetch(`/api/struxts/${struxtId}/nodes`, {
       method: 'POST',
       body: JSON.stringify({
         x: draggingNewNodeCopy.x,
@@ -82,6 +87,7 @@
   }
 
   function onNewNodeMouseDown(e: MouseEvent, type: 'node' | 'group' = 'node') {
+    if (!struxtId) return
     const { clientX, clientY } = e
     const scrollContainer = document.getElementById(
       'scroll-container'
@@ -94,6 +100,8 @@
       title: '',
       type,
       parentId: null,
+      description: '',
+      struxtId,
     }
     $draggingNodeId = -1
   }

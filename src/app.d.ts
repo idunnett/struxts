@@ -10,7 +10,9 @@ declare global {
       supabase: SupabaseClient<any, 'public', any>
       getSession: () => Promise<Session | null>
     }
-    // interface PageData {}
+    interface PageData {
+      flash?: { type: 'success' | 'error'; message: string }
+    }
     // interface Platform {}
   }
 }
