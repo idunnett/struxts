@@ -5,6 +5,7 @@ export const nodes = writable<Node[]>([])
 
 export const hoveringNode = writable<Node | null>(null)
 export const activeEditingNode = writable<Node | null>(null)
+export const activeEditingNodeHasChanges = writable<boolean>(false)
 export const linkingFromNode = writable<Node | null>(null)
 export const linkingToMouse = writable<Node | null>(null)
 export const draggingNodeId = writable<number | null>(null)

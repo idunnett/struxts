@@ -10,6 +10,7 @@
     activeNode,
     defaultNodeWidths,
     defaultNodeHeights,
+    activeEditingNodeHasChanges,
   } from '../../nodeStore'
   import type { Node } from '../server/db/schema'
   import type { newNodeSchema } from './NodeEditDrawer/schemas'
@@ -95,7 +96,13 @@
 
 <div
   on:dblclick|stopPropagation={() => {
+    if (
+      $activeEditingNodeHasChanges &&
+      !confirm('Switch active nodes without saving? All changes will be lost.')
+    )
+      return
     $activeEditingNode = { ...opts }
+    $activeEditingNodeHasChanges = false
     drawerStore.open(drawerSettings)
   }}
   on:click|stopPropagation={() => ($activeNode = opts.id)}
@@ -116,8 +123,10 @@
   )}px; z-index: {opts.type === 'node' ? 10 : -10}"
   class="select-none shadow-sm cursor-move {opts.type === 'node'
     ? 'bg-white'
-    : 'bg-surface-300'} border-2 {$activeNode === opts.id
-    ? 'border-primary-500/50'
+    : 'bg-surface-300'} border-2 {$activeEditingNode?.id === opts.id
+    ? 'border-primary-500'
+    : ''} {$activeNode === opts.id
+    ? 'ring-2 ring-primary-500/50 '
     : ''} absolute flex items-center rounded-md group outline-primary-500/50"
   role="button"
   tabindex="0"

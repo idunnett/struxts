@@ -6,6 +6,7 @@
   import { superForm } from 'sveltekit-superforms/client'
   import {
     activeEditingNode,
+    activeEditingNodeHasChanges,
     minNodeHeights,
     minNodeWidths,
     nodes,
@@ -24,8 +25,9 @@
   let resizing: 'x' | 'y' | 'w' | 'h' | null = null
 
   $: oldNode = $nodes.find((node) => node.id === $activeEditingNode?.id)
-  $: hasChanges =
-    oldNode && $activeEditingNode && !_.isEqual(oldNode, $activeEditingNode)
+  $: oldNode &&
+    $activeEditingNode &&
+    ($activeEditingNodeHasChanges = !_.isEqual(oldNode, $activeEditingNode))
 
   const { form, submitting, enhance } = superForm(superValidatedForm, {
     onSubmit: () => {
@@ -118,13 +120,12 @@
 
   function closeDrawer() {
     if (
-      hasChanges &&
-      !confirm(
-        'Are you sure you want to close node without saving? All changes will be lost.'
-      )
+      $activeEditingNodeHasChanges &&
+      !confirm('Close node without saving? All changes will be lost.')
     )
       return
     $activeEditingNode = null
+    $activeEditingNodeHasChanges = false
     drawerStore.close()
   }
 
