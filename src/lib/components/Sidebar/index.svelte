@@ -126,6 +126,8 @@
     }
     $draggingNodeId = -1
   }
+
+  $: console.log(showUserMenu)
 </script>
 
 <div
@@ -248,4 +250,7 @@
   </div>
 </AppRail>
 
-<svelte:window on:click={() => (showUserMenu = false)} on:mouseup={onMouseUp} />
+<svelte:window
+  on:click|capture={() => (showUserMenu = false)}
+  on:mouseup={onMouseUp}
+/>
