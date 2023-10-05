@@ -26,14 +26,14 @@ export const POST: RequestHandler = async (event) => {
       },
       event
     )
-  const { x, y, type } = await request.json()
+  const { x, y, type, bgColor, textColor } = await request.json()
 
   if (typeof x !== 'number' || typeof y !== 'number')
     throw error(400, 'Invalid input')
 
   const res = await db
     .insert(nodesTable)
-    .values({ x, y, type, struxtId })
+    .values({ x, y, type, bgColor, textColor, struxtId })
     .returning({ id: nodesTable.id })
 
   return json(res[0])

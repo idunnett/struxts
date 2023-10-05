@@ -6,13 +6,17 @@
   import Icon from '../Icon.svelte'
   import { AppRail, Avatar } from '@skeletonlabs/skeleton'
   import { getInitials } from '$lib/utils/avatarUtils'
-  import { getXPosRelativeToScrollContainer } from '$lib/utils/nodeUtils'
+  import {
+    getXPosRelativeToScrollContainer,
+    getYPosRelativeToScrollContainer,
+  } from '$lib/utils/nodeUtils'
   import {
     draggingNewNode,
     draggingNodeId,
     defaultNodeHeights,
     defaultNodeWidths,
     nodes,
+    defaultNodeBgColors,
   } from '../../../nodeStore'
   import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/stores'
@@ -59,7 +63,7 @@
   $: showStruxtMenu && struxtMenuBtn && struxtMenuDiv && positionStruxtMenu()
 
   function positionUserMenu() {
-    const { x, width, height } = userMenuBtn.getBoundingClientRect()
+    const { x, width } = userMenuBtn.getBoundingClientRect()
     userMenuDiv.style.bottom = '0px'
     userMenuDiv.style.left = `${x + width}px`
   }
@@ -84,6 +88,8 @@
         h: draggingNewNodeCopy.h,
         title: '',
         type: draggingNewNodeCopy.type,
+        bgColor: draggingNewNodeCopy.bgColor,
+        textColor: draggingNewNodeCopy.textColor,
         parentId: null,
         description: '',
         struxtId,
@@ -95,6 +101,8 @@
         x: draggingNewNodeCopy.x,
         y: draggingNewNodeCopy.y,
         type: draggingNewNodeCopy.type,
+        bgColor: draggingNewNodeCopy.bgColor,
+        textColor: draggingNewNodeCopy.textColor,
       }),
     })
     const data = await res.json()
@@ -112,10 +120,11 @@
       'scroll-container'
     ) as HTMLDivElement
     const x = getXPosRelativeToScrollContainer(clientX, scrollContainer)
+    const y = getYPosRelativeToScrollContainer(clientY, scrollContainer)
     $draggingNewNode = {
       id: -1,
-      x,
-      y: clientY - 20,
+      x: x - $defaultNodeWidths[type] / 2,
+      y: y - $defaultNodeHeights[type] / 2,
       w: $defaultNodeWidths[type],
       h: $defaultNodeHeights[type],
       title: '',
@@ -123,11 +132,11 @@
       parentId: null,
       description: '',
       struxtId,
+      bgColor: $defaultNodeBgColors[type],
+      textColor: '#000000',
     }
     $draggingNodeId = -1
   }
-
-  $: console.log(showUserMenu)
 </script>
 
 <div

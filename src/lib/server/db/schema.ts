@@ -62,6 +62,8 @@ export const nodesTable = pgTable('nodes', {
   title: text('title').default(''),
   description: text('description').default(''),
   type: nodeTypeEnum('type').notNull(),
+  bgColor: text('bg_color').notNull().default('#ffffff'),
+  textColor: text('text_color').notNull().default('#000000'),
   parentId: integer('parentId'),
   struxtId: integer('struxtId')
     .notNull()

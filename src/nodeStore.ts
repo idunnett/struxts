@@ -44,3 +44,9 @@ export const minNodeHeights = readable<{
   node: 40,
   group: 128,
 })
+export const defaultNodeBgColors = readable<{
+  [key in keyof NodeWidthsOrHeights]: string
+}>({
+  node: '#ffffff',
+  group: '#ebedf0',
+})

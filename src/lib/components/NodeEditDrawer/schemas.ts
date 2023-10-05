@@ -8,4 +8,6 @@ export const newNodeSchema = z.object({
   y: z.number(),
   w: z.number(),
   h: z.number(),
+  bgColor: z.string(),
+  textColor: z.string(),
 })

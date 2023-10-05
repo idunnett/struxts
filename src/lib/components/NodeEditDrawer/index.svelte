@@ -40,6 +40,8 @@
       node.y = $form.y
       node.w = $form.w
       node.h = $form.h
+      node.bgColor = $form.bgColor
+      node.textColor = $form.textColor
       $nodes[nodeIndex] = node
     },
     onResult: ({ result }) => {
@@ -137,6 +139,8 @@
     $form.y = node.y
     $form.w = node.w
     $form.h = node.h
+    $form.bgColor = node.bgColor
+    $form.textColor = node.textColor
   }
   $: $activeEditingNode && setFormValues($activeEditingNode)
 </script>
@@ -251,6 +255,40 @@
           disabled={$submitting}
           bind:value={$activeEditingNode.h}
         />
+      </label>
+    </div>
+    <div class="flex items-center gap-4">
+      <label class="label">
+        <span>Node Color</span>
+        <div class="grid grid-cols-[auto_1fr] gap-2">
+          <input
+            class="input !p-0 border-2 !border-solid"
+            type="color"
+            bind:value={$activeEditingNode.bgColor}
+          />
+          <input
+            class="input"
+            type="text"
+            name="bgColor"
+            bind:value={$activeEditingNode.bgColor}
+          />
+        </div>
+      </label>
+      <label class="label">
+        <span>Text Color</span>
+        <div class="grid grid-cols-[auto_1fr] gap-2">
+          <input
+            class="input !p-0 border-2 !border-solid"
+            type="color"
+            bind:value={$activeEditingNode.textColor}
+          />
+          <input
+            class="input"
+            type="text"
+            name="textColor"
+            bind:value={$activeEditingNode.textColor}
+          />
+        </div>
       </label>
     </div>
     <button

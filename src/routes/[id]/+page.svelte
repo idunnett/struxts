@@ -57,6 +57,8 @@
         struxtId,
         w: $defaultNodeWidths['node'],
         h: $defaultNodeHeights['node'],
+        bgColor: '#ffffff',
+        textColor: '#000000',
       },
     ]
 

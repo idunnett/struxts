@@ -65,6 +65,8 @@
       struxtId,
       w: $defaultNodeWidths['node'],
       h: $defaultNodeHeights['node'],
+      bgColor: '#ffffff',
+      textColor: '#000000',
     }
   }
 
@@ -92,6 +94,16 @@
   function getNodeTop(opts: Node, activeEditingNode: Node | null) {
     if (activeEditingNode?.id === opts.id) return activeEditingNode.y + $offset
     return opts.y + $offset
+  }
+
+  function getNodeBgColor(opts: Node, activeEditingNode: Node | null) {
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.bgColor
+    return opts.bgColor
+  }
+
+  function getNodeTextColor(opts: Node, activeEditingNode: Node | null) {
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.textColor
+    return opts.textColor
   }
 </script>
 
@@ -121,12 +133,16 @@
     $activeEditingNode
   )}px; width: {getNodeWidth($activeEditingNode)}px; height: {getNodeHeight(
     $activeEditingNode
-  )}px; z-index: {opts.type === 'node' ? 10 : -10}"
+  )}px; background-color: {getNodeBgColor(
+    opts,
+    $activeEditingNode
+  )}; color: {getNodeTextColor(
+    opts,
+    $activeEditingNode
+  )}; z-index: {opts.type === 'node' ? 10 : -10}"
   class="select-none shadow-sm {$activeNode === opts.id
     ? 'cursor-move'
-    : 'cursor-auto'} {opts.type === 'node'
-    ? 'bg-white'
-    : 'bg-surface-300'} border-2 {$activeEditingNode?.id === opts.id
+    : 'cursor-pointer'} border-2 {$activeEditingNode?.id === opts.id
     ? 'border-primary-500'
     : ''} {$activeNode === opts.id
     ? 'ring-2 ring-primary-500/50 '

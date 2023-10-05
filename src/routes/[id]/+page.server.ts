@@ -80,6 +80,8 @@ export const actions: Actions = {
     const y = form.data.y
     const w = form.data.w
     const h = form.data.h
+    const bgColor = form.data.bgColor
+    const textColor = form.data.textColor
 
     const node = await db.query.nodesTable.findFirst({
       where: eq(nodesTable.id, id),
@@ -96,6 +98,8 @@ export const actions: Actions = {
         y,
         w,
         h,
+        bgColor,
+        textColor,
       })
       .where(eq(nodesTable.id, id))
 

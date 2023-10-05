@@ -8,7 +8,16 @@ export function getXPosRelativeToScrollContainer(
   const clientXWithoutSidebar = clientX - 80 // (80 is width of sidebar)
   const offsetValue = get(offset)
   const x = Math.round(
-    scrollContainer.scrollLeft - offsetValue + clientXWithoutSidebar - 64
-  ) // (64 is half of node width)
+    scrollContainer.scrollLeft - offsetValue + clientXWithoutSidebar
+  )
   return x
+}
+
+export function getYPosRelativeToScrollContainer(
+  clientY: number,
+  scrollContainer: HTMLDivElement
+) {
+  const offsetValue = get(offset)
+  const y = Math.round(scrollContainer.scrollTop - offsetValue + clientY)
+  return y
 }
