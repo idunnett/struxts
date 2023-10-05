@@ -36,6 +36,7 @@
   } satisfies DrawerSettings
 
   function onMouseDown() {
+    if ($activeNode !== opts.id) return
     $draggingNodeId = opts.id
   }
 
@@ -89,8 +90,8 @@
   }
 
   function getNodeTop(opts: Node, activeEditingNode: Node | null) {
-    if (activeEditingNode?.id === opts.id) return activeEditingNode.y
-    return opts.y
+    if (activeEditingNode?.id === opts.id) return activeEditingNode.y + $offset
+    return opts.y + $offset
   }
 </script>
 
@@ -121,7 +122,9 @@
   )}px; width: {getNodeWidth($activeEditingNode)}px; height: {getNodeHeight(
     $activeEditingNode
   )}px; z-index: {opts.type === 'node' ? 10 : -10}"
-  class="select-none shadow-sm cursor-move {opts.type === 'node'
+  class="select-none shadow-sm {$activeNode === opts.id
+    ? 'cursor-move'
+    : 'cursor-auto'} {opts.type === 'node'
     ? 'bg-white'
     : 'bg-surface-300'} border-2 {$activeEditingNode?.id === opts.id
     ? 'border-primary-500'

@@ -16,9 +16,9 @@
     const fromNodeHeight = fromNode.h
 
     let x1: number = fromNode.x + fromNodeWidthHalf + $offset
-    let y1: number = fromNode.y + fromNodeHeight
+    let y1: number = fromNode.y + fromNodeHeight + $offset
     let x4: number = toNode.x + toNodeWidthHalf + $offset
-    let y4: number = toNode.y
+    let y4: number = toNode.y + $offset
     const dy: number = Math.abs(y4 - y1) * bezierWeight
 
     let y2: number = y1 + dy

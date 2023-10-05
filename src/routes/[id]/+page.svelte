@@ -14,6 +14,7 @@
     defaultNodeWidths,
     nodes,
     offset,
+    draggingNodeId,
   } from '../../nodeStore'
   import type { PageServerData } from './$types'
   import { getXPosRelativeToScrollContainer } from '$lib/utils/nodeUtils'
@@ -26,12 +27,18 @@
   $: $activeStruxt = data.struxt
 
   let scrollContainer: HTMLDivElement
+  let dragScrolling = false
 
   onMount(() => {
     $nodes = data.nodes
     const windowWidth = window.innerWidth - 80 // (80 is width of sidebar)
-    const scrollLeft = $offset - windowWidth / 2 + 64 // (64 is half of node width)
-    scrollContainer.scrollTo(scrollLeft, 0)
+    const windowHeight = window.innerHeight
+    const scrollLeft =
+      $offset - windowWidth / 2 + $defaultNodeWidths['node'] / 2
+    const scrollTop =
+      $offset - windowHeight / 2 + $defaultNodeHeights['node'] / 2
+
+    scrollContainer.scrollTo(scrollLeft, scrollTop)
   })
 
   async function addNode(e: MouseEvent) {
@@ -95,6 +102,23 @@
     $linkingFromNode = null
   }
 
+  function onMouseDown() {
+    if ($draggingNodeId) return
+    dragScrolling = true
+    scrollContainer.style.cursor = 'grabbing'
+  }
+
+  function onWindowMouseUp() {
+    if (!dragScrolling) return
+    dragScrolling = false
+    scrollContainer.style.cursor = 'default'
+  }
+
+  function onWindowMouseMove(e: MouseEvent) {
+    if (!dragScrolling) return
+    scrollContainer.scrollBy(-e.movementX, -e.movementY)
+  }
+
   function getParentNode(id: number, activeEditingNode: NodeType | null) {
     const parentNode = $nodes.find((node) => node.id === id)
     if (activeEditingNode?.id === parentNode?.id)
@@ -145,9 +169,10 @@
   on:dblclick={addNode}
   on:mouseup={onMouseUp}
   on:mousemove={onMouseMove}
+  on:mousedown={onMouseDown}
   bind:this={scrollContainer}
 >
-  <div class="relative w-[16000px] h-full polka-dots z-0">
+  <div class="relative w-[16000px] h-[16000px] polka-dots z-0">
     {#each $nodes as node}
       <Node bind:opts={node} superValidatedForm={data.newNodeForm} {struxtId} />
       {#if node.parentId}
@@ -176,4 +201,6 @@
     $activeNode = null
   }}
   on:keydown={onKeyDown}
+  on:mouseup={onWindowMouseUp}
+  on:mousemove={onWindowMouseMove}
 />
