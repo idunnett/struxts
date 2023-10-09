@@ -1,5 +1,9 @@
 import { db } from '$lib/server/db'
-import { nodesTable, profileStruxtsTable } from '$lib/server/db/schema'
+import {
+  hLinksTable,
+  nodesTable,
+  profileStruxtsTable,
+} from '$lib/server/db/schema'
 import { and, eq } from 'drizzle-orm'
 import type { Actions, PageServerLoad } from './$types'
 import { fail } from '@sveltejs/kit'
@@ -35,14 +39,17 @@ export const load: PageServerLoad = async (event) => {
       event
     )
 
-  const nodes = await db
-    .select()
-    .from(nodesTable)
-    .where(eq(nodesTable.struxtId, struxtId))
+  const nodes = await db.query.nodesTable.findMany({
+    where: eq(nodesTable.struxtId, struxtId),
+  })
+  const hLinks = await db.query.hLinksTable.findMany({
+    where: eq(hLinksTable.struxtId, struxtId),
+  })
   const newNodeForm = await superValidate(newNodeSchema)
   return {
     struxt: profileStruxt.struxt,
     nodes,
+    hLinks,
     newNodeForm,
   }
 }

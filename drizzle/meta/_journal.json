@@ -71,6 +71,27 @@
       "when": 1696519438040,
       "tag": "0009_pale_natasha_romanoff",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1696777783238,
+      "tag": "0010_large_fenris",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1696888850055,
+      "tag": "0011_acoustic_power_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1696889864018,
+      "tag": "0012_moaning_black_cat",
+      "breakpoints": true
     }
   ]
 }

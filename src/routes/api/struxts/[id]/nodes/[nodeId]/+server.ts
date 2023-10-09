@@ -1,8 +1,12 @@
 import { db } from '$lib/server/db'
-import { nodesTable, profileStruxtsTable } from '$lib/server/db/schema'
+import {
+  hLinksTable,
+  nodesTable,
+  profileStruxtsTable,
+} from '$lib/server/db/schema'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, or } from 'drizzle-orm'
 import { redirect } from 'sveltekit-flash-message/server'
 
 export const PUT: RequestHandler = async (event) => {
@@ -109,6 +113,14 @@ export const DELETE: RequestHandler = async (event) => {
   if (isNaN(nodeId))
     return json({ error: 'Invalid ID format' }, { status: 400 })
 
+  await db
+    .delete(hLinksTable)
+    .where(
+      and(
+        or(eq(hLinksTable.leftId, nodeId), eq(hLinksTable.rightId, nodeId)),
+        eq(hLinksTable.struxtId, struxtId)
+      )
+    )
   await db
     .delete(nodesTable)
     .where(and(eq(nodesTable.id, nodeId), eq(nodesTable.struxtId, struxtId)))

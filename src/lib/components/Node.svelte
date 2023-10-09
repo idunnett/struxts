@@ -11,6 +11,7 @@
     defaultNodeWidths,
     defaultNodeHeights,
     activeEditingNodeHasChanges,
+    linkingFromPos,
   } from '../../nodeStore'
   import type { Node } from '../server/db/schema'
   import type { newNodeSchema } from './NodeEditDrawer/schemas'
@@ -52,12 +53,19 @@
     })
   }
 
-  function onLinkMouseDown(e: MouseEvent) {
+  function onLinkMouseDown(e: MouseEvent, pos: 'left' | 'right' | null = null) {
     $linkingFromNode = opts
+    $linkingFromPos = pos
+    let x = opts.x
+    let y = opts.y + opts.h
+    if (pos === 'right') {
+      // x += opts.w / 2
+      y -= opts.h / 2
+    }
     $linkingToMouse = {
       id: -1,
-      x: opts.x,
-      y: e.clientY,
+      x,
+      y,
       title: '',
       description: '',
       type: 'node',
@@ -168,6 +176,12 @@
   <div
     class="hidden group-hover:block rounded-full w-2 h-2 bg-blue-500 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
     on:mousedown|stopPropagation={onLinkMouseDown}
+    role="button"
+    tabindex="0"
+  />
+  <div
+    class="hidden group-hover:block rounded-full w-2 h-2 bg-blue-500 absolute top-1/2 left-full -translate-x-1/2 -translate-y-1/2"
+    on:mousedown|stopPropagation={(e) => onLinkMouseDown(e, 'right')}
     role="button"
     tabindex="0"
   />

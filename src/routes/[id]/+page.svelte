@@ -15,9 +15,14 @@
     nodes,
     offset,
     draggingNodeId,
+    linkingFromPos,
+    hLinks,
   } from '../../nodeStore'
   import type { PageServerData } from './$types'
-  import { getXPosRelativeToScrollContainer } from '$lib/utils/nodeUtils'
+  import {
+    getXPosRelativeToScrollContainer,
+    getYPosRelativeToScrollContainer,
+  } from '$lib/utils/nodeUtils'
   import { activeStruxt } from '../../struxtStore'
   import type { Node as NodeType } from '$lib/server/db/schema'
 
@@ -31,6 +36,7 @@
 
   onMount(() => {
     $nodes = data.nodes
+    $hLinks = data.hLinks
     const windowWidth = window.innerWidth - 80 // (80 is width of sidebar)
     const windowHeight = window.innerHeight
     const scrollLeft =
@@ -43,13 +49,18 @@
 
   async function addNode(e: MouseEvent) {
     const { clientX, clientY } = e
-    const x = getXPosRelativeToScrollContainer(clientX, scrollContainer)
+    const x =
+      getXPosRelativeToScrollContainer(clientX, scrollContainer) -
+      $defaultNodeWidths['node'] / 2
+    const y =
+      getYPosRelativeToScrollContainer(clientY, scrollContainer) -
+      $defaultNodeHeights['node'] / 2
     $nodes = [
       ...$nodes,
       {
         id: 0,
         x,
-        y: clientY - 20,
+        y,
         title: '',
         type: 'node',
         parentId: null,
@@ -66,7 +77,7 @@
       method: 'POST',
       body: JSON.stringify({
         x,
-        y: clientY - 20,
+        y,
         type: 'node',
       }),
     })
@@ -91,17 +102,38 @@
       )
       const toNode = $nodes[toNodeIndex]
       if (!toNode) return
-      toNode.parentId = $linkingFromNode.id
-      $nodes[toNodeIndex] = toNode
-      $linkingToMouse = null
-      $linkingFromNode = null
-      await fetch(`/api/struxts/${struxtId}/nodes/${toNode.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(toNode),
-      })
+      if (!$linkingFromPos) {
+        toNode.parentId = $linkingFromNode.id
+        $nodes[toNodeIndex] = toNode
+        $linkingToMouse = null
+        $linkingFromNode = null
+        await fetch(`/api/struxts/${struxtId}/nodes/${toNode.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(toNode),
+        })
+      } else if ($linkingFromPos === 'right') {
+        $hLinks = [
+          ...$hLinks,
+          {
+            struxtId,
+            leftId: $linkingFromNode.id,
+            rightId: toNode.id,
+          },
+        ]
+        $linkingFromPos = null
+        $linkingToMouse = null
+        await fetch(`/api/struxts/${struxtId}/links`, {
+          method: 'POST',
+          body: JSON.stringify({
+            leftId: $linkingFromNode.id,
+            rightId: toNode.id,
+          }),
+        })
+      }
     }
     $linkingToMouse = null
     $linkingFromNode = null
+    $linkingFromPos = null
   }
 
   function onMouseDown() {
@@ -128,6 +160,17 @@
     return parentNode
   }
 
+  function getNodeById(
+    id: number,
+    nodes: NodeType[],
+    activeEditingNode: NodeType | null
+  ) {
+    const node = nodes.find((node) => node.id === id)
+    if (activeEditingNode?.id === node?.id)
+      return activeEditingNode ?? undefined
+    return node
+  }
+
   async function onKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       $linkingToMouse = null
@@ -146,18 +189,30 @@
           method: 'DELETE',
         })
       } else if ($activeNodeLink) {
-        const nodeIndex = $nodes.findIndex(
-          (node) => node.id === $activeNodeLink
-        )
-        const node = $nodes[nodeIndex]
-        if (!node) return
-        node.parentId = null
-        $nodes[nodeIndex] = node
-
-        await fetch(`/api/struxts/${struxtId}/nodes/${$activeNodeLink}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ parentId: null }),
-        })
+        const activeLink = $activeNodeLink
+        if (typeof activeLink === 'number') {
+          const nodeIndex = $nodes.findIndex((node) => node.id === activeLink)
+          const node = $nodes[nodeIndex]
+          if (!node) return
+          node.parentId = null
+          $nodes[nodeIndex] = node
+          await fetch(`/api/struxts/${struxtId}/nodes/${activeLink}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ parentId: null }),
+          })
+        } else {
+          $hLinks = $hLinks.filter(
+            (link) =>
+              link.leftId !== activeLink.leftId ||
+              link.rightId !== activeLink.rightId
+          )
+          await fetch(
+            `/api/struxts/${struxtId}/links/${activeLink.leftId}/${activeLink.rightId}`,
+            {
+              method: 'DELETE',
+            }
+          )
+        }
       }
     }
   }
@@ -183,6 +238,13 @@
           to={$activeEditingNode?.id === node.id ? $activeEditingNode : node}
         />
       {/if}
+    {/each}
+    {#each $hLinks as link}
+      <NodeLink
+        from={getNodeById(link.leftId, $nodes, $activeEditingNode)}
+        to={getNodeById(link.rightId, $nodes, $activeEditingNode)}
+        horizontal
+      />
     {/each}
     {#if $linkingFromNode && $linkingToMouse}
       <NodeLink bind:from={$linkingFromNode} bind:to={$linkingToMouse} />

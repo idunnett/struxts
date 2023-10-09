@@ -1,0 +1,1 @@
+ALTER TABLE "h_links" ALTER COLUMN "struxtId" SET NOT NULL;

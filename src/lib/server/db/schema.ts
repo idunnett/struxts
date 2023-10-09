@@ -11,6 +11,7 @@ import {
   pgEnum,
   uuid,
   timestamp,
+  primaryKey,
 } from 'drizzle-orm/pg-core'
 
 export const profilesTable = pgTable('profiles', {
@@ -77,5 +78,42 @@ export const nodesTableRelations = relations(nodesTable, ({ one }) => ({
   parent: one(nodesTable, {
     fields: [nodesTable.parentId],
     references: [nodesTable.id],
+  }),
+}))
+
+export const hLinksTable = pgTable(
+  'h_links',
+  {
+    leftId: integer('left_id')
+      .notNull()
+      .references(() => nodesTable.id),
+    rightId: integer('right_id')
+      .notNull()
+      .references(() => nodesTable.id),
+    struxtId: integer('struxtId')
+      .notNull()
+      .references(() => struxtsTable.id),
+  },
+  ({ leftId, rightId, struxtId }) => {
+    return {
+      pk: primaryKey(leftId, rightId, struxtId),
+    }
+  }
+)
+
+export type HLink = InferSelectModel<typeof hLinksTable>
+
+export const hLinksTableRelations = relations(hLinksTable, ({ one }) => ({
+  left: one(nodesTable, {
+    fields: [hLinksTable.leftId],
+    references: [nodesTable.id],
+  }),
+  right: one(nodesTable, {
+    fields: [hLinksTable.rightId],
+    references: [nodesTable.id],
+  }),
+  struxt: one(struxtsTable, {
+    fields: [hLinksTable.struxtId],
+    references: [struxtsTable.id],
   }),
 }))
