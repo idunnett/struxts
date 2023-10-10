@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isEqual } from 'lodash'
+  import _ from 'lodash'
   import {
     activeNodeLink,
     linkingFromPos,
@@ -108,7 +108,7 @@
   <svg class="absolute z-0" bind:this={svg}>
     <path
       class="fill-none cursor-pointer {$activeNodeLink === to.id ||
-      isEqual($activeNodeLink, {
+      _.isEqual($activeNodeLink, {
         leftId: from.id,
         rightId: to.id,
       })
