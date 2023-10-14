@@ -4,6 +4,8 @@ import type { HLink, Node } from './lib/server/db/schema'
 export const nodes = writable<Node[]>([])
 export const hLinks = writable<HLink[]>([])
 
+export const presentationMode = writable<boolean>(false)
+
 export const hoveringNode = writable<Node | null>(null)
 export const activeEditingNode = writable<Node | null>(null)
 export const activeEditingNodeHasChanges = writable<boolean>(false)

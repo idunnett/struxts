@@ -4,7 +4,7 @@
   import TiArrowRight from 'svelte-icons-pack/ti/TiArrowRight'
   import RiSystemLogoutBoxLine from 'svelte-icons-pack/ri/RiSystemLogoutBoxLine'
   import Icon from '../Icon.svelte'
-  import { AppRail, Avatar } from '@skeletonlabs/skeleton'
+  import { AppRail, Avatar, SlideToggle } from '@skeletonlabs/skeleton'
   import { getInitials } from '$lib/utils/avatarUtils'
   import {
     getXPosRelativeToScrollContainer,
@@ -17,6 +17,7 @@
     defaultNodeWidths,
     nodes,
     defaultNodeBgColors,
+    presentationMode,
   } from '../../../nodeStore'
   import { goto, invalidateAll } from '$app/navigation'
   import { page } from '$app/stores'
@@ -215,33 +216,41 @@
     </AppRailAnchor> -->
   {#if session && $activeStruxt}
     <div class="w-full flex flex-col items-center gap-1 py-2">
-      <div class="pb-6">
-        <button
-          class="relative btn text-2xl w-10 h-10 flex justify-center items-center variant-filled-primary rounded-md"
-          bind:this={struxtMenuBtn}
-          on:mouseenter={() => (showStruxtMenu = true)}
+      <button
+        class="relative btn text-2xl w-10 h-10 flex justify-center items-center variant-filled-primary rounded-md"
+        bind:this={struxtMenuBtn}
+        on:mouseenter={() => (showStruxtMenu = true)}
+      >
+        <span>
+          {$activeStruxt.title.charAt(0).toUpperCase()}
+        </span>
+      </button>
+      <div class="flex flex-col justify-center items-center pt-2 pb-6 gap-1">
+        <span class="text-[8px] w-min h-min leading-3 text-center"
+          >Presentation Mode</span
         >
-          <span>
-            {$activeStruxt.title.charAt(0).toUpperCase()}
-          </span>
-        </button>
+        <SlideToggle
+          name="presentationMode"
+          size="sm"
+          bind:checked={$presentationMode}
+        />
       </div>
-      <div
-        class="select-none cursor-move bg-white border-2 w-14 m-auto h-7 flex items-center rounded-md"
-        role="button"
-        tabindex="0"
-        on:mousedown={onNewNodeMouseDown}
-      />
-      <span class="text-xs text-surface-900 select-none">Node</span>
-    </div>
-    <div class="w-full flex flex-col items-center gap-1 py-2">
-      <div
-        class="select-none cursor-move bg-surface-300 border-2 w-14 m-auto h-14 flex items-center rounded-md"
-        role="button"
-        tabindex="0"
-        on:mousedown={(e) => onNewNodeMouseDown(e, 'group')}
-      />
-      <span class="text-xs text-surface-900 select-none">Group</span>
+      {#if !$presentationMode}
+        <div
+          class="select-none cursor-move bg-white border-2 w-14 m-auto h-7 flex items-center rounded-md"
+          role="button"
+          tabindex="0"
+          on:mousedown={onNewNodeMouseDown}
+        />
+        <span class="text-xs text-surface-900 select-none">Node</span>
+        <div
+          class="select-none cursor-move bg-surface-300 border-2 w-14 m-auto h-14 flex items-center rounded-md"
+          role="button"
+          tabindex="0"
+          on:mousedown={(e) => onNewNodeMouseDown(e, 'group')}
+        />
+        <span class="text-xs text-surface-900 select-none">Group</span>
+      {/if}
     </div>
   {/if}
   <div slot="trail" class="flex justify-center py-1 px-3 relative w-full">

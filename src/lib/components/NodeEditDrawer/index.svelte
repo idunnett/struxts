@@ -10,6 +10,7 @@
     minNodeHeights,
     minNodeWidths,
     nodes,
+    presentationMode,
   } from '../../../nodeStore'
   import type { newNodeSchema } from './schemas'
   import type { Node } from '$lib/server/db/schema'
@@ -50,27 +51,29 @@
     },
   })
 
-  onMount(async () => {
+  onMount(() => {
     const drawerBackdrop = document.querySelector(
       '.drawer-backdrop'
     ) as HTMLDivElement
     drawerBackdrop.classList.remove('left-0')
-    // replace the element with a copy of itself
-    // and nuke all the event listeners
-    // drawerBackdrop.replaceWith(drawerBackdrop.cloneNode(true))
+  })
 
+  $: $activeEditingNode && setTextAreaEditor()
+
+  async function setTextAreaEditor() {
+    const description = $activeEditingNode?.description ?? ''
+    const blocks = description ? JSON.parse(description) : []
     const codexEditor = document.querySelector('#editor > .codex-editor')
-    if (codexEditor) return
+    $form.description = description
+    if (codexEditor && editor) editor.destroy()
 
     const EditorJS = (await import('@editorjs/editorjs')).default
     // @ts-ignore
     const Header = (await import('@editorjs/header')).default
     // @ts-ignore
     const List = (await import('@editorjs/list')).default
-    const description = $activeEditingNode?.description ?? ''
-    const blocks = description ? JSON.parse(description) : []
-    $form.description = description
     editor = new EditorJS({
+      readOnly: $presentationMode,
       holder: 'editor',
       tools: {
         Header: {
@@ -82,7 +85,7 @@
           inlineToolbar: true,
         },
       },
-      placeholder: 'Start typing...',
+      placeholder: $presentationMode ? '' : 'Start typing...',
       onChange: async (e) => {
         const blocks = (await e.saver.save()).blocks
         $form.description = JSON.stringify(blocks)
@@ -90,7 +93,7 @@
     })
     await editor.isReady
     editor.blocks.insertMany(blocks)
-  })
+  }
 
   function onMouseMove(e: MouseEvent) {
     if (!resizing || !$activeEditingNode) return
@@ -159,154 +162,160 @@
     method="post"
     action="?/update"
     class="flex flex-col p-4 gap-4"
+    on:submit={(e) => $presentationMode && e.preventDefault()}
     use:enhance
   >
     <input type="hidden" name="id" value={$activeEditingNode.id} />
-    <label class="label">
-      <span>Title</span>
-      <input
-        class="input"
-        type="text"
-        placeholder="Title"
-        name="title"
-        disabled={$submitting || $activeEditingNode.type === 'group'}
-        bind:value={$activeEditingNode.title}
-      />
-    </label>
-    <label class="label">
-      <span>Description</span>
-      <div id="editor" class="input px-2" />
-      <input
-        type="hidden"
-        name="description"
-        value={$form.description}
-        disabled={$submitting || $activeEditingNode.type === 'group'}
-      />
-    </label>
-    <div class="flex gap-4 items-center text-sm">
-      <label class="label flex items-center gap-1">
-        <button
-          type="button"
-          class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
-          on:mousedown={() => onAdjustMouseDown('x')}
-        >
-          <span class="h-4 pt-0.5">X</span>
-          <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
-        </button>
-        <input
-          class="input"
-          type="number"
-          name="x"
-          disabled={$submitting}
-          bind:value={$activeEditingNode.x}
-        />
-      </label>
-      <label class="label flex items-center gap-1">
-        <button
-          type="button"
-          class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
-          on:mousedown={() => onAdjustMouseDown('y')}
-        >
-          <span class="h-4 pt-0.5">Y</span>
-          <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
-        </button>
-        <input
-          class="input"
-          type="number"
-          name="y"
-          disabled={$submitting}
-          bind:value={$activeEditingNode.y}
-        />
-      </label>
-    </div>
-    <div class="flex gap-4 items-center text-sm">
-      <label class="label flex items-center gap-1">
-        <button
-          type="button"
-          class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
-          on:mousedown={() => onAdjustMouseDown('w')}
-        >
-          <span class="h-4 pt-0.5">W</span>
-          <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
-        </button>
-        <input
-          class="input"
-          type="number"
-          name="w"
-          min={$minNodeWidths[$activeEditingNode.type]}
-          disabled={$submitting}
-          bind:value={$activeEditingNode.w}
-        />
-      </label>
-      <label class="label flex items-center gap-1">
-        <button
-          type="button"
-          class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
-          on:mousedown={() => onAdjustMouseDown('h')}
-        >
-          <span class="h-4 pt-0.5">H</span>
-          <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
-        </button>
-        <input
-          class="input"
-          type="number"
-          name="h"
-          min={$minNodeHeights[$activeEditingNode.type]}
-          disabled={$submitting}
-          bind:value={$activeEditingNode.h}
-        />
-      </label>
-    </div>
-    <div class="flex items-center gap-4">
+    {#if $presentationMode}
+      <h2 class="h2 font-medium pl-1">{$activeEditingNode.title}</h2>
+      <div id="editor" class="px-2" />
+    {:else}
       <label class="label">
-        <span>Node Color</span>
-        <div class="grid grid-cols-[auto_1fr] gap-2">
-          <input
-            class="input !p-0 border-2 !border-solid"
-            type="color"
-            bind:value={$activeEditingNode.bgColor}
-          />
-          <input
-            class="input"
-            type="text"
-            name="bgColor"
-            bind:value={$activeEditingNode.bgColor}
-          />
-        </div>
+        <span>Title</span>
+        <input
+          class="input"
+          type="text"
+          placeholder="Title"
+          name="title"
+          disabled={$submitting || $activeEditingNode.type === 'group'}
+          bind:value={$activeEditingNode.title}
+        />
       </label>
       <label class="label">
-        <span>Text Color</span>
-        <div class="grid grid-cols-[auto_1fr] gap-2">
-          <input
-            class="input !p-0 border-2 !border-solid"
-            type="color"
-            bind:value={$activeEditingNode.textColor}
-          />
+        <span>Description</span>
+        <div id="editor" class="input px-2" />
+        <input
+          type="hidden"
+          name="description"
+          value={$form.description}
+          disabled={$submitting || $activeEditingNode.type === 'group'}
+        />
+      </label>
+      <div class="flex gap-4 items-center text-sm">
+        <label class="label flex items-center gap-1">
+          <button
+            type="button"
+            class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
+            on:mousedown={() => onAdjustMouseDown('x')}
+          >
+            <span class="h-4 pt-0.5">X</span>
+            <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
+          </button>
           <input
             class="input"
-            type="text"
-            name="textColor"
-            bind:value={$activeEditingNode.textColor}
+            type="number"
+            name="x"
+            disabled={$submitting}
+            bind:value={$activeEditingNode.x}
           />
-        </div>
-      </label>
-    </div>
-    <button
-      type="submit"
-      class="btn variant-filled-primary"
-      disabled={$submitting}
-    >
-      {#if $submitting}
-        <ProgressRadial
-          width="w-6"
-          meter="stroke-white"
-          track="stroke-white/30"
-          stroke={75}
-        />
-      {:else}
-        Save
-      {/if}
-    </button>
+        </label>
+        <label class="label flex items-center gap-1">
+          <button
+            type="button"
+            class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
+            on:mousedown={() => onAdjustMouseDown('y')}
+          >
+            <span class="h-4 pt-0.5">Y</span>
+            <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
+          </button>
+          <input
+            class="input"
+            type="number"
+            name="y"
+            disabled={$submitting}
+            bind:value={$activeEditingNode.y}
+          />
+        </label>
+      </div>
+      <div class="flex gap-4 items-center text-sm">
+        <label class="label flex items-center gap-1">
+          <button
+            type="button"
+            class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
+            on:mousedown={() => onAdjustMouseDown('w')}
+          >
+            <span class="h-4 pt-0.5">W</span>
+            <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
+          </button>
+          <input
+            class="input"
+            type="number"
+            name="w"
+            min={$minNodeWidths[$activeEditingNode.type]}
+            disabled={$submitting}
+            bind:value={$activeEditingNode.w}
+          />
+        </label>
+        <label class="label flex items-center gap-1">
+          <button
+            type="button"
+            class="w-10 h-8 cursor-ew-resize variant-soft-surface rounded-md text-surface-900 flex flex-col items-center justify-center"
+            on:mousedown={() => onAdjustMouseDown('h')}
+          >
+            <span class="h-4 pt-0.5">H</span>
+            <Icon src={CgArrowsH} class="text-surface-600" size="xs" />
+          </button>
+          <input
+            class="input"
+            type="number"
+            name="h"
+            min={$minNodeHeights[$activeEditingNode.type]}
+            disabled={$submitting}
+            bind:value={$activeEditingNode.h}
+          />
+        </label>
+      </div>
+      <div class="flex items-center gap-4">
+        <label class="label">
+          <span>Node Color</span>
+          <div class="grid grid-cols-[auto_1fr] gap-2">
+            <input
+              class="input !p-0 border-2 !border-solid"
+              type="color"
+              bind:value={$activeEditingNode.bgColor}
+            />
+            <input
+              class="input"
+              type="text"
+              name="bgColor"
+              bind:value={$activeEditingNode.bgColor}
+            />
+          </div>
+        </label>
+        <label class="label">
+          <span>Text Color</span>
+          <div class="grid grid-cols-[auto_1fr] gap-2">
+            <input
+              class="input !p-0 border-2 !border-solid"
+              type="color"
+              bind:value={$activeEditingNode.textColor}
+            />
+            <input
+              class="input"
+              type="text"
+              name="textColor"
+              bind:value={$activeEditingNode.textColor}
+            />
+          </div>
+        </label>
+      </div>
+      <button
+        type="submit"
+        class="btn variant-filled-primary"
+        disabled={$submitting}
+      >
+        {#if $submitting}
+          <ProgressRadial
+            width="w-6"
+            meter="stroke-white"
+            track="stroke-white/30"
+            stroke={75}
+          />
+        {:else}
+          Save
+        {/if}
+      </button>
+    {/if}
   </form>
 {/if}
 

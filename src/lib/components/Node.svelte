@@ -12,6 +12,7 @@
     defaultNodeHeights,
     activeEditingNodeHasChanges,
     linkingFromPos,
+    presentationMode,
   } from '../../nodeStore'
   import type { Node } from '../server/db/schema'
   import type { newNodeSchema } from './NodeEditDrawer/schemas'
@@ -30,14 +31,14 @@
     // Provide your property overrides:
     bgDrawer: 'bg-white text-black',
     bgBackdrop: 'bg-transparent',
-    width: 'w-[280px] md:w-[400px]',
+    width: 'w-[280px] md:w-[600px]',
     meta: {
       superValidatedForm,
     },
   } satisfies DrawerSettings
 
   function onMouseDown() {
-    if ($activeNode !== opts.id) return
+    if ($activeNode !== opts.id || $presentationMode) return
     $draggingNodeId = opts.id
   }
 
@@ -53,7 +54,7 @@
     })
   }
 
-  function onLinkMouseDown(e: MouseEvent, pos: 'left' | 'right' | null = null) {
+  function onLinkMouseDown(pos: 'left' | 'right' | null = null) {
     $linkingFromNode = opts
     $linkingFromPos = pos
     let x = opts.x
@@ -68,11 +69,11 @@
       y,
       title: '',
       description: '',
-      type: 'node',
+      type: opts.type,
       parentId: null,
       struxtId,
-      w: $defaultNodeWidths['node'],
-      h: $defaultNodeHeights['node'],
+      w: opts.w,
+      h: opts.h,
       bgColor: '#ffffff',
       textColor: '#000000',
     }
@@ -148,7 +149,7 @@
     opts,
     $activeEditingNode
   )}; z-index: {opts.type === 'node' ? 10 : -10}"
-  class="select-none shadow-sm {$activeNode === opts.id
+  class="select-none shadow-sm {$activeNode === opts.id && !$presentationMode
     ? 'cursor-move'
     : 'cursor-pointer'} border-2 {$activeEditingNode?.id === opts.id
     ? 'border-primary-500'
@@ -165,26 +166,20 @@
       {opts.title}
     {/if}
   </span>
-  <!-- <input
-    type="text"
-    name="title"
-    class="w-full outline-none px-1 text-center text-sm truncate"
-    bind:value={title}
-    on:blur={updateNode}
-    on:keydown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-  /> -->
-  <div
-    class="hidden group-hover:block rounded-full w-2 h-2 bg-blue-500 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
-    on:mousedown|stopPropagation={onLinkMouseDown}
-    role="button"
-    tabindex="0"
-  />
-  <div
-    class="hidden group-hover:block rounded-full w-2 h-2 bg-blue-500 absolute top-1/2 left-full -translate-x-1/2 -translate-y-1/2"
-    on:mousedown|stopPropagation={(e) => onLinkMouseDown(e, 'right')}
-    role="button"
-    tabindex="0"
-  />
+  {#if !$presentationMode}
+    <div
+      class="hidden group-hover:block rounded-full w-2 h-2 bg-blue-500 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
+      on:mousedown|stopPropagation={() => onLinkMouseDown()}
+      role="button"
+      tabindex="0"
+    />
+    <div
+      class="hidden group-hover:block rounded-full w-2 h-2 bg-blue-500 absolute top-1/2 left-full -translate-x-1/2 -translate-y-1/2"
+      on:mousedown|stopPropagation={() => onLinkMouseDown('right')}
+      role="button"
+      tabindex="0"
+    />
+  {/if}
 </div>
 
 <svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove} />
