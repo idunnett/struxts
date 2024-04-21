@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { api } from "~/trpc/react"
-import { Button } from "./ui/button"
+import { Button } from "../../../../components/ui/button"
 import {
   Card,
   CardContent,
@@ -12,9 +12,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card"
-import { Label } from "./ui/label"
-import { Input } from "./ui/input"
+} from "../../../../components/ui/card"
+import { Label } from "../../../../components/ui/label"
+import { Input } from "../../../../components/ui/input"
 
 export function CreateStructure() {
   const router = useRouter()

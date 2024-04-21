@@ -1,4 +1,4 @@
-import { CreateStructure } from "~/components/create-structure"
+import { CreateStructure } from "~/app/structures/new/_components/create-structure"
 
 export default function NewStructurePage() {
   return (

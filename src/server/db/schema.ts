@@ -1,11 +1,14 @@
-import { relations, sql } from "drizzle-orm"
+import { relations } from "drizzle-orm"
 import {
   index,
-  int,
+  integer,
   primaryKey,
-  sqliteTableCreator,
+  pgTable,
   text,
-} from "drizzle-orm/sqlite-core"
+  serial,
+  uuid,
+  timestamp,
+} from "drizzle-orm/pg-core"
 import { type AdapterAccount } from "next-auth/adapters"
 
 /**
@@ -14,27 +17,23 @@ import { type AdapterAccount } from "next-auth/adapters"
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = sqliteTableCreator((name) => name)
-
-export const structures = createTable("structures", {
-  id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  name: text("name", { length: 255 }),
-  createdById: text("createdById", { length: 255 })
+export const structures = pgTable("structures", {
+  id: serial("id").primaryKey(),
+  name: text("name"),
+  createdById: uuid("createdById")
     .notNull()
     .references(() => users.id),
-  createdAt: int("created_at", { mode: "timestamp" })
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-  updatedAt: int("updatedAt", { mode: "timestamp" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt"),
 })
 
-export const usersStructures = createTable(
+export const usersStructures = pgTable(
   "users_structures",
   {
-    userId: text("userId", { length: 255 })
+    userId: uuid("userId")
       .notNull()
       .references(() => users.id),
-    structureId: int("structureId")
+    structureId: serial("structureId")
       .notNull()
       .references(() => structures.id),
   },
@@ -45,55 +44,51 @@ export const usersStructures = createTable(
   },
 )
 
-export const nodes = createTable("nodes", {
-  id: int("id").primaryKey({ autoIncrement: true }),
-  x: int("x").notNull(),
-  y: int("y").notNull(),
-  w: int("w").notNull(),
-  h: int("h").notNull(),
-  title: text("title", { length: 255 }).default(""),
-  description: text("description", { length: 255 }).default(""),
+export const nodes = pgTable("nodes", {
+  id: serial("id").primaryKey(),
+  x: integer("x").notNull(),
+  y: integer("y").notNull(),
+  w: integer("w").notNull(),
+  h: integer("h").notNull(),
+  title: text("title").default(""),
+  description: text("description").default(""),
   // type: nodeTypeEnum("type").notNull(),
   // bgColor: text("bg_color").notNull().default("#ffffff"),
   // textColor: text("text_color").notNull().default("#000000"),
-  parentId: int("parentId"),
-  structureId: int("structureId")
+  parentId: integer("parentId"),
+  structureId: serial("structureId")
     .notNull()
     .references(() => structures.id),
 })
 
-export const users = createTable("user", {
-  id: text("id", { length: 255 }).notNull().primaryKey(),
-  name: text("name", { length: 255 }),
-  email: text("email", { length: 255 }).notNull(),
-  emailVerified: int("emailVerified", {
-    mode: "timestamp",
-  }).default(sql`CURRENT_TIMESTAMP`),
-  image: text("image", { length: 255 }),
+export const users = pgTable("user", {
+  id: uuid("id").primaryKey(),
+  name: text("name"),
+  email: text("email").notNull(),
+  emailVerified: timestamp("emailVerified").defaultNow(),
+  image: text("image"),
 })
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
 }))
 
-export const accounts = createTable(
+export const accounts = pgTable(
   "account",
   {
-    userId: text("userId", { length: 255 })
+    userId: uuid("userId")
       .notNull()
       .references(() => users.id),
-    type: text("type", { length: 255 })
-      .$type<AdapterAccount["type"]>()
-      .notNull(),
-    provider: text("provider", { length: 255 }).notNull(),
-    providerAccountId: text("providerAccountId", { length: 255 }).notNull(),
+    type: text("type").$type<AdapterAccount["type"]>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
     refresh_token: text("refresh_token"),
     access_token: text("access_token"),
-    expires_at: int("expires_at"),
-    token_type: text("token_type", { length: 255 }),
-    scope: text("scope", { length: 255 }),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
     id_token: text("id_token"),
-    session_state: text("session_state", { length: 255 }),
+    session_state: text("session_state"),
   },
   (account) => ({
     compoundKey: primaryKey({
@@ -107,14 +102,14 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
 }))
 
-export const sessions = createTable(
+export const sessions = pgTable(
   "session",
   {
-    sessionToken: text("sessionToken", { length: 255 }).notNull().primaryKey(),
-    userId: text("userId", { length: 255 })
+    sessionToken: text("sessionToken").notNull().primaryKey(),
+    userId: uuid("userId")
       .notNull()
       .references(() => users.id),
-    expires: int("expires", { mode: "timestamp" }).notNull(),
+    expires: timestamp("expires").notNull(),
   },
   (session) => ({
     userIdIdx: index("session_userId_idx").on(session.userId),
@@ -125,12 +120,12 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }))
 
-export const verificationTokens = createTable(
+export const verificationTokens = pgTable(
   "verificationToken",
   {
-    identifier: text("identifier", { length: 255 }).notNull(),
-    token: text("token", { length: 255 }).notNull(),
-    expires: int("expires", { mode: "timestamp" }).notNull(),
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires").notNull(),
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),

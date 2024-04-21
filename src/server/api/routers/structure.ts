@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { eq } from "drizzle-orm"
-import { revalidatePath } from "next/cache"
+import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc"
@@ -30,12 +29,10 @@ export const structureRouter = createTRPCRouter({
         structureId: newStructure.id,
       })
 
-      revalidatePath("/api/structure/my")
-
       return newStructure.id
     }),
 
-  getMy: protectedProcedure.query(async ({ ctx }) => {
+  getAllOfMy: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select({
         id: structures.id,
@@ -60,4 +57,25 @@ export const structureRouter = createTRPCRouter({
 
     return firstStructure
   }),
+
+  getById: protectedProcedure
+    .input(z.number())
+    .query(async ({ ctx, input }) => {
+      const [structure] = await ctx.db
+        .select({
+          id: structures.id,
+          name: structures.name,
+        })
+        .from(usersStructures)
+        .innerJoin(structures, eq(structures.id, usersStructures.structureId))
+        .where(
+          and(
+            eq(structures.id, input),
+            eq(usersStructures.userId, ctx.session.user.id),
+          ),
+        )
+        .limit(1)
+
+      return structure
+    }),
 })

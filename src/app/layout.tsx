@@ -4,7 +4,7 @@ import { Inter } from "next/font/google"
 import { cn } from "~/lib/utils"
 
 import { TRPCReactProvider } from "~/trpc/react"
-import NavBar from "~/components/nav-bar"
+import NavBar from "~/app/_components/nav-bar"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "bg-background relative flex h-screen flex-col font-sans antialiased",
+          "relative flex h-screen flex-col bg-background font-sans antialiased",
           inter.variable,
         )}
       >
