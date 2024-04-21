@@ -14,7 +14,7 @@ import { type AdapterAccount } from "next-auth/adapters"
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = sqliteTableCreator((name) => `struxts_${name}`)
+export const createTable = sqliteTableCreator((name) => name)
 
 export const structures = createTable("structures", {
   id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -29,7 +29,7 @@ export const structures = createTable("structures", {
 })
 
 export const usersStructures = createTable(
-  "usersStructures",
+  "users_structures",
   {
     userId: text("userId", { length: 255 })
       .notNull()
