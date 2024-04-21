@@ -37,6 +37,6 @@
     "**/*.cjs",
     "**/*.js",
     ".next/types/**/*.ts"
-, "src/app/structures/[structureId]"  ],
+  ],
   "exclude": ["node_modules"]
 }

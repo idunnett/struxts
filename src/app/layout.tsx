@@ -6,6 +6,7 @@ import { cn } from "~/lib/utils"
 import { TRPCReactProvider } from "~/trpc/react"
 import { ClerkProvider } from "@clerk/nextjs"
 import NavBar from "~/app/_components/nav-bar"
+import { Toaster } from "~/components/ui/sonner"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,8 +35,9 @@ export default function RootLayout({
         >
           <TRPCReactProvider>
             <NavBar />
-            <div className="min-h-0 grow overflow-auto">{children}</div>
+            <main className="min-h-0 grow overflow-auto">{children}</main>
           </TRPCReactProvider>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
