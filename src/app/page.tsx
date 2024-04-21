@@ -1,36 +1,17 @@
-// import Link from "next/link";
-
-import { redirect } from "next/navigation"
-import { getServerAuthSession } from "~/server/auth"
-import { api } from "~/trpc/server"
-
-// import { CreatePost } from "~/app/_components/create-post";
+import Link from "next/link"
+import RotatingText from "./_components/RotatingText"
+import { buttonVariants } from "~/components/ui/button"
 
 export default async function Home() {
-  const session = await getServerAuthSession()
-  if (session?.user) {
-    const structure = await api.structure.getOneOfMy()
-    if (structure) redirect(`/structures/${structure.id}`)
-    else redirect("/structures/new")
-  }
-  return <div>Hello</div>
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-16">
+      <h1 className="flex flex-col gap-4 text-center text-4xl font-bold tracking-tight text-gray-800 sm:text-5xl">
+        <span>Structure Diagrams for{""}</span>
+        <RotatingText texts={["Businesses", "Org Charts", "Flow Charts"]} />
+      </h1>
+      <Link href="/structures" className={buttonVariants()}>
+        Get Started
+      </Link>
+    </div>
+  )
 }
-
-// async function CrudShowcase() {
-//   const session = await getServerAuthSession();
-//   if (!session?.user) return null;
-
-//   const latestPost = await api.post.getLatest();
-
-//   return (
-//     <div className="w-full max-w-xs">
-//       {latestPost ? (
-//         <p className="truncate">Your most recent post: {latestPost.name}</p>
-//       ) : (
-//         <p>You have no posts yet.</p>
-//       )}
-
-//       <CreatePost />
-//     </div>
-//   );
-// }

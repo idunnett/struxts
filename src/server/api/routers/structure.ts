@@ -13,7 +13,7 @@ export const structureRouter = createTRPCRouter({
         .insert(structures)
         .values({
           name: input.name,
-          createdById: ctx.session.user.id,
+          createdById: ctx.session.userId,
         })
         .returning({ id: structures.id })
 
@@ -25,7 +25,7 @@ export const structureRouter = createTRPCRouter({
       }
 
       await ctx.db.insert(usersStructures).values({
-        userId: ctx.session.user.id,
+        userId: ctx.session.userId,
         structureId: newStructure.id,
       })
 
@@ -37,10 +37,11 @@ export const structureRouter = createTRPCRouter({
       .select({
         id: structures.id,
         name: structures.name,
+        createdById: structures.createdById,
       })
       .from(usersStructures)
       .innerJoin(structures, eq(structures.id, usersStructures.structureId))
-      .where(eq(usersStructures.userId, ctx.session.user.id))
+      .where(eq(usersStructures.userId, ctx.session.userId))
       .orderBy(structures.updatedAt)
   }),
 
@@ -52,7 +53,7 @@ export const structureRouter = createTRPCRouter({
       })
       .from(usersStructures)
       .innerJoin(structures, eq(structures.id, usersStructures.structureId))
-      .where(eq(usersStructures.userId, ctx.session.user.id))
+      .where(eq(usersStructures.userId, ctx.session.userId))
       .limit(1)
 
     return firstStructure
@@ -71,7 +72,7 @@ export const structureRouter = createTRPCRouter({
         .where(
           and(
             eq(structures.id, input),
-            eq(usersStructures.userId, ctx.session.user.id),
+            eq(usersStructures.userId, ctx.session.userId),
           ),
         )
         .limit(1)

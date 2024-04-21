@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { cn } from "~/lib/utils"
 
 import { TRPCReactProvider } from "~/trpc/react"
+import { ClerkProvider } from "@clerk/nextjs"
 import NavBar from "~/app/_components/nav-bar"
 
 const inter = Inter({
@@ -23,18 +24,20 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body
-        className={cn(
-          "relative flex h-screen flex-col bg-background font-sans antialiased",
-          inter.variable,
-        )}
-      >
-        <TRPCReactProvider>
-          <NavBar />
-          <div className="min-h-0 grow overflow-auto">{children}</div>
-        </TRPCReactProvider>
-      </body>
-    </html>
+    <ClerkProvider signInFallbackRedirectUrl="/">
+      <html lang="en">
+        <body
+          className={cn(
+            "relative flex h-screen flex-col bg-background font-sans antialiased",
+            inter.variable,
+          )}
+        >
+          <TRPCReactProvider>
+            <NavBar />
+            <div className="min-h-0 grow overflow-auto">{children}</div>
+          </TRPCReactProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

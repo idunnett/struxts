@@ -1,54 +1,37 @@
-import { redirect } from "next/navigation"
-import { getServerAuthSession } from "~/server/auth"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../../../components/ui/select"
-import { api } from "~/trpc/server"
-import SignOutButton from "./signout-button"
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { buttonVariants } from "~/components/ui/button"
+import MyStructures from "./my-structures"
+import Link from "next/link"
+import { auth } from "@clerk/nextjs/server"
 
 export default async function NavBar() {
-  const session = await getServerAuthSession()
-  if (!session?.user) redirect("/api/auth/signin")
-
-  const myStructures = await api.structure.getAllOfMy()
-
+  const session = auth()
   return (
     <nav className="h-16 w-full border-b px-8 py-2">
       <div className="flex h-full items-center justify-between">
         <div className="flex h-full items-center gap-8">
-          <h1 className="text-xl font-bold">Struxts</h1>
-          {myStructures.length > 0 && (
-            <>
-              <div className="h-3/4 w-[1px] bg-border" />
-              <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a structure" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>My Structures</SelectLabel>
-                    {myStructures.map((structure) => (
-                      <SelectItem
-                        key={structure.id}
-                        value={structure.id.toString()}
-                      >
-                        {structure.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </>
-          )}
+          <Link href={session.userId ? "/structures" : "/"}>
+            <h1 className="text-xl font-bold">Struxts</h1>
+          </Link>
+          <SignedIn>
+            <MyStructures />
+          </SignedIn>
         </div>
         <div>
-          <SignOutButton />
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className={buttonVariants({
+                variant: "default",
+                size: "sm",
+              })}
+            >
+              Sign In
+            </Link>
+          </SignedOut>
         </div>
       </div>
     </nav>
