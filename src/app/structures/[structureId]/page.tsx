@@ -29,5 +29,7 @@ export default async function StructurePage({
     )
   }
 
-  return <Structure structure={structure} />
+  const nodes = await api.node.getByStructureId(structure.id)
+
+  return <Structure structure={structure} initialNodes={nodes} />
 }

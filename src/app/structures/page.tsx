@@ -9,7 +9,7 @@ export default async function StructuresPage() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex justify-between">
+      <div className="flex justify-between px-2">
         <h2 className="text-2xl font-medium">Your Structures</h2>
         <Link
           href="/structures/new"

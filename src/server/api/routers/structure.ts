@@ -1,9 +1,21 @@
 import { TRPCError } from "@trpc/server"
 import { and, eq } from "drizzle-orm"
+import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc"
-import { usersStructures, structures } from "~/server/db/schema"
+import { usersStructures, structures, nodes } from "~/server/db/schema"
+
+const updateNodeSchema = z.object({
+  id: z.string().optional(),
+  position: z.object({
+    x: z.number(),
+    y: z.number(),
+  }),
+  label: z.string().nullish(),
+})
+
+export type UpdateNode = z.infer<typeof updateNodeSchema>
 
 export const structureRouter = createTRPCRouter({
   create: protectedProcedure
@@ -78,5 +90,42 @@ export const structureRouter = createTRPCRouter({
         .limit(1)
 
       return structure
+    }),
+  update: protectedProcedure
+    .input(
+      z.object({
+        structureId: z.number(),
+        nodes: z.array(updateNodeSchema),
+        // edges: z.array()
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      for (const inputNode of input.nodes) {
+        let inputNodeId: number | undefined = undefined
+        if (inputNode.id && !inputNode.id.startsWith("__")) {
+          inputNodeId = Number(inputNode.id)
+          if (isNaN(inputNodeId)) inputNodeId = undefined
+        }
+        await ctx.db
+          .insert(nodes)
+          .values({
+            id: inputNodeId,
+            x: inputNode.position.x,
+            y: inputNode.position.y,
+            label: inputNode.label,
+            h: 100,
+            w: 100,
+            structureId: input.structureId,
+          })
+          .onConflictDoUpdate({
+            target: nodes.id,
+            set: {
+              x: inputNode.position.x,
+              y: inputNode.position.y,
+              label: inputNode.label,
+            },
+          })
+      }
+      revalidatePath(`/structures/${input.structureId}`)
     }),
 })

@@ -13,7 +13,12 @@ import { cn } from "~/lib/utils"
 import { type NodeData } from "~/types"
 import LineWrappingInput from "react-line-wrapping-input"
 
-export default function BasicNode({ id, data, selected }: NodeProps<NodeData>) {
+export default function BasicNode({
+  id,
+  data,
+  selected,
+  dragging,
+}: NodeProps<NodeData>) {
   const [popoverSide, setPopoverSide] = useState<
     "top" | "right" | "bottom" | "left"
   >("left")
@@ -25,14 +30,20 @@ export default function BasicNode({ id, data, selected }: NodeProps<NodeData>) {
       const side = popoverContent.getAttribute("data-side")
       if (side === "right") setPopoverSide("bottom")
       else setPopoverSide("left")
-    }, 0)
+    }, 10)
+  }
+
+  function handlePopoverClose() {
+    setTimeout(() => {
+      setPopoverSide("left")
+    }, 100)
   }
 
   return (
     <div
       id={id}
       className={cn(
-        "relative w-40 border border-foreground/50 bg-card p-2",
+        "relative w-[162px] border border-foreground/50 bg-card p-2",
         data.label.length > 10 && "pl-3",
         data.label.length > 11 && "pl-4",
         data.label.length > 12 && "pl-5",
@@ -45,18 +56,18 @@ export default function BasicNode({ id, data, selected }: NodeProps<NodeData>) {
       <LineWrappingInput
         value={data.label}
         onChange={(e) => data.onLabelChange?.(id, e.target.value)}
-        className="w-full break-words bg-transparent text-center text-sm outline-none "
+        className={cn(
+          "w-full break-words bg-transparent text-center text-sm outline-none",
+          dragging && "cursor-grabbing",
+        )}
         readOnly={!data.editable}
-        // onMouseDown={(e) => {
-        //   console.log("click")
-        //   if (!data.editable) {
-        //     e.preventDefault()
-        //     e.stopPropagation()
-        //   }
-        // }}
-        // tabIndex={data.editable ? 0 : -1}
       />
-      <Popover onOpenChange={(open) => open && handlePopoverOpen()}>
+      <Popover
+        onOpenChange={(open) => {
+          if (open) handlePopoverOpen()
+          else handlePopoverClose()
+        }}
+      >
         <PopoverTrigger
           asChild
           className="absolute left-1 top-1/2 -translate-y-1/2"

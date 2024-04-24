@@ -5,6 +5,7 @@ import {
   text,
   serial,
   timestamp,
+  real,
 } from "drizzle-orm/pg-core"
 
 /**
@@ -38,16 +39,15 @@ export const usersStructures = pgTable(
 
 export const nodes = pgTable("nodes", {
   id: serial("id").primaryKey(),
-  x: integer("x").notNull(),
-  y: integer("y").notNull(),
+  x: real("x").notNull(),
+  y: real("y").notNull(),
   w: integer("w").notNull(),
   h: integer("h").notNull(),
-  title: text("title").default(""),
-  description: text("description").default(""),
+  label: text("label"),
+  description: text("description"),
   // type: nodeTypeEnum("type").notNull(),
   // bgColor: text("bg_color").notNull().default("#ffffff"),
   // textColor: text("text_color").notNull().default("#000000"),
-  parentId: integer("parentId"),
   structureId: serial("structureId")
     .notNull()
     .references(() => structures.id),
