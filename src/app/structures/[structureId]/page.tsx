@@ -29,7 +29,16 @@ export default async function StructurePage({
     )
   }
 
-  const nodes = await api.node.getByStructureId(structure.id)
+  const [nodes, edges] = await Promise.all([
+    api.node.getByStructureId(structure.id),
+    api.edge.getByStructureId(structure.id),
+  ])
 
-  return <Structure structure={structure} initialNodes={nodes} />
+  return (
+    <Structure
+      structure={structure}
+      initialNodes={nodes}
+      initialEdges={edges}
+    />
+  )
 }

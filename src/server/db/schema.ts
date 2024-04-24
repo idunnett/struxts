@@ -52,3 +52,19 @@ export const nodes = pgTable("nodes", {
     .notNull()
     .references(() => structures.id),
 })
+
+export const edges = pgTable("edges", {
+  id: serial("id").primaryKey(),
+  source: serial("source")
+    .notNull()
+    .references(() => nodes.id),
+  target: serial("target")
+    .notNull()
+    .references(() => nodes.id),
+  startLabel: text("startLabel"),
+  label: text("label"),
+  endLabel: text("endLabel"),
+  structureId: serial("structureId")
+    .notNull()
+    .references(() => structures.id),
+})

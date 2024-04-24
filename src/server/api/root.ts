@@ -1,6 +1,7 @@
 import { structureRouter } from "~/server/api/routers/structure"
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc"
 import { nodeRouter } from "./routers/node"
+import { edgeRouter } from "./routers/edges"
 
 /**
  * This is the primary router for your server.
@@ -10,6 +11,7 @@ import { nodeRouter } from "./routers/node"
 export const appRouter = createTRPCRouter({
   structure: structureRouter,
   node: nodeRouter,
+  edge: edgeRouter,
 })
 
 // export type definition of API

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc"
-import { usersStructures, structures, nodes } from "~/server/db/schema"
+import { usersStructures, structures, nodes, edges } from "~/server/db/schema"
 
 const updateNodeSchema = z.object({
   id: z.string().optional(),
@@ -14,8 +14,15 @@ const updateNodeSchema = z.object({
   }),
   label: z.string().nullish(),
 })
-
 export type UpdateNode = z.infer<typeof updateNodeSchema>
+const updateEdgeSchema = z.object({
+  id: z.string().optional(),
+  source: z.string().or(z.number()),
+  target: z.string().or(z.number()),
+  startLabel: z.string().nullish(),
+  endLabel: z.string().nullish(),
+})
+export type UpdateEdge = z.infer<typeof updateEdgeSchema>
 
 export const structureRouter = createTRPCRouter({
   create: protectedProcedure
@@ -96,17 +103,17 @@ export const structureRouter = createTRPCRouter({
       z.object({
         structureId: z.number(),
         nodes: z.array(updateNodeSchema),
-        // edges: z.array()
+        edges: z.array(updateEdgeSchema),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       for (const inputNode of input.nodes) {
         let inputNodeId: number | undefined = undefined
-        if (inputNode.id && !inputNode.id.startsWith("__")) {
+        if (inputNode.id && !inputNode.id.startsWith("reactflow__")) {
           inputNodeId = Number(inputNode.id)
           if (isNaN(inputNodeId)) inputNodeId = undefined
         }
-        await ctx.db
+        const [newNode] = await ctx.db
           .insert(nodes)
           .values({
             id: inputNodeId,
@@ -123,6 +130,44 @@ export const structureRouter = createTRPCRouter({
               x: inputNode.position.x,
               y: inputNode.position.y,
               label: inputNode.label,
+            },
+          })
+          .returning({ id: nodes.id })
+
+        if (!newNode) continue
+        if (inputNode.id?.startsWith("reactflow__")) {
+          for (const inputEdge of input.edges) {
+            if (inputEdge.source === inputNode.id) inputEdge.source = newNode.id
+            if (inputEdge.target === inputNode.id) inputEdge.target = newNode.id
+          }
+        }
+      }
+      for (const inputEdge of input.edges) {
+        let inputEdgeId: number | undefined = undefined
+        if (inputEdge.id && !inputEdge.id.startsWith("reactflow__")) {
+          inputEdgeId = Number(inputEdge.id)
+          if (isNaN(inputEdgeId)) inputEdgeId = undefined
+        }
+        const edgeSource = Number(inputEdge.source)
+        const edgeTarget = Number(inputEdge.target)
+        if (isNaN(edgeSource) || isNaN(edgeTarget)) continue
+        await ctx.db
+          .insert(edges)
+          .values({
+            id: inputEdgeId,
+            source: edgeSource,
+            target: edgeTarget,
+            startLabel: inputEdge.startLabel,
+            endLabel: inputEdge.endLabel,
+            structureId: input.structureId,
+          })
+          .onConflictDoUpdate({
+            target: edges.id,
+            set: {
+              source: edgeSource,
+              target: edgeTarget,
+              startLabel: inputEdge.startLabel,
+              endLabel: inputEdge.endLabel,
             },
           })
       }
