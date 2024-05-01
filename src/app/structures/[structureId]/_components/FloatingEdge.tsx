@@ -17,7 +17,6 @@ export default function FloatingEdge({
   data,
   markerEnd,
   style,
-  selected,
 }: EdgeProps<EdgeData>) {
   const sourceNode = useStore(
     useCallback((store) => store.nodeInternals.get(source), [source]),
@@ -25,6 +24,7 @@ export default function FloatingEdge({
   const targetNode = useStore(
     useCallback((store) => store.nodeInternals.get(target), [target]),
   )
+  // const [groupHovering, setGroupHovering] = useState(false)
 
   if (!sourceNode || !targetNode) return null
 
@@ -59,13 +59,24 @@ export default function FloatingEdge({
 
     return -50
   }
+  // console.log(groupHovering)
   return (
     <>
+      {/* <rect
+        x={Math.min(sx, tx)}
+        y={Math.min(sy, ty)}
+        width={Math.abs(sx - tx)}
+        height={Math.abs(sy - ty)}
+        style={{ fill: "red" }}
+        className="pointer-events-auto"
+        onMouseEnter={() => setGroupHovering(true)}
+        onMouseLeave={() => setGroupHovering(false)}
+      /> */}
       <path
         id={id}
         className={cn(
-          "fill-none stroke-foreground stroke-1",
-          selected && "stroke-primary stroke-2",
+          "fill-none stroke-foreground stroke-2",
+          // selected && "stroke-blue-500",
         )}
         d={edgePath}
         markerEnd={markerEnd}
@@ -77,6 +88,7 @@ export default function FloatingEdge({
             transform={`translate(${getXTranslate(sx, sourceNode)}%, ${getYTanslate(sy, sourceNode)}%) translate(${sx}px,${sy}px)`}
             label={data.startLabel ?? ""}
             editable={!!data.editable}
+            // groupHovering={groupHovering}
             onChange={(label) => data.onStartLabelChange?.(id, label)}
           />
         )}
@@ -85,6 +97,7 @@ export default function FloatingEdge({
             transform={`translate(${getXTranslate(tx, targetNode)}%, ${getYTanslate(ty, targetNode)}%) translate(${tx}px,${ty}px)`}
             label={data.endLabel ?? ""}
             editable={!!data.editable}
+            // groupHovering={groupHovering}
             onChange={(label) => data.onEndLabelChange?.(id, label)}
           />
         )}
@@ -99,10 +112,12 @@ function EdgeLabel({
   label,
   editable,
   onChange,
+  // groupHovering,
 }: {
   transform: string
   label: string
   editable: boolean
+  // groupHovering: boolean
   onChange: (label: string) => void
 }) {
   const [hovering, setHovering] = useState(false)
@@ -122,9 +137,12 @@ function EdgeLabel({
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {editable && showInput ? (
+      {editable ? (
         <input
-          className="pointer-events-auto w-24 bg-transparent px-1 text-center outline-none ring-1 ring-muted-foreground ring-offset-1"
+          className={cn(
+            "pointer-events-auto w-24 bg-transparent px-1 text-center outline-none ring-muted-foreground ring-offset-1 focus:ring-1",
+            showInput && "opacity-100",
+          )}
           value={label}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}

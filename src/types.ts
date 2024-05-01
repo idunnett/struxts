@@ -1,7 +1,9 @@
 export interface NodeData {
   label: string
+  info: string
   editable: boolean
   onLabelChange?: (nodeId: string, label: string) => void
+  onInfoChange?: (nodeId: string, info: string) => void
 }
 
 export interface EdgeData {

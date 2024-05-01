@@ -12,6 +12,8 @@ import {
 import { cn } from "~/lib/utils"
 import { type NodeData } from "~/types"
 import LineWrappingInput from "react-line-wrapping-input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+import TipTapEditor from "./TipTapEditor"
 
 export default function BasicNode({
   id,
@@ -22,14 +24,23 @@ export default function BasicNode({
   const [popoverSide, setPopoverSide] = useState<
     "top" | "right" | "bottom" | "left"
   >("left")
+  const [popovoerSideOffset, setPopoverSideOffset] = useState(10)
+  const [popoverAlignOffset, setPopoverAlignOffset] = useState(-18)
 
   function handlePopoverOpen() {
     setTimeout(() => {
       const popoverContent = document.getElementById(`popover-${id}`)
       if (!popoverContent) return
       const side = popoverContent.getAttribute("data-side")
-      if (side === "right") setPopoverSide("bottom")
-      else setPopoverSide("left")
+      if (side === "right") {
+        setPopoverSide("bottom")
+        setPopoverSideOffset(22)
+        setPopoverAlignOffset(-10)
+      } else {
+        setPopoverSide("left")
+        setPopoverSideOffset(10)
+        setPopoverAlignOffset(-18)
+      }
     }, 10)
   }
 
@@ -43,14 +54,14 @@ export default function BasicNode({
     <div
       id={id}
       className={cn(
-        "relative w-[162px] border border-foreground/50 bg-card p-2",
+        "relative w-[162px] rounded-sm border border-foreground/50 bg-card p-2",
         data.label.length > 10 && "pl-3",
         data.label.length > 11 && "pl-4",
         data.label.length > 12 && "pl-5",
         data.label.length > 13 && "pl-6",
         data.label.length > 14 && "pl-7",
         data.label.length > 15 && "pl-8",
-        selected && "ring-1 ring-primary/50",
+        selected && "ring-2 ring-blue-500/50 ring-offset-1",
       )}
     >
       <LineWrappingInput
@@ -80,10 +91,23 @@ export default function BasicNode({
           id={`popover-${id}`}
           side={popoverSide}
           align="start"
-          alignOffset={-12}
-          sideOffset={10}
+          alignOffset={popoverAlignOffset}
+          sideOffset={popovoerSideOffset}
+          className="w-[500px]"
         >
-          Hello there
+          <Tabs defaultValue="account" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="account">Info</TabsTrigger>
+              <TabsTrigger value="password">Files</TabsTrigger>
+            </TabsList>
+            <TabsContent value="account">
+              <TipTapEditor
+                editable={data.editable}
+                info={data.info}
+                onInfoUpdate={(info) => data.onInfoChange?.(id, info)}
+              />
+            </TabsContent>
+          </Tabs>
         </PopoverContent>
       </Popover>
       <Handle

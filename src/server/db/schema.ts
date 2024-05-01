@@ -44,7 +44,7 @@ export const nodes = pgTable("nodes", {
   w: integer("w").notNull(),
   h: integer("h").notNull(),
   label: text("label"),
-  description: text("description"),
+  info: text("info"),
   // type: nodeTypeEnum("type").notNull(),
   // bgColor: text("bg_color").notNull().default("#ffffff"),
   // textColor: text("text_color").notNull().default("#000000"),

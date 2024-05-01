@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { and, eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -13,6 +13,7 @@ const updateNodeSchema = z.object({
     y: z.number(),
   }),
   label: z.string().nullish(),
+  info: z.string().nullish(),
 })
 export type UpdateNode = z.infer<typeof updateNodeSchema>
 const updateEdgeSchema = z.object({
@@ -104,9 +105,29 @@ export const structureRouter = createTRPCRouter({
         structureId: z.number(),
         nodes: z.array(updateNodeSchema),
         edges: z.array(updateEdgeSchema),
+        nodesToDelete: z.array(z.number()),
+        edgesToDelete: z.array(z.number()),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (input.edgesToDelete.length > 0)
+        await ctx.db
+          .delete(edges)
+          .where(
+            and(
+              inArray(edges.id, input.edgesToDelete),
+              eq(edges.structureId, input.structureId),
+            ),
+          )
+      if (input.nodesToDelete.length > 0)
+        await ctx.db
+          .delete(nodes)
+          .where(
+            and(
+              inArray(nodes.id, input.nodesToDelete),
+              eq(nodes.structureId, input.structureId),
+            ),
+          )
       for (const inputNode of input.nodes) {
         let inputNodeId: number | undefined = undefined
         if (inputNode.id && !inputNode.id.startsWith("reactflow__")) {
@@ -120,6 +141,7 @@ export const structureRouter = createTRPCRouter({
             x: inputNode.position.x,
             y: inputNode.position.y,
             label: inputNode.label,
+            info: inputNode.info,
             h: 100,
             w: 100,
             structureId: input.structureId,
@@ -130,6 +152,7 @@ export const structureRouter = createTRPCRouter({
               x: inputNode.position.x,
               y: inputNode.position.y,
               label: inputNode.label,
+              info: inputNode.info,
             },
           })
           .returning({ id: nodes.id })
@@ -171,6 +194,7 @@ export const structureRouter = createTRPCRouter({
             },
           })
       }
+
       revalidatePath(`/structures/${input.structureId}`)
     }),
 })

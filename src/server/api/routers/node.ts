@@ -16,6 +16,7 @@ export const nodeRouter = createTRPCRouter({
           },
           data: {
             label: nodes.label,
+            info: nodes.info,
           },
         })
         .from(nodes)

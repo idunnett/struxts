@@ -76,11 +76,17 @@ export default function Structure({
   const [isTransitionStarted, startTransition] = useTransition()
   const router = useRouter()
   const [editable, setEditable] = useState(true)
-  const [nodes, setNodes, onNodesChange] = useNodesState(
+  const [nodesToDelete, setNodesToDelete] = useState<number[]>([])
+  const [edgesToDelete, setEdgesToDelete] = useState<number[]>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialNodes.map((node) => ({
       ...node,
       id: node.id.toString(),
-      data: { label: node.data.label, editable: false },
+      data: {
+        label: node.data.label ?? "",
+        info: node.data.info ?? "",
+        editable: false,
+      },
       type: "basic",
     })),
   )
@@ -96,19 +102,13 @@ export default function Structure({
         editable: false,
       },
       markerEnd: {
-        type: MarkerType.Arrow,
-        strokeWidth: 1.5,
-        height: 24,
-        width: 24,
-        // color: "hsl(var(--muted-foreground))",
+        type: MarkerType.ArrowClosed,
+        strokeWidth: 1,
+        height: 16,
+        width: 16,
       },
     })),
   )
-
-  // console.log("initialNodes", initialNodes)
-  // console.log("nodes", nodes)
-  // console.log("initialEdges", initialEdges)
-  // console.log("edges", edges)
 
   const onConnect = useCallback(
     (params: Edge | Connection) =>
@@ -118,11 +118,11 @@ export default function Structure({
             ...params,
             type: "floating",
             markerEnd: {
-              type: MarkerType.Arrow,
-              strokeWidth: 1.5,
-              height: 24,
-              width: 24,
-              color: "hsl(var(--muted-foreground))",
+              type: MarkerType.ArrowClosed,
+              strokeWidth: 1,
+              height: 16,
+              width: 16,
+              color: "hsl(var(--foreground))",
             },
           },
           eds,
@@ -168,17 +168,56 @@ export default function Structure({
       ),
     [setEdges],
   )
-
-  // console.log("initialNodes", initialNodes)
-  // console.log("nodes", nodes)
+  const onInfoChange = useCallback(
+    (id: string, info: string) =>
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id ? { ...node, data: { ...node.data, info } } : node,
+        ),
+      ),
+    [setNodes],
+  )
+  const onNodesDelete = useCallback(
+    (nodes: Node[]) => {
+      for (const node of nodes) {
+        const initialNode = initialNodes.find(
+          (n) => n.id.toString() === node.id,
+        )
+        if (!initialNode) continue
+        if (nodesToDelete.includes(initialNode.id)) continue
+        setNodesToDelete((nodesToDelete) =>
+          nodesToDelete.concat(initialNode.id),
+        )
+      }
+    },
+    [initialNodes, nodesToDelete],
+  )
+  const onEdgesDelete = useCallback(
+    (edges: Edge[]) => {
+      for (const edge of edges) {
+        const initialEdge = initialEdges.find(
+          (e) => e.id.toString() === edge.id,
+        )
+        if (!initialEdge) continue
+        if (edgesToDelete.includes(initialEdge.id)) continue
+        setEdgesToDelete((edgesToDelete) =>
+          edgesToDelete.concat(initialEdge.id),
+        )
+      }
+    },
+    [initialEdges, edgesToDelete],
+  )
 
   const hasChanges = useMemo(() => {
+    if (nodesToDelete.length > 0) return true
+    if (edgesToDelete.length > 0) return true
     for (const node of nodes) {
       const initialNode = initialNodes.find((n) => n.id.toString() === node.id)
       if (!initialNode) return true
       if (node.data.label !== initialNode.data.label) return true
       if (node.position.x !== initialNode.position.x) return true
       if (node.position.y !== initialNode.position.y) return true
+      if (node.data.info !== (initialNode.data.info ?? "")) return true
     }
     for (const edge of edges) {
       const initialEdge = initialEdges.find((e) => e.id.toString() === edge.id)
@@ -190,7 +229,14 @@ export default function Structure({
       if (edge.data?.endLabel !== initialEdge.data.endLabel) return true
     }
     return false
-  }, [edges, initialEdges, initialNodes, nodes])
+  }, [
+    edges,
+    edgesToDelete.length,
+    initialEdges,
+    initialNodes,
+    nodes,
+    nodesToDelete.length,
+  ])
 
   function handleAddNode(e: MouseEvent<HTMLDivElement>) {
     const position = reactFlowInstance?.screenToFlowPosition({
@@ -200,7 +246,7 @@ export default function Structure({
     if (!position) return
     const newNode: Node<NodeData> = {
       id: `reactflow__${nanoid()}`,
-      data: { label: "", editable },
+      data: { label: "", info: "", editable },
       type: "basic",
       position,
     }
@@ -208,9 +254,7 @@ export default function Structure({
   }
 
   const updateStructure = api.structure.update.useMutation({
-    onSuccess: () => {
-      startTransition(() => router.refresh())
-    },
+    onSuccess: () => startTransition(() => router.refresh()),
   })
 
   const resetNodes = useCallback(() => {
@@ -218,10 +262,15 @@ export default function Structure({
       initialNodes.map((node) => ({
         ...node,
         id: node.id.toString(),
-        data: { label: node.data.label, editable: false },
+        data: {
+          label: node.data.label ?? "",
+          info: node.data.info ?? "",
+          editable: false,
+        },
         type: "basic",
       })),
     )
+    setNodesToDelete([])
   }, [initialNodes, setNodes])
   const resetEdges = useCallback(() => {
     setEdges(
@@ -237,13 +286,14 @@ export default function Structure({
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          strokeWidth: 1.5,
-          height: 24,
-          width: 24,
+          strokeWidth: 1,
+          height: 16,
+          width: 16,
           color: "hsl(var(--foreground))",
         },
       })),
     )
+    setEdgesToDelete([])
   }, [initialEdges, setEdges])
 
   useEffect(() => {
@@ -263,12 +313,14 @@ export default function Structure({
         !initialNode ||
         node.data.label !== initialNode.data.label ||
         node.position.x !== initialNode.position.x ||
-        node.position.y !== initialNode.position.y
+        node.position.y !== initialNode.position.y ||
+        node.data.info !== (initialNode.data.info ?? "")
       ) {
         nodesToUpdate.push({
           id: node.id,
           position: node.position,
           label: node.data.label,
+          info: node.data.info || null,
         })
       }
     }
@@ -291,13 +343,13 @@ export default function Structure({
         })
       }
     }
-    console.log("nodesToUpdate", nodesToUpdate)
-    console.log("edgesToUpdate", edgesToUpdate)
 
     updateStructure.mutate({
       structureId: structure.id,
       nodes: nodesToUpdate,
       edges: edgesToUpdate,
+      nodesToDelete,
+      edgesToDelete,
     })
   }
 
@@ -310,8 +362,10 @@ export default function Structure({
               ...node,
               data: {
                 label: node.data.label,
+                info: node.data.info,
                 editable: editable && !!reactFlowInstance,
                 onLabelChange,
+                onInfoChange,
               },
             }))}
             edges={edges.map((edge) => ({
@@ -344,15 +398,20 @@ export default function Structure({
             fitView
             edgesUpdatable={editable && !!reactFlowInstance}
             nodesDraggable={editable && !!reactFlowInstance}
-            // nodesFocusable={editable && !!reactFlowInstance}
             nodesConnectable={editable && !!reactFlowInstance}
             selectNodesOnDrag={editable && !!reactFlowInstance}
             edgesFocusable={editable && !!reactFlowInstance}
-            // elementsSelectable={editable && !!reactFlowInstance}
+            edgeUpdaterRadius={12.5}
             zoomOnDoubleClick={false}
             onInit={(instance) => {
               setReactFlowInstance(instance)
               setEditable(false)
+            }}
+            onNodesDelete={(nodes) => {
+              if (editable && reactFlowInstance) onNodesDelete(nodes)
+            }}
+            onEdgesDelete={(edges) => {
+              if (editable && reactFlowInstance) onEdgesDelete(edges)
             }}
           >
             {reactFlowInstance && (
@@ -363,7 +422,7 @@ export default function Structure({
                       nodes.map((node) => ({
                         ...node,
                         data: {
-                          label: node.data.label,
+                          ...node.data,
                           editable: !editable,
                           onLabelChange,
                         },
