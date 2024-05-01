@@ -3,7 +3,7 @@ import { SignIn } from "@clerk/nextjs"
 export default function SignInPage() {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <SignIn routing="hash" />
+      <SignIn routing="hash" fallbackRedirectUrl="/structures" />
     </div>
   )
 }
