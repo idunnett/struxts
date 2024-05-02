@@ -1,7 +1,7 @@
 "use client"
 
 import { Info, Trash, Circle, CircleSlash } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Handle, type NodeProps, Position } from "reactflow"
 import { Button } from "~/components/ui/button"
 import {
@@ -55,6 +55,10 @@ export default function BasicNode({
       setPopoverSide("left")
     }, 100)
   }
+
+  useEffect(() => {
+    if (dragging) setToolbarPopoverOpen(false)
+  }, [dragging])
 
   return (
     <Popover
@@ -209,7 +213,7 @@ export default function BasicNode({
                   <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
                 ) : (
                   <Circle
-                    strokeWidth={3}
+                    strokeWidth={5}
                     className="h-4 w-4 rounded-full border fill-muted stroke-current"
                   />
                 )}
@@ -230,6 +234,50 @@ export default function BasicNode({
                   onClick={() =>
                     data.onNodeDataChange?.(id, {
                       borderColor: colour.value,
+                    })
+                  }
+                >
+                  {colour.value === "transparent" ? (
+                    <CircleSlash className="stroke-muted-foreground" />
+                  ) : (
+                    <Circle className="fill-current stroke-current" />
+                  )}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                style={{
+                  color: data.bgColor,
+                }}
+              >
+                {data.bgColor === "transparent" ? (
+                  <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
+                ) : (
+                  <Circle className="h-4 w-4 rounded-full border fill-current stroke-current" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              sideOffset={12}
+              className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+            >
+              {colours.map((colour) => (
+                <button
+                  key={colour.value}
+                  className="rounded-full border transition-all hover:border-blue-500/50"
+                  style={{
+                    color: colour.value,
+                  }}
+                  onClick={() =>
+                    data.onNodeDataChange?.(id, {
+                      bgColor: colour.value,
                     })
                   }
                 >

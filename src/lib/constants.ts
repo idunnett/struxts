@@ -8,16 +8,20 @@ export const colours = [
     value: "#ffffff",
   },
   {
-    label: "Black",
-    value: "#000000",
+    label: "Light Gray",
+    value: "#d4d4d4",
+  },
+  {
+    label: "Gray",
+    value: "#a3a3a3",
   },
   {
     label: "Slate",
     value: "#64748b",
   },
   {
-    label: "Gray",
-    value: "#6b7280",
+    label: "Black",
+    value: "#000000",
   },
   {
     label: "Red",
@@ -28,8 +32,16 @@ export const colours = [
     value: "#f97316",
   },
   {
+    label: "Light Yellow",
+    value: "#fef08a",
+  },
+  {
     label: "Yellow",
     value: "#facc15",
+  },
+  {
+    label: "Light Lime",
+    value: "#bef264",
   },
   {
     label: "Lime",
@@ -48,8 +60,12 @@ export const colours = [
     value: "#14b8a6",
   },
   {
+    label: "Lighter Blue",
+    value: "#bfdbfe",
+  },
+  {
     label: "Light Blue",
-    value: "#0ea5e9",
+    value: "#38bdf8",
   },
   {
     label: "Blue",

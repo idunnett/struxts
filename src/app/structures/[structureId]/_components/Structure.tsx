@@ -328,6 +328,7 @@ export default function Structure({
           label: node.data.label,
           info: node.data.info || null,
           borderColor: node.data.borderColor || null,
+          bgColor: node.data.bgColor || null,
         })
       }
     }
@@ -464,15 +465,29 @@ export default function Structure({
             )}
             <Panel position="top-right">
               {editable && reactFlowInstance && hasChanges && (
-                <Button
-                  disabled={updateStructure.isPending || isTransitionStarted}
-                  onClick={handleSaveChanges}
-                >
-                  {(updateStructure.isPending || isTransitionStarted) && (
-                    <Spinner className="mr-2" />
-                  )}
-                  Save Changes
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={updateStructure.isPending || isTransitionStarted}
+                    onClick={() => {
+                      resetEdges()
+                      resetNodes()
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={updateStructure.isPending || isTransitionStarted}
+                    onClick={handleSaveChanges}
+                  >
+                    {(updateStructure.isPending || isTransitionStarted) && (
+                      <Spinner className="mr-2" />
+                    )}
+                    Save Changes
+                  </Button>
+                </div>
               )}
               {!editable && reactFlowInstance && (
                 <DownloadButton structureName={structure.name} />
