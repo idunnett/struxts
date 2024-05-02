@@ -22,6 +22,7 @@ const updateEdgeSchema = z.object({
   target: z.string().or(z.number()),
   startLabel: z.string().nullish(),
   endLabel: z.string().nullish(),
+  label: z.string().nullish(),
 })
 export type UpdateEdge = z.infer<typeof updateEdgeSchema>
 
@@ -181,6 +182,7 @@ export const structureRouter = createTRPCRouter({
             source: edgeSource,
             target: edgeTarget,
             startLabel: inputEdge.startLabel,
+            label: inputEdge.label,
             endLabel: inputEdge.endLabel,
             structureId: input.structureId,
           })
@@ -190,6 +192,7 @@ export const structureRouter = createTRPCRouter({
               source: edgeSource,
               target: edgeTarget,
               startLabel: inputEdge.startLabel,
+              label: inputEdge.label,
               endLabel: inputEdge.endLabel,
             },
           })

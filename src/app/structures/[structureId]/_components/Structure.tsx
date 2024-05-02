@@ -110,7 +110,6 @@ export default function Structure({
       },
     })),
   )
-
   const onConnect = useCallback(
     (params: Edge | Connection) =>
       setEdges((eds) =>
@@ -131,7 +130,6 @@ export default function Structure({
       ),
     [setEdges],
   )
-
   const onLabelChange = useCallback(
     (id: string, label: string) =>
       setNodes((nodes) =>
@@ -163,6 +161,20 @@ export default function Structure({
             ? {
                 ...edge,
                 data: { ...edge.data, endLabel: label },
+              }
+            : edge,
+        ),
+      ),
+    [setEdges],
+  )
+  const onMiddleLabelChange = useCallback(
+    (id: string, label: string) =>
+      setEdges((edges) =>
+        edges.map((edge) =>
+          edge.id === id
+            ? {
+                ...edge,
+                data: { ...edge.data, label: label },
               }
             : edge,
         ),
@@ -335,7 +347,8 @@ export default function Structure({
         edge.target !== initialEdge.target.toString() ||
         edge.data?.startLabel !== initialEdge.data?.startLabel ||
         edge.data?.label !== initialEdge.data?.label ||
-        edge.data?.endLabel !== initialEdge.data?.endLabel
+        edge.data?.endLabel !== initialEdge.data?.endLabel ||
+        edge.data?.label !== initialEdge.data?.label
       ) {
         edgesToUpdate.push({
           id: edge.id,
@@ -343,6 +356,7 @@ export default function Structure({
           target: edge.target,
           startLabel: edge.data?.startLabel,
           endLabel: edge.data?.endLabel,
+          label: edge.data?.label,
         })
       }
     }
@@ -378,6 +392,7 @@ export default function Structure({
                 editable: editable && !!reactFlowInstance,
                 onStartLabelChange: onEdgeStartLabelChange,
                 onEndLabelChange: onEdgeEndLabelChange,
+                onMiddleLabelChange: onMiddleLabelChange,
                 onDelete: (id: string) => {
                   onEdgesChange([{ id, type: "remove" }])
                   onEdgesDelete([{ id } as Edge])

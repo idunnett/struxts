@@ -13,5 +13,6 @@ export interface EdgeData {
   editable?: boolean
   onStartLabelChange?: (edgeId: string, label: string | null) => void
   onEndLabelChange?: (edgeId: string, label: string | null) => void
+  onMiddleLabelChange?: (edgeId: string, label: string | null) => void
   onDelete?: (edgeId: string) => void
 }

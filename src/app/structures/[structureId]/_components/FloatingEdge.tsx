@@ -41,7 +41,7 @@ export default function FloatingEdge({
     // sourcePos, targetPos
   } = getEdgeParams(sourceNode, targetNode)
 
-  const [edgePath] = getStraightPath({
+  const [edgePath, labelX, labelY] = getStraightPath({
     sourceX: sx,
     sourceY: sy,
     // sourcePosition: sourcePos,
@@ -75,6 +75,12 @@ export default function FloatingEdge({
     data?.onEndLabelChange?.(id, "")
     setTimeout(() => document.getElementById(`${id}-end-label-input`)?.focus())
   }
+  function handelAddCenterLabel() {
+    data?.onMiddleLabelChange?.(id, "")
+    setTimeout(() =>
+      document.getElementById(`${id}-middle-label-input`)?.focus(),
+    )
+  }
 
   return (
     <>
@@ -104,6 +110,15 @@ export default function FloatingEdge({
               + Start Label
             </Button>
             <Button
+              disabled={data?.label != null}
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={handelAddCenterLabel}
+            >
+              + Center Label
+            </Button>
+            <Button
               disabled={data?.endLabel != null}
               size="sm"
               variant="outline"
@@ -131,8 +146,17 @@ export default function FloatingEdge({
             transform={`translate(${getXTranslate(sx, sourceNode)}%, ${getYTanslate(sy, sourceNode)}%) translate(${sx}px,${sy}px)`}
             label={data.startLabel ?? ""}
             editable={!!data.editable}
-            // groupHovering={groupHovering}
             onChange={(label) => data.onStartLabelChange?.(id, label)}
+          />
+        )}
+        {data?.label != null && (
+          <EdgeLabel
+            id={id}
+            labelType="middle"
+            transform={`translate(-50%, -50%) translate(${labelX}px,${labelY}px)`}
+            label={data.label ?? ""}
+            editable={!!data.editable}
+            onChange={(label) => data.onMiddleLabelChange?.(id, label)}
           />
         )}
         {data?.endLabel != null && (
@@ -142,7 +166,6 @@ export default function FloatingEdge({
             transform={`translate(${getXTranslate(tx, targetNode)}%, ${getYTanslate(ty, targetNode)}%) translate(${tx}px,${ty}px)`}
             label={data.endLabel ?? ""}
             editable={!!data.editable}
-            // groupHovering={groupHovering}
             onChange={(label) => data.onEndLabelChange?.(id, label)}
           />
         )}
@@ -162,8 +185,8 @@ function EdgeLabel({
   // groupHovering,
 }: {
   id: string
-  labelType: "start" | "end"
-  transform: string
+  labelType: "start" | "end" | "middle"
+  transform?: string
   label: string
   editable: boolean
   // groupHovering: boolean
