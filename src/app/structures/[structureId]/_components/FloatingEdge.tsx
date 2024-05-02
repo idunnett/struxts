@@ -24,6 +24,7 @@ export default function FloatingEdge({
   markerEnd,
   selected,
   style,
+  interactionWidth,
 }: EdgeProps<EdgeData>) {
   const sourceNode = useStore(
     useCallback((store) => store.nodeInternals.get(source), [source]),
@@ -84,18 +85,25 @@ export default function FloatingEdge({
 
   return (
     <>
+      <path
+        id={id}
+        fill="none"
+        className={cn(
+          "stroke-foreground stroke-2",
+          selected && "outline-dashed outline-blue-500/50",
+        )}
+        d={edgePath}
+        markerEnd={markerEnd}
+        style={style}
+      />
       <Popover open={selected && data?.editable}>
         <PopoverTrigger asChild>
           <path
-            id={id}
-            fill="none"
-            className={cn(
-              "stroke-foreground stroke-2",
-              selected && "outline-dashed",
-            )}
             d={edgePath}
-            markerEnd={markerEnd}
-            style={style}
+            fill="none"
+            strokeOpacity={0}
+            strokeWidth={interactionWidth ?? 20}
+            className="react-flow__edge-interaction"
           />
         </PopoverTrigger>
         <PopoverContent className="w-fit p-2" side="top" sideOffset={12}>

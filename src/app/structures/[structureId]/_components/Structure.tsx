@@ -26,11 +26,11 @@ import ReactFlow, {
   ControlButton,
   Panel,
   type ReactFlowInstance,
+  type DefaultEdgeOptions,
 } from "reactflow"
 
 import "reactflow/dist/style.css"
 import BasicNode from "./BasicNode"
-import BasicEdge from "./BasicEdge"
 import FloatingEdge from "./FloatingEdge"
 import FloatingConnectionLine from "./FloatingConnectionLine"
 import { type EdgeData, type NodeData } from "~/types"
@@ -63,8 +63,11 @@ interface Props {
 }
 
 const nodeTypes = { basic: BasicNode }
-const edgeTypes = { basic: BasicEdge, floating: FloatingEdge }
-const defaultEdgeOptions = { type: "floating" }
+const edgeTypes = { floating: FloatingEdge }
+const defaultEdgeOptions: DefaultEdgeOptions = {
+  type: "floating",
+  interactionWidth: 20,
+}
 
 export default function Structure({
   structure,
@@ -383,6 +386,8 @@ export default function Structure({
                 editable: editable && !!reactFlowInstance,
                 onLabelChange,
                 onInfoChange,
+                onDelete: (id: string) =>
+                  reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
               },
             }))}
             edges={edges.map((edge) => ({
@@ -393,10 +398,8 @@ export default function Structure({
                 onStartLabelChange: onEdgeStartLabelChange,
                 onEndLabelChange: onEdgeEndLabelChange,
                 onMiddleLabelChange: onMiddleLabelChange,
-                onDelete: (id: string) => {
-                  onEdgesChange([{ id, type: "remove" }])
-                  onEdgesDelete([{ id } as Edge])
-                },
+                onDelete: (id: string) =>
+                  reactFlowInstance?.deleteElements({ edges: [{ id }] }),
               },
             }))}
             onNodesChange={(nodeChanges) => {
