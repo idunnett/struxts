@@ -51,6 +51,7 @@ import { api } from "~/trpc/react"
 import { type api as serverApi } from "~/trpc/server"
 import Spinner from "~/components/Spinner"
 import { useRouter } from "next/navigation"
+import DownloadButton from "./DownloadButton"
 
 interface Props {
   structure: {
@@ -239,18 +240,20 @@ export default function Structure({
   ])
 
   function handleAddNode(e: MouseEvent<HTMLDivElement>) {
-    const position = reactFlowInstance?.screenToFlowPosition({
-      x: e.clientX - 140,
-      y: e.clientY - 30,
-    })
-    if (!position) return
-    const newNode: Node<NodeData> = {
-      id: `reactflow__${nanoid()}`,
-      data: { label: "", info: "", editable },
-      type: "basic",
-      position,
-    }
-    setNodes((nds) => nds.concat(newNode))
+    onNodesChange([
+      {
+        type: "add",
+        item: {
+          id: `reactflow__${nanoid()}`,
+          data: { label: "", info: "", editable },
+          type: "basic",
+          position: reactFlowInstance?.screenToFlowPosition({
+            x: e.clientX - 140,
+            y: e.clientY - 30,
+          }) ?? { x: 0, y: 0 },
+        },
+      },
+    ])
   }
 
   const updateStructure = api.structure.update.useMutation({
@@ -375,6 +378,10 @@ export default function Structure({
                 editable: editable && !!reactFlowInstance,
                 onStartLabelChange: onEdgeStartLabelChange,
                 onEndLabelChange: onEdgeEndLabelChange,
+                onDelete: (id: string) => {
+                  onEdgesChange([{ id, type: "remove" }])
+                  onEdgesDelete([{ id } as Edge])
+                },
               },
             }))}
             onNodesChange={(nodeChanges) => {
@@ -443,8 +450,8 @@ export default function Structure({
                 size={1}
               />
             )}
-            {editable && reactFlowInstance && hasChanges && (
-              <Panel position="top-right">
+            <Panel position="top-right">
+              {editable && reactFlowInstance && hasChanges && (
                 <Button
                   disabled={updateStructure.isPending || isTransitionStarted}
                   onClick={handleSaveChanges}
@@ -454,8 +461,11 @@ export default function Structure({
                   )}
                   Save Changes
                 </Button>
-              </Panel>
-            )}
+              )}
+              {!editable && reactFlowInstance && (
+                <DownloadButton structureName={structure.name} />
+              )}
+            </Panel>
           </ReactFlow>
         </div>
         {editable && reactFlowInstance && (

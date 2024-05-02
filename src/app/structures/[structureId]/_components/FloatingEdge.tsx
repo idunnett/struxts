@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback } from "react"
 import {
   useStore,
   type EdgeProps,
@@ -9,6 +9,12 @@ import {
 import { getEdgeParams } from "./edgeUtils"
 import { type EdgeData } from "~/types"
 import { cn } from "~/lib/utils"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover"
+import { Button } from "~/components/ui/button"
 
 export default function FloatingEdge({
   id,
@@ -16,6 +22,7 @@ export default function FloatingEdge({
   target,
   data,
   markerEnd,
+  selected,
   style,
 }: EdgeProps<EdgeData>) {
   const sourceNode = useStore(
@@ -24,8 +31,6 @@ export default function FloatingEdge({
   const targetNode = useStore(
     useCallback((store) => store.nodeInternals.get(target), [target]),
   )
-  // const [groupHovering, setGroupHovering] = useState(false)
-
   if (!sourceNode || !targetNode) return null
 
   const {
@@ -59,32 +64,70 @@ export default function FloatingEdge({
 
     return -50
   }
-  // console.log(groupHovering)
+
+  function handleAddStartLabel() {
+    data?.onStartLabelChange?.(id, "")
+    setTimeout(() =>
+      document.getElementById(`${id}-start-label-input`)?.focus(),
+    )
+  }
+  function handleAddEndLabel() {
+    data?.onEndLabelChange?.(id, "")
+    setTimeout(() => document.getElementById(`${id}-end-label-input`)?.focus())
+  }
+
   return (
     <>
-      {/* <rect
-        x={Math.min(sx, tx)}
-        y={Math.min(sy, ty)}
-        width={Math.abs(sx - tx)}
-        height={Math.abs(sy - ty)}
-        style={{ fill: "red" }}
-        className="pointer-events-auto"
-        onMouseEnter={() => setGroupHovering(true)}
-        onMouseLeave={() => setGroupHovering(false)}
-      /> */}
-      <path
-        id={id}
-        className={cn(
-          "fill-none stroke-foreground stroke-2",
-          // selected && "stroke-blue-500",
-        )}
-        d={edgePath}
-        markerEnd={markerEnd}
-        style={style}
-      />
+      <Popover open={selected && data?.editable}>
+        <PopoverTrigger asChild>
+          <path
+            id={id}
+            fill="none"
+            className={cn(
+              "stroke-foreground stroke-2",
+              selected && "outline-dashed",
+            )}
+            d={edgePath}
+            markerEnd={markerEnd}
+            style={style}
+          />
+        </PopoverTrigger>
+        <PopoverContent className="w-fit p-2" side="top" sideOffset={12}>
+          <div className="flex gap-2">
+            <Button
+              disabled={data?.startLabel != null}
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={handleAddStartLabel}
+            >
+              + Start Label
+            </Button>
+            <Button
+              disabled={data?.endLabel != null}
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={handleAddEndLabel}
+            >
+              + End Label
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={() => data?.onDelete?.(id)}
+            >
+              Delete
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
       <EdgeLabelRenderer>
-        {(!!data?.startLabel || data?.editable) && (
+        {data?.startLabel != null && (
           <EdgeLabel
+            id={id}
+            labelType="start"
             transform={`translate(${getXTranslate(sx, sourceNode)}%, ${getYTanslate(sy, sourceNode)}%) translate(${sx}px,${sy}px)`}
             label={data.startLabel ?? ""}
             editable={!!data.editable}
@@ -92,8 +135,10 @@ export default function FloatingEdge({
             onChange={(label) => data.onStartLabelChange?.(id, label)}
           />
         )}
-        {(!!data?.endLabel || !!data?.editable) && (
+        {data?.endLabel != null && (
           <EdgeLabel
+            id={id}
+            labelType="end"
             transform={`translate(${getXTranslate(tx, targetNode)}%, ${getYTanslate(ty, targetNode)}%) translate(${tx}px,${ty}px)`}
             label={data.endLabel ?? ""}
             editable={!!data.editable}
@@ -108,45 +153,38 @@ export default function FloatingEdge({
 
 // this is a little helper component to render the actual edge label
 function EdgeLabel({
+  id,
+  labelType,
   transform,
   label,
   editable,
   onChange,
   // groupHovering,
 }: {
+  id: string
+  labelType: "start" | "end"
   transform: string
   label: string
   editable: boolean
   // groupHovering: boolean
-  onChange: (label: string) => void
+  onChange: (label: string | null) => void
 }) {
-  const [hovering, setHovering] = useState(false)
-  const [focused, setFocused] = useState(false)
-
-  const showInput = useMemo(() => hovering || focused, [hovering, focused])
-
   return (
     <div
       style={{
         transform,
       }}
-      className={cn(
-        "pointer-events-auto absolute border-[10px] border-transparent bg-background bg-clip-padding px-1 py-0.5 text-xs",
-        !showInput && !label.length && "opacity-0",
-      )}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
+      className="pointer-events-auto absolute border-[10px] border-transparent bg-background bg-clip-padding px-1 py-0.5 text-xs"
     >
       {editable ? (
         <input
-          className={cn(
-            "pointer-events-auto w-24 bg-transparent px-1 text-center outline-none ring-muted-foreground ring-offset-1 focus:ring-1",
-            showInput && "opacity-100",
-          )}
+          id={`${id}-${labelType}-label-input`}
+          className="pointer-events-auto w-24 bg-transparent px-1 text-center outline-none ring-muted-foreground ring-offset-1 focus:ring-1"
           value={label}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onBlur={() => {
+            if (!label) onChange(null)
+          }}
         />
       ) : (
         <span className="truncate">{label}</span>
