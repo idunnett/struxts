@@ -15,6 +15,8 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover"
 import { Button } from "~/components/ui/button"
+import { Circle, Trash } from "lucide-react"
+import { colours } from "~/lib/constants"
 
 export default function FloatingEdge({
   id,
@@ -67,17 +69,17 @@ export default function FloatingEdge({
   }
 
   function handleAddStartLabel() {
-    data?.onStartLabelChange?.(id, "")
+    data?.onEdgeDataChange?.(id, { startLabel: "" })
     setTimeout(() =>
       document.getElementById(`${id}-start-label-input`)?.focus(),
     )
   }
   function handleAddEndLabel() {
-    data?.onEndLabelChange?.(id, "")
+    data?.onEdgeDataChange?.(id, { endLabel: "" })
     setTimeout(() => document.getElementById(`${id}-end-label-input`)?.focus())
   }
   function handelAddCenterLabel() {
-    data?.onMiddleLabelChange?.(id, "")
+    data?.onEdgeDataChange?.(id, { label: "" })
     setTimeout(() =>
       document.getElementById(`${id}-middle-label-input`)?.focus(),
     )
@@ -86,15 +88,19 @@ export default function FloatingEdge({
   return (
     <>
       <path
+        key={markerEnd}
         id={id}
         fill="none"
         className={cn(
-          "stroke-foreground stroke-2",
+          "stroke-current stroke-2 marker:fill-current",
           selected && "outline-dashed outline-blue-500/50",
         )}
         d={edgePath}
         markerEnd={markerEnd}
-        style={style}
+        style={{
+          ...style,
+          color: data?.color,
+        }}
       />
       <Popover open={selected && data?.editable}>
         <PopoverTrigger asChild>
@@ -135,13 +141,54 @@ export default function FloatingEdge({
             >
               + End Label
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  style={{
+                    color: data?.color ?? "#000000",
+                  }}
+                >
+                  <Circle
+                    strokeWidth={3}
+                    className="h-4 w-4 rounded-full border fill-current stroke-current"
+                  />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                sideOffset={12}
+                className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+              >
+                {colours
+                  .filter((c) => c.value !== "transparent")
+                  .map((colour) => (
+                    <button
+                      key={colour.value}
+                      className="rounded-full border transition-all hover:border-blue-500/50"
+                      style={{
+                        color: colour.value,
+                      }}
+                      onClick={() =>
+                        data?.onEdgeDataChange?.(id, {
+                          color: colour.value,
+                        })
+                      }
+                    >
+                      <Circle className="fill-current stroke-current" />
+                    </button>
+                  ))}
+              </PopoverContent>
+            </Popover>
             <Button
               size="sm"
               variant="outline"
               className="text-xs"
               onClick={() => data?.onDelete?.(id)}
             >
-              Delete
+              <Trash className="h-4 w-4 text-red-500" />
             </Button>
           </div>
         </PopoverContent>
@@ -154,7 +201,9 @@ export default function FloatingEdge({
             transform={`translate(${getXTranslate(sx, sourceNode)}%, ${getYTanslate(sy, sourceNode)}%) translate(${sx}px,${sy}px)`}
             label={data.startLabel ?? ""}
             editable={!!data.editable}
-            onChange={(label) => data.onStartLabelChange?.(id, label)}
+            onChange={(startLabel) =>
+              data.onEdgeDataChange?.(id, { startLabel })
+            }
           />
         )}
         {data?.label != null && (
@@ -164,7 +213,7 @@ export default function FloatingEdge({
             transform={`translate(-50%, -50%) translate(${labelX}px,${labelY}px)`}
             label={data.label ?? ""}
             editable={!!data.editable}
-            onChange={(label) => data.onMiddleLabelChange?.(id, label)}
+            onChange={(label) => data.onEdgeDataChange?.(id, { label })}
           />
         )}
         {data?.endLabel != null && (
@@ -174,7 +223,7 @@ export default function FloatingEdge({
             transform={`translate(${getXTranslate(tx, targetNode)}%, ${getYTanslate(ty, targetNode)}%) translate(${tx}px,${ty}px)`}
             label={data.endLabel ?? ""}
             editable={!!data.editable}
-            onChange={(label) => data.onEndLabelChange?.(id, label)}
+            onChange={(endLabel) => data.onEdgeDataChange?.(id, { endLabel })}
           />
         )}
       </EdgeLabelRenderer>

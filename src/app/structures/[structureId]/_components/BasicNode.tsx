@@ -1,6 +1,6 @@
 "use client"
 
-import { Info, Trash } from "lucide-react"
+import { Info, Trash, Circle, CircleSlash } from "lucide-react"
 import { useState } from "react"
 import { Handle, type NodeProps, Position } from "reactflow"
 import { Button } from "~/components/ui/button"
@@ -14,6 +14,7 @@ import { type NodeData } from "~/types"
 import LineWrappingInput from "react-line-wrapping-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
 import TipTapEditor from "./TipTapEditor"
+import { colours } from "~/lib/constants"
 
 export default function BasicNode({
   id,
@@ -21,7 +22,9 @@ export default function BasicNode({
   selected,
   dragging,
 }: NodeProps<NodeData>) {
+  const [toolbarPopoverOpen, setToolbarPopoverOpen] = useState(false)
   const [infoPopoverOpen, setInfoPopoverOpen] = useState(false)
+  const [focused, setFocused] = useState(false)
   const [popoverSide, setPopoverSide] = useState<
     "top" | "right" | "bottom" | "left"
   >("left")
@@ -43,7 +46,7 @@ export default function BasicNode({
         setPopoverSideOffset(10)
         setPopoverAlignOffset(-18)
       }
-    }, 10)
+    })
   }
 
   function handlePopoverClose() {
@@ -54,12 +57,23 @@ export default function BasicNode({
   }
 
   return (
-    <Popover open={selected && data.editable && !dragging && !infoPopoverOpen}>
+    <Popover
+      open={
+        selected &&
+        data.editable &&
+        !dragging &&
+        !infoPopoverOpen &&
+        toolbarPopoverOpen
+      }
+      onOpenChange={(open) =>
+        !open && !focused && !selected && setToolbarPopoverOpen(false)
+      }
+    >
       <PopoverTrigger asChild>
         <div
           id={id}
           className={cn(
-            "relative w-[162px] cursor-pointer rounded-sm border border-foreground/50 bg-card p-2",
+            "relative w-[162px] cursor-pointer rounded-sm border p-2",
             data.label.length > 10 && "pl-3",
             data.label.length > 11 && "pl-4",
             data.label.length > 12 && "pl-5",
@@ -69,21 +83,40 @@ export default function BasicNode({
             selected && "ring-2 ring-blue-500/50 ring-offset-1",
             dragging && "cursor-grabbing",
           )}
+          style={{
+            borderColor: data.borderColor,
+            backgroundColor: data.bgColor,
+          }}
+          onClick={() => setToolbarPopoverOpen(true)}
+          onDoubleClick={() => {
+            if (focused) return
+            setFocused(true)
+            setTimeout(() => {
+              const input = document.getElementById(
+                `line-wrapping-input-${id}`,
+              ) as HTMLTextAreaElement
+              if (!input) return
+              input.select()
+            })
+          }}
         >
           <LineWrappingInput
+            id={`line-wrapping-input-${id}`}
             value={data.label}
-            onChange={(e) => data.onLabelChange?.(id, e.target.value)}
+            onChange={(e) =>
+              data.onNodeDataChange?.(id, { label: e.target.value })
+            }
             className={cn(
-              "w-full break-words bg-transparent text-center text-sm outline-none",
+              "nodrag w-full break-words bg-transparent text-center text-sm outline-none",
               dragging && "cursor-grabbing",
             )}
-            readOnly={!data.editable}
+            readOnly={!data.editable || !focused}
+            onBlur={() => setFocused(false)}
           />
           <Popover
             open={infoPopoverOpen}
             onOpenChange={(open) => {
-              if (open) handlePopoverOpen()
-              else handlePopoverClose()
+              if (!open) handlePopoverClose()
             }}
           >
             <PopoverTrigger
@@ -94,9 +127,11 @@ export default function BasicNode({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
+                  if (!infoPopoverOpen) handlePopoverOpen()
+                  setToolbarPopoverOpen(false)
                   setInfoPopoverOpen(true)
                 }}
               >
@@ -110,6 +145,10 @@ export default function BasicNode({
               alignOffset={popoverAlignOffset}
               sideOffset={popovoerSideOffset}
               className="w-[500px]"
+              onDoubleClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
             >
               <Tabs defaultValue="account" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
@@ -120,7 +159,9 @@ export default function BasicNode({
                   <TipTapEditor
                     editable={data.editable}
                     info={data.info}
-                    onInfoUpdate={(info) => data.onInfoChange?.(id, info)}
+                    onInfoUpdate={(info) =>
+                      data.onNodeDataChange?.(id, { info })
+                    }
                   />
                 </TabsContent>
               </Tabs>
@@ -154,6 +195,53 @@ export default function BasicNode({
       </PopoverTrigger>
       <PopoverContent side="top" sideOffset={12} className="w-fit p-2">
         <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                style={{
+                  color: data.borderColor,
+                }}
+              >
+                {data.borderColor === "transparent" ? (
+                  <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
+                ) : (
+                  <Circle
+                    strokeWidth={3}
+                    className="h-4 w-4 rounded-full border fill-muted stroke-current"
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              sideOffset={12}
+              className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+            >
+              {colours.map((colour) => (
+                <button
+                  key={colour.value}
+                  className="rounded-full border transition-all hover:border-blue-500/50"
+                  style={{
+                    color: colour.value,
+                  }}
+                  onClick={() =>
+                    data.onNodeDataChange?.(id, {
+                      borderColor: colour.value,
+                    })
+                  }
+                >
+                  {colour.value === "transparent" ? (
+                    <CircleSlash className="stroke-muted-foreground" />
+                  ) : (
+                    <Circle className="fill-current stroke-current" />
+                  )}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
           <Button
             size="sm"
             variant="outline"

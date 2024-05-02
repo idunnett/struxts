@@ -45,8 +45,9 @@ export const nodes = pgTable("nodes", {
   h: integer("h").notNull(),
   label: text("label"),
   info: text("info"),
+  borderColor: text("border_color").notNull().default("#000000"),
+  bgColor: text("bg_color").notNull().default("#ffffff"),
   // type: nodeTypeEnum("type").notNull(),
-  // bgColor: text("bg_color").notNull().default("#ffffff"),
   // textColor: text("text_color").notNull().default("#000000"),
   structureId: serial("structureId")
     .notNull()
@@ -64,6 +65,7 @@ export const edges = pgTable("edges", {
   startLabel: text("startLabel"),
   label: text("label"),
   endLabel: text("endLabel"),
+  color: text("color").notNull().default("#000000"),
   structureId: serial("structureId")
     .notNull()
     .references(() => structures.id),

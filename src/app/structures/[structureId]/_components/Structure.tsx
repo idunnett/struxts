@@ -89,6 +89,8 @@ export default function Structure({
       data: {
         label: node.data.label ?? "",
         info: node.data.info ?? "",
+        borderColor: node.data.borderColor,
+        bgColor: node.data.bgColor,
         editable: false,
       },
       type: "basic",
@@ -110,6 +112,7 @@ export default function Structure({
         strokeWidth: 1,
         height: 16,
         width: 16,
+        color: edge.data.color ?? "#000000",
       },
     })),
   )
@@ -125,7 +128,7 @@ export default function Structure({
               strokeWidth: 1,
               height: 16,
               width: 16,
-              color: "hsl(var(--foreground))",
+              color: "#000000",
             },
           },
           eds,
@@ -133,62 +136,34 @@ export default function Structure({
       ),
     [setEdges],
   )
-  const onLabelChange = useCallback(
-    (id: string, label: string) =>
+  const onEdgeDataChange = useCallback(
+    (id: string, newData: Partial<EdgeData>) =>
+      setEdges((edges) =>
+        edges.map((edge) =>
+          edge.id === id
+            ? {
+                ...edge,
+                data: { ...edge.data!, ...newData },
+                markerEnd: {
+                  type: MarkerType.ArrowClosed,
+                  strokeWidth: 1,
+                  height: 16,
+                  width: 16,
+                  color: edge.data?.color ?? "#000000",
+                },
+              }
+            : edge,
+        ),
+      ),
+    [setEdges],
+  )
+  const onNodeDataChange = useCallback(
+    (id: string, newData: Partial<NodeData>) =>
       setNodes((nodes) =>
         nodes.map((node) =>
-          node.id === id ? { ...node, data: { ...node.data, label } } : node,
-        ),
-      ),
-    [setNodes],
-  )
-  const onEdgeStartLabelChange = useCallback(
-    (id: string, label: string) =>
-      setEdges((edges) =>
-        edges.map((edge) =>
-          edge.id === id
-            ? {
-                ...edge,
-                data: { ...edge.data, startLabel: label },
-              }
-            : edge,
-        ),
-      ),
-    [setEdges],
-  )
-  const onEdgeEndLabelChange = useCallback(
-    (id: string, label: string) =>
-      setEdges((edges) =>
-        edges.map((edge) =>
-          edge.id === id
-            ? {
-                ...edge,
-                data: { ...edge.data, endLabel: label },
-              }
-            : edge,
-        ),
-      ),
-    [setEdges],
-  )
-  const onMiddleLabelChange = useCallback(
-    (id: string, label: string) =>
-      setEdges((edges) =>
-        edges.map((edge) =>
-          edge.id === id
-            ? {
-                ...edge,
-                data: { ...edge.data, label: label },
-              }
-            : edge,
-        ),
-      ),
-    [setEdges],
-  )
-  const onInfoChange = useCallback(
-    (id: string, info: string) =>
-      setNodes((nodes) =>
-        nodes.map((node) =>
-          node.id === id ? { ...node, data: { ...node.data, info } } : node,
+          node.id === id
+            ? { ...node, data: { ...node.data, ...newData } }
+            : node,
         ),
       ),
     [setNodes],
@@ -234,6 +209,8 @@ export default function Structure({
       if (node.position.x !== initialNode.position.x) return true
       if (node.position.y !== initialNode.position.y) return true
       if (node.data.info !== (initialNode.data.info ?? "")) return true
+      if (node.data.borderColor !== initialNode.data.borderColor) return true
+      if (node.data.bgColor !== initialNode.data.bgColor) return true
     }
     for (const edge of edges) {
       const initialEdge = initialEdges.find((e) => e.id.toString() === edge.id)
@@ -243,6 +220,7 @@ export default function Structure({
       if (edge.data?.startLabel !== initialEdge.data.startLabel) return true
       if (edge.data?.label !== initialEdge.data.label) return true
       if (edge.data?.endLabel !== initialEdge.data.endLabel) return true
+      if (edge.data?.color !== initialEdge.data.color) return true
     }
     return false
   }, [
@@ -260,7 +238,13 @@ export default function Structure({
         type: "add",
         item: {
           id: `reactflow__${nanoid()}`,
-          data: { label: "", info: "", editable },
+          data: {
+            label: "",
+            info: "",
+            bgColor: "#ffffff",
+            borderColor: "#000000",
+            editable,
+          },
           type: "basic",
           position: reactFlowInstance?.screenToFlowPosition({
             x: e.clientX - 140,
@@ -283,6 +267,8 @@ export default function Structure({
         data: {
           label: node.data.label ?? "",
           info: node.data.info ?? "",
+          borderColor: node.data.borderColor,
+          bgColor: node.data.bgColor,
           editable: false,
         },
         type: "basic",
@@ -307,7 +293,7 @@ export default function Structure({
           strokeWidth: 1,
           height: 16,
           width: 16,
-          color: "hsl(var(--foreground))",
+          color: edge.data.color ?? "#000000",
         },
       })),
     )
@@ -332,13 +318,16 @@ export default function Structure({
         node.data.label !== initialNode.data.label ||
         node.position.x !== initialNode.position.x ||
         node.position.y !== initialNode.position.y ||
-        node.data.info !== (initialNode.data.info ?? "")
+        node.data.info !== (initialNode.data.info ?? "") ||
+        node.data.borderColor !== initialNode.data.borderColor ||
+        node.data.bgColor !== initialNode.data.bgColor
       ) {
         nodesToUpdate.push({
           id: node.id,
           position: node.position,
           label: node.data.label,
           info: node.data.info || null,
+          borderColor: node.data.borderColor || null,
         })
       }
     }
@@ -351,7 +340,8 @@ export default function Structure({
         edge.data?.startLabel !== initialEdge.data?.startLabel ||
         edge.data?.label !== initialEdge.data?.label ||
         edge.data?.endLabel !== initialEdge.data?.endLabel ||
-        edge.data?.label !== initialEdge.data?.label
+        edge.data?.label !== initialEdge.data?.label ||
+        edge.data?.color !== initialEdge.data?.color
       ) {
         edgesToUpdate.push({
           id: edge.id,
@@ -360,6 +350,7 @@ export default function Structure({
           startLabel: edge.data?.startLabel,
           endLabel: edge.data?.endLabel,
           label: edge.data?.label,
+          color: edge.data?.color,
         })
       }
     }
@@ -381,11 +372,9 @@ export default function Structure({
             nodes={nodes.map((node) => ({
               ...node,
               data: {
-                label: node.data.label,
-                info: node.data.info,
+                ...node.data,
                 editable: editable && !!reactFlowInstance,
-                onLabelChange,
-                onInfoChange,
+                onNodeDataChange,
                 onDelete: (id: string) =>
                   reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
               },
@@ -395,11 +384,16 @@ export default function Structure({
               data: {
                 ...edge.data,
                 editable: editable && !!reactFlowInstance,
-                onStartLabelChange: onEdgeStartLabelChange,
-                onEndLabelChange: onEdgeEndLabelChange,
-                onMiddleLabelChange: onMiddleLabelChange,
+                onEdgeDataChange,
                 onDelete: (id: string) =>
                   reactFlowInstance?.deleteElements({ edges: [{ id }] }),
+              },
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                strokeWidth: 1,
+                height: 16,
+                width: 16,
+                color: edge.data?.color ?? "#000000",
               },
             }))}
             onNodesChange={(nodeChanges) => {
@@ -449,7 +443,7 @@ export default function Structure({
                         data: {
                           ...node.data,
                           editable: !editable,
-                          onLabelChange,
+                          onNodeDataChange,
                         },
                       })),
                     )

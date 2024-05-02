@@ -17,6 +17,9 @@ declare module "react-line-wrapping-input" {
     onChange?: React.ChangeEventHandler<HTMLInputElement>
     onClick?: React.MouseEventHandler<HTMLInputElement>
     onMouseDown?: React.MouseEventHandler<HTMLInputElement>
+    onFocus?: React.FocusEventHandler<HTMLInputElement>
+    onBlur?: React.FocusEventHandler<HTMLInputElement>
+    onDoubleClick?: React.MouseEventHandler<HTMLInputElement>
   }
 
   declare const LineWrappingInput: React.FC<Props>

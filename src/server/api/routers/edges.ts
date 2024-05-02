@@ -16,6 +16,7 @@ export const edgeRouter = createTRPCRouter({
             startLabel: edges.startLabel,
             label: edges.label,
             endLabel: edges.endLabel,
+            color: edges.color,
           },
         })
         .from(edges)

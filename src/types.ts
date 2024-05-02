@@ -2,18 +2,18 @@ export interface NodeData {
   label: string
   info: string
   editable: boolean
-  onLabelChange?: (nodeId: string, label: string) => void
-  onInfoChange?: (nodeId: string, info: string) => void
+  borderColor: string
+  bgColor: string
   onDelete?: (nodeId: string) => void
+  onNodeDataChange?: (nodeId: string, data: Partial<NodeData>) => void
 }
 
 export interface EdgeData {
   startLabel?: string | null
   label?: string | null
   endLabel?: string | null
+  color: string
   editable?: boolean
-  onStartLabelChange?: (edgeId: string, label: string | null) => void
-  onEndLabelChange?: (edgeId: string, label: string | null) => void
-  onMiddleLabelChange?: (edgeId: string, label: string | null) => void
+  onEdgeDataChange?: (edgeId: string, data: Partial<EdgeData>) => void
   onDelete?: (edgeId: string) => void
 }

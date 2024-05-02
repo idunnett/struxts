@@ -14,6 +14,8 @@ const updateNodeSchema = z.object({
   }),
   label: z.string().nullish(),
   info: z.string().nullish(),
+  borderColor: z.string().nullish(),
+  bgColor: z.string().nullish(),
 })
 export type UpdateNode = z.infer<typeof updateNodeSchema>
 const updateEdgeSchema = z.object({
@@ -23,6 +25,7 @@ const updateEdgeSchema = z.object({
   startLabel: z.string().nullish(),
   endLabel: z.string().nullish(),
   label: z.string().nullish(),
+  color: z.string().nullish(),
 })
 export type UpdateEdge = z.infer<typeof updateEdgeSchema>
 
@@ -143,6 +146,8 @@ export const structureRouter = createTRPCRouter({
             y: inputNode.position.y,
             label: inputNode.label,
             info: inputNode.info,
+            borderColor: inputNode.borderColor ?? "#000000",
+            bgColor: inputNode.bgColor ?? "#ffffff",
             h: 100,
             w: 100,
             structureId: input.structureId,
@@ -154,6 +159,8 @@ export const structureRouter = createTRPCRouter({
               y: inputNode.position.y,
               label: inputNode.label,
               info: inputNode.info,
+              borderColor: inputNode.borderColor ?? "#000000",
+              bgColor: inputNode.bgColor ?? "#ffffff",
             },
           })
           .returning({ id: nodes.id })
@@ -184,6 +191,7 @@ export const structureRouter = createTRPCRouter({
             startLabel: inputEdge.startLabel,
             label: inputEdge.label,
             endLabel: inputEdge.endLabel,
+            color: inputEdge.color ?? "#000000",
             structureId: input.structureId,
           })
           .onConflictDoUpdate({
@@ -194,6 +202,7 @@ export const structureRouter = createTRPCRouter({
               startLabel: inputEdge.startLabel,
               label: inputEdge.label,
               endLabel: inputEdge.endLabel,
+              color: inputEdge.color ?? "#000000",
             },
           })
       }
