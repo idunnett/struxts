@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import {
   useStore,
   type EdgeProps,
@@ -17,6 +17,7 @@ import {
 import { Button } from "~/components/ui/button"
 import { Circle, Trash } from "lucide-react"
 import { colours } from "~/lib/constants"
+import updateInputWidth from "update-input-width"
 
 export default function FloatingEdge({
   id,
@@ -249,6 +250,13 @@ function EdgeLabel({
   // groupHovering: boolean
   onChange: (label: string | null) => void
 }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!inputRef.current) return
+    updateInputWidth(inputRef.current)
+  }, [label])
+
   return (
     <div
       style={{
@@ -256,19 +264,18 @@ function EdgeLabel({
       }}
       className="pointer-events-auto absolute border-[10px] border-transparent bg-background bg-clip-padding px-1 py-0.5 text-xs"
     >
-      {editable ? (
-        <input
-          id={`${id}-${labelType}-label-input`}
-          className="pointer-events-auto w-24 bg-transparent px-1 text-center outline-none ring-muted-foreground ring-offset-1 focus:ring-1"
-          value={label}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={() => {
-            if (!label) onChange(null)
-          }}
-        />
-      ) : (
-        <span className="truncate">{label}</span>
-      )}
+      <input
+        ref={inputRef}
+        id={`${id}-${labelType}-label-input`}
+        className="pointer-events-auto min-w-4 bg-transparent text-center outline-none ring-blue-500/50 ring-offset-1 focus:ring-1"
+        value={label}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => {
+          if (!label) onChange(null)
+        }}
+        autoComplete="off"
+        disabled={!editable}
+      />
     </div>
   )
 }
