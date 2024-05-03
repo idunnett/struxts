@@ -2,7 +2,7 @@ import Link from "next/link"
 import { buttonVariants } from "~/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card"
 import { api } from "~/trpc/server"
-import StructureCreatedBy from "./_components/StructureCreatedBy"
+import StructureCardContent from "./_components/StructureCardContent"
 
 export default async function StructuresPage() {
   const myStructures = await api.structure.getAllOfMy()
@@ -29,8 +29,8 @@ export default async function StructuresPage() {
                 <CardHeader>
                   <CardTitle className="text-base">{structure.name}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <StructureCreatedBy userId={structure.createdById} />
+                <CardContent className="flex flex-col gap-2">
+                  <StructureCardContent structure={structure} />
                 </CardContent>
               </Card>
             </Link>

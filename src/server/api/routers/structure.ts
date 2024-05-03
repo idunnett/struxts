@@ -1,3 +1,4 @@
+import { clerkClient } from "@clerk/nextjs/server"
 import { TRPCError } from "@trpc/server"
 import { and, eq, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
@@ -38,6 +39,7 @@ export const structureRouter = createTRPCRouter({
         .values({
           name: input.name,
           createdById: ctx.session.userId,
+          owner: ctx.session.userId,
         })
         .returning({ id: structures.id })
 
@@ -62,6 +64,8 @@ export const structureRouter = createTRPCRouter({
         id: structures.id,
         name: structures.name,
         createdById: structures.createdById,
+        owner: structures.owner,
+        createdAt: structures.createdAt,
       })
       .from(usersStructures)
       .innerJoin(structures, eq(structures.id, usersStructures.structureId))
@@ -102,6 +106,23 @@ export const structureRouter = createTRPCRouter({
         .limit(1)
 
       return structure
+    }),
+
+  getCollaborators: protectedProcedure
+    .input(z.number())
+    .query(async ({ ctx, input }) => {
+      const collaborators = await ctx.db
+        .select({
+          userId: usersStructures.userId,
+        })
+        .from(usersStructures)
+        .where(eq(usersStructures.structureId, input))
+
+      return await Promise.all(
+        collaborators.map((collaborator) =>
+          clerkClient.users.getUser(collaborator.userId),
+        ),
+      )
     }),
   update: protectedProcedure
     .input(

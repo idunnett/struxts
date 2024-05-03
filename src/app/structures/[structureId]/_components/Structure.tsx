@@ -52,6 +52,14 @@ import { type api as serverApi } from "~/trpc/server"
 import Spinner from "~/components/Spinner"
 import { useRouter } from "next/navigation"
 import DownloadButton from "./DownloadButton"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "~/components/ui/navigation-menu"
+import CollaboratorsMenu from "./CollaboratorsMenu"
 
 interface Props {
   structure: {
@@ -366,143 +374,164 @@ export default function Structure({
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <div className="h-full w-full" ref={reactFlowWrapper}>
-          <ReactFlow
-            nodes={nodes.map((node) => ({
-              ...node,
-              data: {
-                ...node.data,
-                editable: editable && !!reactFlowInstance,
-                onNodeDataChange,
-                onDelete: (id: string) =>
-                  reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
-              },
-            }))}
-            edges={edges.map((edge) => ({
-              ...edge,
-              data: {
-                ...edge.data,
-                editable: editable && !!reactFlowInstance,
-                onEdgeDataChange,
-                onDelete: (id: string) =>
-                  reactFlowInstance?.deleteElements({ edges: [{ id }] }),
-              },
-              markerEnd: {
-                type: MarkerType.ArrowClosed,
-                strokeWidth: 1,
-                height: 16,
-                width: 16,
-                color: edge.data?.color ?? "#000000",
-              },
-            }))}
-            onNodesChange={(nodeChanges) => {
-              if (editable && reactFlowInstance) onNodesChange(nodeChanges)
-            }}
-            onEdgesChange={(edgeChanges) => {
-              if (editable && reactFlowInstance) onEdgesChange(edgeChanges)
-            }}
-            onConnect={(connection) => {
-              if (editable && reactFlowInstance) onConnect(connection)
-            }}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
-            connectionLineType={ConnectionLineType.Straight}
-            connectionLineComponent={FloatingConnectionLine}
-            connectionMode={ConnectionMode.Loose}
-            connectionRadius={30}
-            snapToGrid
-            snapGrid={[12.5, 12.5]}
-            fitView
-            edgesUpdatable={editable && !!reactFlowInstance}
-            nodesDraggable={editable && !!reactFlowInstance}
-            nodesConnectable={editable && !!reactFlowInstance}
-            selectNodesOnDrag={editable && !!reactFlowInstance}
-            edgesFocusable={editable && !!reactFlowInstance}
-            edgeUpdaterRadius={12.5}
-            zoomOnDoubleClick={false}
-            onInit={(instance) => {
-              setReactFlowInstance(instance)
-              setEditable(false)
-            }}
-            onNodesDelete={(nodes) => {
-              if (editable && reactFlowInstance) onNodesDelete(nodes)
-            }}
-            onEdgesDelete={(edges) => {
-              if (editable && reactFlowInstance) onEdgesDelete(edges)
-            }}
-          >
-            {reactFlowInstance && (
-              <Controls showInteractive={false}>
-                <ControlButton
-                  onClick={() => {
-                    setNodes((nodes) =>
-                      nodes.map((node) => ({
-                        ...node,
-                        data: {
-                          ...node.data,
-                          editable: !editable,
-                          onNodeDataChange,
-                        },
-                      })),
-                    )
-                    setEditable(!editable)
-                  }}
-                >
-                  {editable ? <Unlock /> : <Lock />}
-                </ControlButton>
-              </Controls>
-            )}
-            <MiniMap />
-            {editable && reactFlowInstance && (
-              <Background
-                variant={BackgroundVariant.Dots}
-                gap={12.5}
-                size={1}
-              />
-            )}
-            <Panel position="top-right">
-              {editable && reactFlowInstance && hasChanges && (
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={updateStructure.isPending || isTransitionStarted}
+    <div className="flex h-full flex-col">
+      <div className="px-4 py-1">
+        <NavigationMenu className="flex-initial">
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Collaborators</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <CollaboratorsMenu
+                  structureId={structure.id}
+                  structureName={structure.name}
+                />
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
+      <div className="min-h-0 w-full grow" ref={reactFlowWrapper}>
+        <ContextMenu>
+          <ContextMenuTrigger>
+            <ReactFlow
+              nodes={nodes.map((node) => ({
+                ...node,
+                data: {
+                  ...node.data,
+                  editable: editable && !!reactFlowInstance,
+                  onNodeDataChange,
+                  onDelete: (id: string) =>
+                    reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
+                },
+              }))}
+              edges={edges.map((edge) => ({
+                ...edge,
+                data: {
+                  ...edge.data,
+                  editable: editable && !!reactFlowInstance,
+                  onEdgeDataChange,
+                  onDelete: (id: string) =>
+                    reactFlowInstance?.deleteElements({ edges: [{ id }] }),
+                },
+                markerEnd: {
+                  type: MarkerType.ArrowClosed,
+                  strokeWidth: 1,
+                  height: 16,
+                  width: 16,
+                  color: edge.data?.color ?? "#000000",
+                },
+              }))}
+              onNodesChange={(nodeChanges) => {
+                if (editable && reactFlowInstance) onNodesChange(nodeChanges)
+              }}
+              onEdgesChange={(edgeChanges) => {
+                if (editable && reactFlowInstance) onEdgesChange(edgeChanges)
+              }}
+              onConnect={(connection) => {
+                if (editable && reactFlowInstance) onConnect(connection)
+              }}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              defaultEdgeOptions={defaultEdgeOptions}
+              connectionLineType={ConnectionLineType.Straight}
+              connectionLineComponent={FloatingConnectionLine}
+              connectionMode={ConnectionMode.Loose}
+              connectionRadius={30}
+              snapToGrid
+              snapGrid={[12.5, 12.5]}
+              fitView
+              edgesUpdatable={editable && !!reactFlowInstance}
+              nodesDraggable={editable && !!reactFlowInstance}
+              nodesConnectable={editable && !!reactFlowInstance}
+              selectNodesOnDrag={editable && !!reactFlowInstance}
+              edgesFocusable={editable && !!reactFlowInstance}
+              edgeUpdaterRadius={12.5}
+              zoomOnDoubleClick={false}
+              onInit={(instance) => {
+                setReactFlowInstance(instance)
+                setEditable(false)
+              }}
+              onNodesDelete={(nodes) => {
+                if (editable && reactFlowInstance) onNodesDelete(nodes)
+              }}
+              onEdgesDelete={(edges) => {
+                if (editable && reactFlowInstance) onEdgesDelete(edges)
+              }}
+            >
+              {reactFlowInstance && (
+                <Controls showInteractive={false}>
+                  <ControlButton
                     onClick={() => {
-                      resetEdges()
-                      resetNodes()
+                      setNodes((nodes) =>
+                        nodes.map((node) => ({
+                          ...node,
+                          data: {
+                            ...node.data,
+                            editable: !editable,
+                            onNodeDataChange,
+                          },
+                        })),
+                      )
+                      setEditable(!editable)
                     }}
                   >
-                    Reset
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={updateStructure.isPending || isTransitionStarted}
-                    onClick={handleSaveChanges}
-                  >
-                    {(updateStructure.isPending || isTransitionStarted) && (
-                      <Spinner className="mr-2" />
-                    )}
-                    Save Changes
-                  </Button>
-                </div>
+                    {editable ? <Unlock /> : <Lock />}
+                  </ControlButton>
+                </Controls>
               )}
-              {!editable && reactFlowInstance && (
-                <DownloadButton structureName={structure.name} />
+              <MiniMap />
+              {editable && reactFlowInstance && (
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  gap={12.5}
+                  size={1}
+                />
               )}
-            </Panel>
-          </ReactFlow>
-        </div>
-        {editable && reactFlowInstance && (
-          <ContextMenuContent>
-            <ContextMenuItem onClick={(e) => handleAddNode(e)}>
-              + Add Node
-            </ContextMenuItem>
-          </ContextMenuContent>
-        )}
-      </ContextMenuTrigger>
-    </ContextMenu>
+              <Panel position="top-right">
+                {editable && reactFlowInstance && hasChanges && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        updateStructure.isPending || isTransitionStarted
+                      }
+                      onClick={() => {
+                        resetEdges()
+                        resetNodes()
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={
+                        updateStructure.isPending || isTransitionStarted
+                      }
+                      onClick={handleSaveChanges}
+                    >
+                      {(updateStructure.isPending || isTransitionStarted) && (
+                        <Spinner className="mr-2" />
+                      )}
+                      Save Changes
+                    </Button>
+                  </div>
+                )}
+                {!editable && reactFlowInstance && (
+                  <DownloadButton structureName={structure.name} />
+                )}
+              </Panel>
+            </ReactFlow>
+            {editable && reactFlowInstance && (
+              <ContextMenuContent>
+                <ContextMenuItem onClick={(e) => handleAddNode(e)}>
+                  + Add Node
+                </ContextMenuItem>
+              </ContextMenuContent>
+            )}
+          </ContextMenuTrigger>
+        </ContextMenu>
+      </div>
+    </div>
   )
 }

@@ -18,6 +18,7 @@ export const structures = pgTable("structures", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   createdById: text("createdById").notNull(),
+  owner: text("owner").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt"),
 })
@@ -33,6 +34,24 @@ export const usersStructures = pgTable(
   (table) => {
     return {
       pk: primaryKey({ columns: [table.userId, table.structureId] }),
+    }
+  },
+)
+
+export const userStructureInvites = pgTable(
+  "user_structure_invites",
+  {
+    invitedBy: text("invitedBy").notNull(),
+    userId: text("userId").notNull(),
+    structureId: serial("structureId")
+      .notNull()
+      .references(() => structures.id),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({
+        columns: [table.invitedBy, table.userId, table.structureId],
+      }),
     }
   },
 )
