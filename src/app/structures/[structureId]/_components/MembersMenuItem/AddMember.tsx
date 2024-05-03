@@ -1,24 +1,35 @@
 import { type User } from "@clerk/nextjs/server"
 import { Check, Plus } from "lucide-react"
+import { toast } from "sonner"
 import Spinner from "~/components/Spinner"
 import { Button } from "~/components/ui/button"
 import { api } from "~/trpc/react"
+import { type StruxtUser } from "~/types"
 
 interface Props {
   structureId: number
   user: User
-  collaborators: User[]
-  onAddCollaborator: (user: User) => void
+  members: {
+    clerkUser: User
+    role: string
+  }[]
+  onAddMember: (user: StruxtUser) => void
 }
 
-export default function AddCollaborator({
+export default function AddMember({
   structureId,
   user,
-  collaborators,
-  onAddCollaborator,
+  members,
+  onAddMember,
 }: Props) {
-  const addCollaborator = api.user.addToStructure.useMutation({
-    onSuccess: (user) => onAddCollaborator(user),
+  const trpcUtils = api.useUtils()
+  const addMember = api.user.addToStructure.useMutation({
+    onSuccess: (user) => onAddMember(user),
+    onError: (error) => {
+      toast.error(error.message)
+    },
+    onSettled: async () =>
+      await trpcUtils.user.getStructureMembers.invalidate(),
   })
 
   return (
@@ -28,23 +39,23 @@ export default function AddCollaborator({
         size="sm"
         className="h-8 text-xs"
         onClick={() =>
-          addCollaborator.mutate({
+          addMember.mutate({
             userId: user.id,
             structureId,
           })
         }
         disabled={
-          addCollaborator.isPending ||
-          !!collaborators?.find((c) => c.id === user.id)
+          addMember.isPending ||
+          !!members?.find(({ clerkUser }) => clerkUser.id === user.id)
         }
       >
-        {collaborators?.find((c) => c.id === user.id) ? (
+        {members?.find(({ clerkUser }) => clerkUser.id === user.id) ? (
           <div className="flex items-center gap-1">
             <Check className="h-3 w-3" /> Added
           </div>
         ) : (
           <div className="flex items-center gap-1">
-            {addCollaborator.isPending ? (
+            {addMember.isPending ? (
               <Spinner className="h-4 w-4" />
             ) : (
               <Plus className="h-3 w-3" />

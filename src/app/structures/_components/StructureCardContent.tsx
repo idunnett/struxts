@@ -2,6 +2,7 @@ import { formatDate } from "date-fns"
 import StructureOwner from "./StructureOwner"
 import { api } from "~/trpc/server"
 import Image from "next/image"
+import { cn } from "~/lib/utils"
 
 export default async function StructureCardContent({
   structure,
@@ -14,27 +15,27 @@ export default async function StructureCardContent({
     createdAt: Date
   }
 }) {
-  const collaborators = await api.user.getStructureCollaborators(structure.id)
+  const members = await api.user.getStructureMembers(structure.id)
 
-  const collaboratorsWithoutOwner = collaborators.filter(
-    (c) => c.id !== structure.owner,
+  const membersWithoutOwner = members.filter(
+    (c) => c.clerkUser.id !== structure.owner,
   )
 
   return (
     <>
       <StructureOwner owner={structure.owner} />
-      {collaboratorsWithoutOwner.length > 0 && (
+      {membersWithoutOwner.length > 0 && (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Collaborators: </span>
-          <div>
-            {collaboratorsWithoutOwner.map((collaborator) => (
+          <span className="text-sm text-muted-foreground">Members: </span>
+          <div className="flex items-center">
+            {membersWithoutOwner.map((member, i) => (
               <Image
-                key={collaborator.id}
-                src={collaborator.imageUrl}
-                alt={collaborator.fullName ?? "Structure Collaborator Picture"}
-                className="rounded-full"
+                key={member.clerkUser.id}
+                src={member.clerkUser.imageUrl}
+                alt={member.clerkUser.fullName ?? "Member picture"}
                 width={24}
                 height={24}
+                className={cn("rounded-full", i !== 0 && "-ml-2")}
               />
             ))}
           </div>

@@ -1,3 +1,5 @@
+import { type User } from "@clerk/nextjs/server"
+
 export interface NodeData {
   label: string
   info: string
@@ -16,4 +18,9 @@ export interface EdgeData {
   editable?: boolean
   onEdgeDataChange?: (edgeId: string, data: Partial<EdgeData>) => void
   onDelete?: (edgeId: string) => void
+}
+
+export interface StruxtUser {
+  clerkUser: User
+  role: string
 }

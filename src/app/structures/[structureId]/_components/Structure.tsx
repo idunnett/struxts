@@ -55,12 +55,8 @@ import { useRouter } from "next/navigation"
 import DownloadButton from "./DownloadButton"
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
   NavigationMenuList,
-  NavigationMenuTrigger,
 } from "~/components/ui/navigation-menu"
-import CollaboratorsMenu from "./CollaboratorsMenu"
 import {
   Dialog,
   DialogClose,
@@ -69,7 +65,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
-import InviteCollaboratorForm from "./InviteCollaboratorForm"
+import InviteMemberForm from "./InviteMemberForm"
+import MembersMenuItem from "./MembersMenuItem"
+import ManageMembers from "./ManageMembers"
 
 interface Props {
   structure: {
@@ -78,6 +76,7 @@ interface Props {
   }
   initialNodes: Awaited<ReturnType<typeof serverApi.node.getByStructureId>>
   initialEdges: Awaited<ReturnType<typeof serverApi.edge.getByStructureId>>
+  currentStructureUser: { userId: string; role: string }
 }
 
 const nodeTypes = { basic: BasicNode }
@@ -91,6 +90,7 @@ export default function Structure({
   structure,
   initialNodes,
   initialEdges,
+  currentStructureUser,
 }: Props) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setReactFlowInstance] =
@@ -100,8 +100,8 @@ export default function Structure({
   const [editable, setEditable] = useState(true)
   const [nodesToDelete, setNodesToDelete] = useState<number[]>([])
   const [edgesToDelete, setEdgesToDelete] = useState<number[]>([])
-  const [addCollaboratorDialogOpen, setAddCollaboratorDialogOpen] =
-    useState(false)
+  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
+  const [manageMembersDialogOpen, setManageMembersDialogOpen] = useState(false)
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialNodes.map((node) => ({
       ...node,
@@ -320,6 +320,13 @@ export default function Structure({
     setEdgesToDelete([])
   }, [initialEdges, setEdges])
 
+  const currentUserCanEdit = useMemo(
+    () =>
+      currentStructureUser.role === "Owner" ||
+      currentStructureUser.role === "Admin",
+    [currentStructureUser.role],
+  )
+
   useEffect(() => {
     resetNodes()
   }, [initialNodes, resetNodes])
@@ -388,18 +395,14 @@ export default function Structure({
   return (
     <>
       <div className="flex h-full flex-col">
-        <div className="px-4 py-1">
+        <div className="border-b px-4 py-1">
           <NavigationMenu className="flex-initial">
             <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Collaborators</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <CollaboratorsMenu
-                    structureId={structure.id}
-                    onAddCollaborator={() => setAddCollaboratorDialogOpen(true)}
-                  />
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+              <MembersMenuItem
+                structureId={structure.id}
+                onAddMember={() => setAddMemberDialogOpen(true)}
+                onManageMembers={() => setManageMembersDialogOpen(true)}
+              />
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -411,7 +414,8 @@ export default function Structure({
                   ...node,
                   data: {
                     ...node.data,
-                    editable: editable && !!reactFlowInstance,
+                    editable:
+                      editable && !!reactFlowInstance && currentUserCanEdit,
                     onNodeDataChange,
                     onDelete: (id: string) =>
                       reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
@@ -421,7 +425,8 @@ export default function Structure({
                   ...edge,
                   data: {
                     ...edge.data,
-                    editable: editable && !!reactFlowInstance,
+                    editable:
+                      editable && !!reactFlowInstance && currentUserCanEdit,
                     onEdgeDataChange,
                     onDelete: (id: string) =>
                       reactFlowInstance?.deleteElements({ edges: [{ id }] }),
@@ -435,13 +440,16 @@ export default function Structure({
                   },
                 }))}
                 onNodesChange={(nodeChanges) => {
-                  if (editable && reactFlowInstance) onNodesChange(nodeChanges)
+                  if (editable && reactFlowInstance && currentUserCanEdit)
+                    onNodesChange(nodeChanges)
                 }}
                 onEdgesChange={(edgeChanges) => {
-                  if (editable && reactFlowInstance) onEdgesChange(edgeChanges)
+                  if (editable && reactFlowInstance && currentUserCanEdit)
+                    onEdgesChange(edgeChanges)
                 }}
                 onConnect={(connection) => {
-                  if (editable && reactFlowInstance) onConnect(connection)
+                  if (editable && reactFlowInstance && currentUserCanEdit)
+                    onConnect(connection)
                 }}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
@@ -453,11 +461,21 @@ export default function Structure({
                 snapToGrid
                 snapGrid={[12.5, 12.5]}
                 fitView
-                edgesUpdatable={editable && !!reactFlowInstance}
-                nodesDraggable={editable && !!reactFlowInstance}
-                nodesConnectable={editable && !!reactFlowInstance}
-                selectNodesOnDrag={editable && !!reactFlowInstance}
-                edgesFocusable={editable && !!reactFlowInstance}
+                edgesUpdatable={
+                  editable && !!reactFlowInstance && currentUserCanEdit
+                }
+                nodesDraggable={
+                  editable && !!reactFlowInstance && currentUserCanEdit
+                }
+                nodesConnectable={
+                  editable && !!reactFlowInstance && currentUserCanEdit
+                }
+                selectNodesOnDrag={
+                  editable && !!reactFlowInstance && currentUserCanEdit
+                }
+                edgesFocusable={
+                  editable && !!reactFlowInstance && currentUserCanEdit
+                }
                 edgeUpdaterRadius={12.5}
                 zoomOnDoubleClick={false}
                 onInit={(instance) => {
@@ -465,16 +483,19 @@ export default function Structure({
                   setEditable(false)
                 }}
                 onNodesDelete={(nodes) => {
-                  if (editable && reactFlowInstance) onNodesDelete(nodes)
+                  if (editable && reactFlowInstance && currentUserCanEdit)
+                    onNodesDelete(nodes)
                 }}
                 onEdgesDelete={(edges) => {
-                  if (editable && reactFlowInstance) onEdgesDelete(edges)
+                  if (editable && reactFlowInstance && currentUserCanEdit)
+                    onEdgesDelete(edges)
                 }}
               >
                 {reactFlowInstance && (
                   <Controls showInteractive={false}>
                     <ControlButton
                       onClick={() => {
+                        if (!currentUserCanEdit) return
                         setNodes((nodes) =>
                           nodes.map((node) => ({
                             ...node,
@@ -493,7 +514,7 @@ export default function Structure({
                   </Controls>
                 )}
                 <MiniMap />
-                {editable && reactFlowInstance && (
+                {editable && reactFlowInstance && currentUserCanEdit && (
                   <Background
                     variant={BackgroundVariant.Dots}
                     gap={12.5}
@@ -501,41 +522,45 @@ export default function Structure({
                   />
                 )}
                 <Panel position="top-right">
-                  {editable && reactFlowInstance && hasChanges && (
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={
-                          updateStructure.isPending || isTransitionStarted
-                        }
-                        onClick={() => {
-                          resetEdges()
-                          resetNodes()
-                        }}
-                      >
-                        Reset
-                      </Button>
-                      <Button
-                        size="sm"
-                        disabled={
-                          updateStructure.isPending || isTransitionStarted
-                        }
-                        onClick={handleSaveChanges}
-                      >
-                        {(updateStructure.isPending || isTransitionStarted) && (
-                          <Spinner className="mr-2" />
-                        )}
-                        Save Changes
-                      </Button>
-                    </div>
-                  )}
+                  {editable &&
+                    reactFlowInstance &&
+                    currentUserCanEdit &&
+                    hasChanges && (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={
+                            updateStructure.isPending || isTransitionStarted
+                          }
+                          onClick={() => {
+                            resetEdges()
+                            resetNodes()
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={
+                            updateStructure.isPending || isTransitionStarted
+                          }
+                          onClick={handleSaveChanges}
+                        >
+                          {(updateStructure.isPending ||
+                            isTransitionStarted) && (
+                            <Spinner className="mr-2" />
+                          )}
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
                   {!editable && reactFlowInstance && (
                     <DownloadButton structureName={structure.name} />
                   )}
                 </Panel>
               </ReactFlow>
-              {editable && reactFlowInstance && (
+              {editable && reactFlowInstance && currentUserCanEdit && (
                 <ContextMenuContent>
                   <ContextMenuItem onClick={(e) => handleAddNode(e)}>
                     + Add Node
@@ -546,13 +571,10 @@ export default function Structure({
           </ContextMenu>
         </div>
       </div>
-      <Dialog
-        open={addCollaboratorDialogOpen}
-        onOpenChange={setAddCollaboratorDialogOpen}
-      >
+      <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invite a Collaborator to {structure.name}</DialogTitle>
+            <DialogTitle>Invite a Member to {structure.name}</DialogTitle>
           </DialogHeader>
           <Suspense
             fallback={
@@ -561,7 +583,33 @@ export default function Structure({
               </div>
             }
           >
-            <InviteCollaboratorForm structureId={structure.id} />
+            <InviteMemberForm structureId={structure.id} />
+          </Suspense>
+          <DialogFooter className="sm:justify-start">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={manageMembersDialogOpen}
+        onOpenChange={setManageMembersDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage Structure Members</DialogTitle>
+          </DialogHeader>
+          <Suspense
+            fallback={
+              <div className="flex h-full w-full items-center justify-center">
+                <Spinner />
+              </div>
+            }
+          >
+            <ManageMembers structureId={structure.id} />
           </Suspense>
           <DialogFooter className="sm:justify-start">
             <DialogClose asChild>

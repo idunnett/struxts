@@ -6,16 +6,16 @@ import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { useDebounce } from "~/hooks/useDebounce"
 import { api } from "~/trpc/react"
-import AddCollaborator from "./AddCollaborator"
+import AddMember from "./MembersMenuItem/AddMember"
 
 interface Props {
   structureId: number
 }
 
-export default function InviteCollaboratorForm({ structureId }: Props) {
-  const [initialCollaborators] =
-    api.user.getStructureCollaborators.useSuspenseQuery(structureId)
-  const [collaborators, setCollaborators] = useState(initialCollaborators)
+export default function InviteMemberForm({ structureId }: Props) {
+  const [initialMembers] =
+    api.user.getStructureMembers.useSuspenseQuery(structureId)
+  const [members, setMembers] = useState(initialMembers)
 
   const [searchValue, setSearchValue] = useState("")
   const debouncedSearchValue = useDebounce(searchValue)
@@ -31,7 +31,7 @@ export default function InviteCollaboratorForm({ structureId }: Props) {
       <div className="flex items-center space-x-2">
         <div className="relative grid flex-1 gap-2">
           <Label htmlFor="link" className="sr-only">
-            Invite Collaborator
+            Invite Member
           </Label>
           <Input
             id="user-search"
@@ -58,14 +58,12 @@ export default function InviteCollaboratorForm({ structureId }: Props) {
       </div>
       <div className="flex flex-col gap-1">
         {users?.map((user) => (
-          <AddCollaborator
+          <AddMember
             key={user.id}
-            collaborators={collaborators}
+            members={members}
             structureId={structureId}
             user={user}
-            onAddCollaborator={(user) =>
-              setCollaborators((prev) => [...prev, user])
-            }
+            onAddMember={(user) => setMembers((prev) => [...prev, user])}
           />
         ))}
       </div>

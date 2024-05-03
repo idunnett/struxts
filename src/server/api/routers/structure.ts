@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, or } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -52,6 +52,7 @@ export const structureRouter = createTRPCRouter({
       await ctx.db.insert(usersStructures).values({
         userId: ctx.session.userId,
         structureId: newStructure.id,
+        role: "Admin",
       })
 
       return newStructure.id
@@ -59,17 +60,23 @@ export const structureRouter = createTRPCRouter({
 
   getAllOfMy: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db
-      .select({
+      .selectDistinct({
         id: structures.id,
         name: structures.name,
         createdById: structures.createdById,
         owner: structures.owner,
         createdAt: structures.createdAt,
+        updatedAt: structures.updatedAt,
       })
       .from(usersStructures)
       .innerJoin(structures, eq(structures.id, usersStructures.structureId))
-      .where(eq(usersStructures.userId, ctx.session.userId))
-      .orderBy(structures.updatedAt)
+      .where(
+        or(
+          eq(usersStructures.userId, ctx.session.userId),
+          eq(structures.owner, ctx.session.userId),
+        ),
+      )
+      .orderBy(structures.owner, structures.updatedAt)
   }),
 
   getOneOfMy: protectedProcedure.query(async ({ ctx }) => {
@@ -99,7 +106,10 @@ export const structureRouter = createTRPCRouter({
         .where(
           and(
             eq(structures.id, input),
-            eq(usersStructures.userId, ctx.session.userId),
+            or(
+              eq(structures.owner, ctx.session.userId),
+              eq(usersStructures.userId, ctx.session.userId),
+            ),
           ),
         )
         .limit(1)

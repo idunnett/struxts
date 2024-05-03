@@ -6,6 +6,7 @@ import {
   serial,
   timestamp,
   real,
+  pgEnum,
 } from "drizzle-orm/pg-core"
 
 /**
@@ -23,6 +24,11 @@ export const structures = pgTable("structures", {
   updatedAt: timestamp("updatedAt"),
 })
 
+export const usersStructuresRoleEnum = pgEnum("users_structures_role", [
+  "Guest",
+  "Admin",
+])
+
 export const usersStructures = pgTable(
   "users_structures",
   {
@@ -30,6 +36,7 @@ export const usersStructures = pgTable(
     structureId: serial("structureId")
       .notNull()
       .references(() => structures.id),
+    role: usersStructuresRoleEnum("role").notNull().default("Guest"),
   },
   (table) => {
     return {
