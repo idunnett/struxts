@@ -29,7 +29,7 @@ export default async function StructuresPage() {
                 <CardHeader>
                   <CardTitle className="text-base">{structure.name}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-2">
+                <CardContent className="flex flex-col gap-1">
                   <StructureCardContent structure={structure} />
                 </CardContent>
               </Card>

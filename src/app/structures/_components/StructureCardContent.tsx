@@ -14,7 +14,7 @@ export default async function StructureCardContent({
     createdAt: Date
   }
 }) {
-  const collaborators = await api.structure.getCollaborators(structure.id)
+  const collaborators = await api.user.getStructureCollaborators(structure.id)
 
   const collaboratorsWithoutOwner = collaborators.filter(
     (c) => c.id !== structure.owner,
