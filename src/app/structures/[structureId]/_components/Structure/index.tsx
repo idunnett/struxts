@@ -85,6 +85,11 @@ export default function Structure({
   const [editable, setEditable] = useState(true)
   const [nodesToDelete, setNodesToDelete] = useState<number[]>([])
   const [edgesToDelete, setEdgesToDelete] = useState<number[]>([])
+  const [lastUsedEdgeColor, setLastUsedEdgeColor] = useState("#000000")
+  const [lastUsedNodeColors, setLastUsedNodeColors] = useState<{
+    bgColor: string
+    borderColor: string
+  }>({ bgColor: "#ffffff", borderColor: "#000000" })
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialNodes.map((node) => ({
       ...node,
@@ -120,27 +125,34 @@ export default function Structure({
     })),
   )
   const onConnect = useCallback(
-    (params: Edge | Connection) =>
+    (params: Edge | Connection) => {
       setEdges((eds) =>
         addEdge(
           {
             ...params,
             type: "floating",
+            data: {
+              color: lastUsedEdgeColor,
+            },
             markerEnd: {
               type: MarkerType.ArrowClosed,
               strokeWidth: 1,
               height: 16,
               width: 16,
-              color: "#000000",
+              color: lastUsedEdgeColor,
             },
           },
           eds,
         ),
-      ),
-    [setEdges],
+      )
+    },
+    [lastUsedEdgeColor, setEdges],
   )
   const onEdgeDataChange = useCallback(
-    (id: string, newData: Partial<EdgeData>) =>
+    (id: string, newData: Partial<EdgeData>) => {
+      const edge = edges.find((edge) => edge.id === id)
+      if (edge && newData.color) setLastUsedEdgeColor(newData.color)
+
       setEdges((edges) =>
         edges.map((edge) =>
           edge.id === id
@@ -157,19 +169,28 @@ export default function Structure({
               }
             : edge,
         ),
-      ),
-    [setEdges],
+      )
+    },
+    [edges, setEdges],
   )
   const onNodeDataChange = useCallback(
-    (id: string, newData: Partial<NodeData>) =>
+    (id: string, newData: Partial<NodeData>) => {
+      const node = nodes.find((node) => node.id === id)
+      if (node && (!!newData.bgColor || !!newData.borderColor))
+        setLastUsedNodeColors((prevData) => {
+          if (newData.bgColor) prevData.bgColor = newData.bgColor
+          if (newData.borderColor) prevData.borderColor = newData.borderColor
+          return prevData
+        })
       setNodes((nodes) =>
         nodes.map((node) =>
           node.id === id
             ? { ...node, data: { ...node.data, ...newData } }
             : node,
         ),
-      ),
-    [setNodes],
+      )
+    },
+    [nodes, setNodes],
   )
   const onNodesDelete = useCallback(
     (nodes: Node[]) => {
@@ -244,8 +265,8 @@ export default function Structure({
           data: {
             label: "",
             info: "",
-            bgColor: "#ffffff",
-            borderColor: "#000000",
+            bgColor: lastUsedNodeColors.bgColor,
+            borderColor: lastUsedNodeColors.borderColor,
             editable,
           },
           type: "basic",
@@ -424,7 +445,9 @@ export default function Structure({
             edgeTypes={edgeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             connectionLineType={ConnectionLineType.Straight}
-            connectionLineComponent={FloatingConnectionLine}
+            connectionLineComponent={(props) => (
+              <FloatingConnectionLine {...props} stroke={lastUsedEdgeColor} />
+            )}
             connectionMode={ConnectionMode.Loose}
             connectionRadius={30}
             snapToGrid

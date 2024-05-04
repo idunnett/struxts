@@ -5,13 +5,18 @@ import {
 } from "reactflow"
 import { getEdgeParams } from "../../_utils/edgeUtils"
 
+interface Props extends ConnectionLineComponentProps {
+  stroke: string
+}
+
 function FloatingConnectionLine({
   toX,
   toY,
   // fromPosition,
   // toPosition,
   fromNode,
-}: ConnectionLineComponentProps) {
+  stroke,
+}: Props) {
   if (!fromNode) return null
 
   const targetNode: Node = {
@@ -37,7 +42,7 @@ function FloatingConnectionLine({
     <g>
       <path
         fill="none"
-        stroke="#222"
+        stroke={stroke}
         strokeWidth={1.5}
         className="animated"
         d={edgePath}
@@ -47,7 +52,7 @@ function FloatingConnectionLine({
         cy={toY}
         fill="#fff"
         r={3}
-        stroke="#222"
+        stroke={stroke}
         strokeWidth={1.5}
       />
     </g>
