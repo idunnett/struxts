@@ -3,7 +3,7 @@ import {
   type Node,
   getStraightPath,
 } from "reactflow"
-import { getEdgeParams } from "./edgeUtils"
+import { getEdgeParams } from "../../_utils/edgeUtils"
 
 function FloatingConnectionLine({
   toX,

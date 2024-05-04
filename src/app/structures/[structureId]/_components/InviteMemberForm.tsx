@@ -6,7 +6,7 @@ import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import { useDebounce } from "~/hooks/useDebounce"
 import { api } from "~/trpc/react"
-import AddMember from "./MembersMenuItem/AddMember"
+import AddMember from "./StructureNav/MembersMenuItem/AddMember"
 
 interface Props {
   structureId: number

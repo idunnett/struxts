@@ -13,6 +13,8 @@ import { ZodError } from "zod"
 import { auth } from "@clerk/nextjs/server"
 
 import { db } from "~/server/db"
+import { getCurrentStructureUser } from "../actions/getCurrentStructureUser"
+import { isAdmin, isOwner } from "~/lib/utils"
 
 /**
  * 1. CONTEXT
@@ -106,3 +108,46 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
     },
   })
 })
+
+// Expects input to be an object with a `structureId` key that is a number
+export const structureAdminProcedure = protectedProcedure.use(
+  async ({ ctx, next, getRawInput }) => {
+    const rawInput = await getRawInput()
+    if (
+      typeof rawInput !== "object" ||
+      !rawInput ||
+      !("structureId" in rawInput)
+    )
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Structure ID not found in input.",
+      })
+
+    if (typeof rawInput.structureId !== "number")
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Structure ID is not of type number.",
+      })
+
+    const currentStructureUser = await getCurrentStructureUser(
+      ctx,
+      rawInput.structureId,
+    )
+    if (!currentStructureUser || !isAdmin(currentStructureUser.role))
+      throw new TRPCError({ code: "UNAUTHORIZED" })
+    return next({
+      ctx: {
+        ...ctx,
+        currentStructureUser,
+      },
+    })
+  },
+)
+
+export const structureOwnerProcedure = structureAdminProcedure.use(
+  async ({ ctx, next }) => {
+    if (!isOwner(ctx.currentStructureUser?.role))
+      throw new TRPCError({ code: "UNAUTHORIZED" })
+    return next()
+  },
+)

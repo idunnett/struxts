@@ -48,7 +48,8 @@ export default function ManageMemberActions({
         </div>
       ) : (
         <>
-          {isCurrentUserOwner || member.role === "Guest" ? (
+          {(isCurrentUserOwner || member.role === "Guest") &&
+          member.clerkUser.id !== session.userId ? (
             <Select
               value={member.role}
               onValueChange={(value) => {

@@ -11,12 +11,17 @@ import { cn } from "~/lib/utils"
 
 interface Props {
   structureId: number
+  currentStructureUser: {
+    role: string
+    userId: string
+  }
   onAddMember: () => void
   onManageMembers: () => void
 }
 
 export default function MembersMenuItem({
   structureId,
+  currentStructureUser,
   onAddMember,
   onManageMembers,
 }: Props) {
@@ -53,6 +58,7 @@ export default function MembersMenuItem({
         {members && (
           <MembersMenu
             members={members}
+            currentStructureUser={currentStructureUser}
             onAddMember={onAddMember}
             onManageMembers={onManageMembers}
           />

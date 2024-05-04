@@ -13,7 +13,7 @@ import { cn } from "~/lib/utils"
 import { type NodeData } from "~/types"
 import LineWrappingInput from "react-line-wrapping-input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
-import TipTapEditor from "./TipTapEditor"
+import TipTapEditor from "../TipTapEditor"
 import { colours } from "~/lib/constants"
 
 export default function BasicNode({

@@ -6,7 +6,7 @@ import {
   EdgeLabelRenderer,
   type Node,
 } from "reactflow"
-import { getEdgeParams } from "./edgeUtils"
+import { getEdgeParams } from "../../_utils/edgeUtils"
 import { type EdgeData } from "~/types"
 import { cn } from "~/lib/utils"
 import {

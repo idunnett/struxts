@@ -1,5 +1,9 @@
 import { z } from "zod"
-import { createTRPCRouter, protectedProcedure } from "../trpc"
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  structureAdminProcedure,
+} from "../trpc"
 import { structures, usersStructures } from "~/server/db/schema"
 import { and, desc, eq } from "drizzle-orm"
 import { clerkClient } from "@clerk/nextjs/server"
@@ -49,7 +53,7 @@ export const userRouter = createTRPCRouter({
     return users.data
   }),
 
-  addToStructure: protectedProcedure
+  addToStructure: structureAdminProcedure
     .input(
       z.object({
         structureId: z.number(),
@@ -57,25 +61,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const currentStructureUser = await getCurrentStructureUser(
-        ctx,
-        input.structureId,
-      )
-      if (!currentStructureUser)
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this structure",
-        })
-      if (
-        currentStructureUser.role !== "Admin" &&
-        currentStructureUser.role !== "Owner"
-      )
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "You do not have permission to add members to this structure",
-        })
-
       const user = await clerkClient.users.getUser(input.userId)
       if (!user)
         throw new TRPCError({
@@ -100,7 +85,7 @@ export const userRouter = createTRPCRouter({
         role: res?.role ?? "Guest",
       } satisfies StruxtUser
     }),
-  removeFromStructure: protectedProcedure
+  removeFromStructure: structureAdminProcedure
     .input(
       z.object({
         structureId: z.number(),
@@ -108,25 +93,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const currentStructureUser = await getCurrentStructureUser(
-        ctx,
-        input.structureId,
-      )
-      if (!currentStructureUser)
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this structure",
-        })
-      if (
-        currentStructureUser.role !== "Admin" &&
-        currentStructureUser.role !== "Owner"
-      )
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "You do not have permission to remove members from this structure",
-        })
-
       const clerkUserToRemove = await clerkClient.users.getUser(input.userId)
       if (!clerkUserToRemove)
         throw new TRPCError({
@@ -153,7 +119,7 @@ export const userRouter = createTRPCRouter({
         })
 
       if (
-        currentStructureUser.role !== "Owner" &&
+        ctx.currentStructureUser.role !== "Owner" &&
         structureUserToRemove.role === "Admin"
       )
         throw new TRPCError({
@@ -171,7 +137,7 @@ export const userRouter = createTRPCRouter({
           ),
         )
     }),
-  updateUserRole: protectedProcedure
+  updateUserRole: structureAdminProcedure
     .input(
       z.object({
         structureId: z.number(),
@@ -180,25 +146,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const currentStructureUser = await getCurrentStructureUser(
-        ctx,
-        input.structureId,
-      )
-      if (!currentStructureUser)
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You are not a member of this structure",
-        })
-      if (
-        currentStructureUser.role !== "Admin" &&
-        currentStructureUser.role !== "Owner"
-      )
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "You do not have permission to update roles in this structure",
-        })
-
       const clerkUser = await clerkClient.users.getUser(input.userId)
       if (!clerkUser)
         throw new TRPCError({
@@ -225,7 +172,7 @@ export const userRouter = createTRPCRouter({
         })
 
       if (
-        currentStructureUser.role !== "Owner" &&
+        ctx.currentStructureUser.role !== "Owner" &&
         structureUser.role === "Admin" &&
         input.role !== "Admin"
       )

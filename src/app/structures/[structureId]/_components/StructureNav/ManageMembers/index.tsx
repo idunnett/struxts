@@ -19,7 +19,7 @@ export default function ManageMembers({ structureId }: Props) {
   }, [members, userId])
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col py-4">
       <div className="flex flex-col gap-2">
         {members.map((member) => (
           <div key={member.clerkUser.id} className="flex justify-between gap-8">

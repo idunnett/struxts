@@ -3,7 +3,12 @@ import { and, eq, inArray, or } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc"
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  structureAdminProcedure,
+  structureOwnerProcedure,
+} from "~/server/api/trpc"
 import { usersStructures, structures, nodes, edges } from "~/server/db/schema"
 
 const updateNodeSchema = z.object({
@@ -49,12 +54,6 @@ export const structureRouter = createTRPCRouter({
         })
       }
 
-      await ctx.db.insert(usersStructures).values({
-        userId: ctx.session.userId,
-        structureId: newStructure.id,
-        role: "Admin",
-      })
-
       return newStructure.id
     }),
 
@@ -68,8 +67,8 @@ export const structureRouter = createTRPCRouter({
         createdAt: structures.createdAt,
         updatedAt: structures.updatedAt,
       })
-      .from(usersStructures)
-      .innerJoin(structures, eq(structures.id, usersStructures.structureId))
+      .from(structures)
+      .leftJoin(usersStructures, eq(structures.id, usersStructures.structureId))
       .where(
         or(
           eq(usersStructures.userId, ctx.session.userId),
@@ -78,21 +77,6 @@ export const structureRouter = createTRPCRouter({
       )
       .orderBy(structures.owner, structures.updatedAt)
   }),
-
-  getOneOfMy: protectedProcedure.query(async ({ ctx }) => {
-    const [firstStructure] = await ctx.db
-      .select({
-        id: structures.id,
-        name: structures.name,
-      })
-      .from(usersStructures)
-      .innerJoin(structures, eq(structures.id, usersStructures.structureId))
-      .where(eq(usersStructures.userId, ctx.session.userId))
-      .limit(1)
-
-    return firstStructure
-  }),
-
   getById: protectedProcedure
     .input(z.number())
     .query(async ({ ctx, input }) => {
@@ -101,8 +85,11 @@ export const structureRouter = createTRPCRouter({
           id: structures.id,
           name: structures.name,
         })
-        .from(usersStructures)
-        .innerJoin(structures, eq(structures.id, usersStructures.structureId))
+        .from(structures)
+        .leftJoin(
+          usersStructures,
+          eq(structures.id, usersStructures.structureId),
+        )
         .where(
           and(
             eq(structures.id, input),
@@ -116,7 +103,7 @@ export const structureRouter = createTRPCRouter({
 
       return structure
     }),
-  update: protectedProcedure
+  update: structureAdminProcedure
     .input(
       z.object({
         structureId: z.number(),
@@ -221,5 +208,32 @@ export const structureRouter = createTRPCRouter({
       }
 
       revalidatePath(`/structures/${input.structureId}`)
+    }),
+  updateName: structureOwnerProcedure
+    .input(z.object({ structureId: z.number(), name: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(structures)
+        .set({ name: input.name })
+        .where(eq(structures.id, input.structureId))
+      revalidatePath(`/structures/${input.structureId}`)
+      revalidatePath(`/structures/${input.structureId}/settings`)
+    }),
+
+  delete: structureOwnerProcedure
+    .input(
+      z.object({
+        structureId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { structureId } = input
+      await ctx.db.delete(edges).where(eq(edges.structureId, structureId))
+      await ctx.db.delete(nodes).where(eq(nodes.structureId, structureId))
+      await ctx.db
+        .delete(usersStructures)
+        .where(eq(usersStructures.structureId, structureId))
+      await ctx.db.delete(structures).where(eq(structures.id, structureId))
+      revalidatePath("/structures")
     }),
 })
