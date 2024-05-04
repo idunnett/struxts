@@ -33,7 +33,7 @@ export default function MyStructuresSelect({ myStructures }: Props) {
 
   return (
     <>
-      <div className="h-3/4 w-[1px] rotate-12 bg-border" />
+      <div className="h-3/4 w-[1px] rotate-12 bg-muted-foreground" />
       <Select
         key={selectedStructureId}
         value={selectedStructureId}
