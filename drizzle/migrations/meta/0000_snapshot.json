@@ -1,106 +1,97 @@
 {
-  "version": "5",
-  "dialect": "sqlite",
-  "id": "57ec0c55-e009-4cb7-b072-8e1d5b15b0aa",
+  "id": "dcaf96d9-05e4-40db-9291-b3b291f607ed",
   "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "5",
+  "dialect": "pg",
   "tables": {
-    "struxts_account": {
-      "name": "struxts_account",
+    "edges": {
+      "name": "edges",
+      "schema": "",
       "columns": {
-        "userId": {
-          "name": "userId",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
         },
-        "type": {
-          "name": "type",
-          "type": "text(255)",
+        "source": {
+          "name": "source",
+          "type": "serial",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
-        "provider": {
-          "name": "provider",
-          "type": "text(255)",
+        "target": {
+          "name": "target",
+          "type": "serial",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
-        "providerAccountId": {
-          "name": "providerAccountId",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "refresh_token": {
-          "name": "refresh_token",
+        "startLabel": {
+          "name": "startLabel",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
-        "access_token": {
-          "name": "access_token",
+        "label": {
+          "name": "label",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "token_type": {
-          "name": "token_type",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "scope": {
-          "name": "scope",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "id_token": {
-          "name": "id_token",
+        "endLabel": {
+          "name": "endLabel",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         },
-        "session_state": {
-          "name": "session_state",
-          "type": "text(255)",
+        "color": {
+          "name": "color",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "default": "'#000000'"
+        },
+        "structureId": {
+          "name": "structureId",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {
-        "account_userId_idx": {
-          "name": "account_userId_idx",
-          "columns": [
-            "userId"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
-        "struxts_account_userId_struxts_user_id_fk": {
-          "name": "struxts_account_userId_struxts_user_id_fk",
-          "tableFrom": "struxts_account",
-          "tableTo": "struxts_user",
+        "edges_source_nodes_id_fk": {
+          "name": "edges_source_nodes_id_fk",
+          "tableFrom": "edges",
+          "tableTo": "nodes",
           "columnsFrom": [
-            "userId"
+            "source"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "edges_target_nodes_id_fk": {
+          "name": "edges_target_nodes_id_fk",
+          "tableFrom": "edges",
+          "tableTo": "nodes",
+          "columnsFrom": [
+            "target"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "edges_structureId_structures_id_fk": {
+          "name": "edges_structureId_structures_id_fk",
+          "tableFrom": "edges",
+          "tableTo": "structures",
+          "columnsFrom": [
+            "structureId"
           ],
           "columnsTo": [
             "id"
@@ -109,92 +100,82 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "struxts_account_provider_providerAccountId_pk": {
-          "columns": [
-            "provider",
-            "providerAccountId"
-          ],
-          "name": "struxts_account_provider_providerAccountId_pk"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "struxts_nodes": {
-      "name": "struxts_nodes",
+    "nodes": {
+      "name": "nodes",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "x": {
           "name": "x",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "y": {
           "name": "y",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "w": {
           "name": "w",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "h": {
           "name": "h",
           "type": "integer",
           "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "info": {
+          "name": "info",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "border_color": {
+          "name": "border_color",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "default": "'#000000'"
         },
-        "title": {
-          "name": "title",
-          "type": "text(255)",
+        "bg_color": {
+          "name": "bg_color",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "description": {
-          "name": "description",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "parentId": {
-          "name": "parentId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "default": "'#ffffff'"
         },
         "structureId": {
           "name": "structureId",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "struxts_nodes_structureId_struxts_structures_id_fk": {
-          "name": "struxts_nodes_structureId_struxts_structures_id_fk",
-          "tableFrom": "struxts_nodes",
-          "tableTo": "struxts_structures",
+        "nodes_structureId_structures_id_fk": {
+          "name": "nodes_structureId_structures_id_fk",
+          "tableFrom": "nodes",
+          "tableTo": "structures",
           "columnsFrom": [
             "structureId"
           ],
@@ -208,155 +189,40 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "struxts_session": {
-      "name": "struxts_session",
-      "columns": {
-        "sessionToken": {
-          "name": "sessionToken",
-          "type": "text(255)",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "expires": {
-          "name": "expires",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "session_userId_idx": {
-          "name": "session_userId_idx",
-          "columns": [
-            "userId"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "struxts_session_userId_struxts_user_id_fk": {
-          "name": "struxts_session_userId_struxts_user_id_fk",
-          "tableFrom": "struxts_session",
-          "tableTo": "struxts_user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "struxts_structures": {
-      "name": "struxts_structures",
+    "structures": {
+      "name": "structures",
+      "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "serial",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
+          "notNull": true
         },
         "name": {
           "name": "name",
-          "type": "text(255)",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true
         },
         "createdById": {
           "name": "createdById",
-          "type": "text(255)",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updatedAt": {
           "name": "updatedAt",
-          "type": "integer",
+          "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "struxts_structures_createdById_struxts_user_id_fk": {
-          "name": "struxts_structures_createdById_struxts_user_id_fk",
-          "tableFrom": "struxts_structures",
-          "tableTo": "struxts_user",
-          "columnsFrom": [
-            "createdById"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "struxts_user": {
-      "name": "struxts_user",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text(255)",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "emailVerified": {
-          "name": "emailVerified",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "image": {
-          "name": "image",
-          "type": "text(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": false
         }
       },
       "indexes": {},
@@ -364,43 +230,35 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "struxts_usersStructures": {
-      "name": "struxts_usersStructures",
+    "user_structure_invites": {
+      "name": "user_structure_invites",
+      "schema": "",
       "columns": {
+        "invitedBy": {
+          "name": "invitedBy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "userId": {
           "name": "userId",
-          "type": "text(255)",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
         },
         "structureId": {
           "name": "structureId",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "struxts_usersStructures_userId_struxts_user_id_fk": {
-          "name": "struxts_usersStructures_userId_struxts_user_id_fk",
-          "tableFrom": "struxts_usersStructures",
-          "tableTo": "struxts_user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "struxts_usersStructures_structureId_struxts_structures_id_fk": {
-          "name": "struxts_usersStructures_structureId_struxts_structures_id_fk",
-          "tableFrom": "struxts_usersStructures",
-          "tableTo": "struxts_structures",
+        "user_structure_invites_structureId_structures_id_fk": {
+          "name": "user_structure_invites_structureId_structures_id_fk",
+          "tableFrom": "user_structure_invites",
+          "tableTo": "structures",
           "columnsFrom": [
             "structureId"
           ],
@@ -411,52 +269,85 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "user_structure_invites_invitedBy_userId_structureId_pk": {
+          "name": "user_structure_invites_invitedBy_userId_structureId_pk",
+          "columns": [
+            "invitedBy",
+            "userId",
+            "structureId"
+          ]
+        }
+      },
       "uniqueConstraints": {}
     },
-    "struxts_verificationToken": {
-      "name": "struxts_verificationToken",
+    "users_structures": {
+      "name": "users_structures",
+      "schema": "",
       "columns": {
-        "identifier": {
-          "name": "identifier",
-          "type": "text(255)",
+        "userId": {
+          "name": "userId",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
-        "token": {
-          "name": "token",
-          "type": "text(255)",
+        "structureId": {
+          "name": "structureId",
+          "type": "serial",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "notNull": true
         },
-        "expires": {
-          "name": "expires",
-          "type": "integer",
+        "role": {
+          "name": "role",
+          "type": "users_structures_role",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "default": "'Guest'"
         }
       },
       "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "struxts_verificationToken_identifier_token_pk": {
-          "columns": [
-            "identifier",
-            "token"
+      "foreignKeys": {
+        "users_structures_structureId_structures_id_fk": {
+          "name": "users_structures_structureId_structures_id_fk",
+          "tableFrom": "users_structures",
+          "tableTo": "structures",
+          "columnsFrom": [
+            "structureId"
           ],
-          "name": "struxts_verificationToken_identifier_token_pk"
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "users_structures_userId_structureId_pk": {
+          "name": "users_structures_userId_structureId_pk",
+          "columns": [
+            "userId",
+            "structureId"
+          ]
         }
       },
       "uniqueConstraints": {}
     }
   },
-  "enums": {},
+  "enums": {
+    "users_structures_role": {
+      "name": "users_structures_role",
+      "values": {
+        "Guest": "Guest",
+        "Admin": "Admin",
+        "Maintainer": "Maintainer",
+        "Owner": "Owner"
+      }
+    }
+  },
+  "schemas": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
+    "tables": {}
   }
 }
