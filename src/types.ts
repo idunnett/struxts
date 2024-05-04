@@ -1,4 +1,5 @@
 import { type User } from "@clerk/nextjs/server"
+import { type usersStructuresRoleEnum } from "./server/db/schema"
 
 export interface NodeData {
   label: string
@@ -20,7 +21,9 @@ export interface EdgeData {
   onDelete?: (edgeId: string) => void
 }
 
+export type ValuesOf<T extends unknown[]> = T[number]
+
 export interface StruxtUser {
   clerkUser: User
-  role: string
+  role: ValuesOf<typeof usersStructuresRoleEnum.enumValues>
 }

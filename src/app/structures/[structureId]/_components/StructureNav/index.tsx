@@ -13,7 +13,7 @@ import {
 import Spinner from "~/components/Spinner"
 import ManageMembers from "./ManageMembers"
 import { Button, buttonVariants } from "~/components/ui/button"
-import InviteMemberForm from "../InviteMemberForm"
+import InviteMemberForm from "./InviteMemberForm"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { isOwner } from "~/lib/utils"
@@ -81,7 +81,7 @@ export default function StructureNav({
       <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invite a Member to {structure.name}</DialogTitle>
+            <DialogTitle>Invite a Member</DialogTitle>
           </DialogHeader>
           <Suspense
             fallback={
