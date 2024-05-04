@@ -39,8 +39,11 @@ export default function MyStructuresSelect({ myStructures }: Props) {
         value={selectedStructureId}
         onValueChange={handleStructureChange}
       >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select a structure" />
+        <SelectTrigger className="max-w-96 gap-2 border-none text-lg font-semibold !ring-0">
+          <SelectValue
+            placeholder="Select a structure"
+            className="shrink truncate"
+          />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
