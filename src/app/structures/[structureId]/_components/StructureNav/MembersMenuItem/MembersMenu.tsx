@@ -22,23 +22,10 @@ export default function MembersMenu({
   onManageMembers,
 }: Props) {
   return (
-    <div className="flex w-max flex-col gap-4 p-4">
+    <div className="flex w-max flex-col gap-6 p-4">
       {members && (
         <>
           <div className="flex flex-col gap-1">
-            {isAdmin(currentStructureUser.role) && (
-              <div className="-mt-3 flex w-full justify-end">
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="w-min gap-1 px-0 text-xs"
-                  onClick={onManageMembers}
-                >
-                  <Settings className="h-3 w-3" />
-                  Manage
-                </Button>
-              </div>
-            )}
             <div className="flex flex-col gap-2">
               {members.map((member) => (
                 <div
@@ -73,13 +60,24 @@ export default function MembersMenu({
             </div>
           </div>
           {isAdmin(currentStructureUser.role) && (
-            <Button
-              size="sm"
-              className="h-8 w-min text-xs"
-              onClick={onAddMember}
-            >
-              + Add Member
-            </Button>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-min gap-1 text-xs"
+                onClick={onManageMembers}
+              >
+                <Settings className="h-3 w-3" />
+                Manage
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 w-min text-xs"
+                onClick={onAddMember}
+              >
+                + Add Member
+              </Button>
+            </div>
           )}
         </>
       )}

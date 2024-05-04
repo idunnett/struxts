@@ -19,7 +19,6 @@ export const structures = pgTable("structures", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   createdById: text("createdById").notNull(),
-  owner: text("owner").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt"),
 })
@@ -27,6 +26,7 @@ export const structures = pgTable("structures", {
 export const usersStructuresRoleEnum = pgEnum("users_structures_role", [
   "Guest",
   "Admin",
+  "Owner",
 ])
 
 export const usersStructures = pgTable(

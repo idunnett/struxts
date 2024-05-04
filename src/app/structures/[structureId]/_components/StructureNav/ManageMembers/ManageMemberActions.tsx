@@ -71,12 +71,17 @@ export default function ManageMemberActions({
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="Admin" className="text-xs">
-                    Admin
-                  </SelectItem>
                   <SelectItem value="Guest" className="text-xs">
                     Guest
                   </SelectItem>
+                  <SelectItem value="Admin" className="text-xs">
+                    Admin
+                  </SelectItem>
+                  {isCurrentUserOwner && (
+                    <SelectItem value="Owner" className="text-xs">
+                      Owner
+                    </SelectItem>
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>

@@ -4,7 +4,7 @@ import {
   protectedProcedure,
   structureAdminProcedure,
 } from "../trpc"
-import { structures, usersStructures } from "~/server/db/schema"
+import { usersStructures } from "~/server/db/schema"
 import { and, desc, eq } from "drizzle-orm"
 import { clerkClient } from "@clerk/nextjs/server"
 import { TRPCError } from "@trpc/server"
@@ -18,12 +18,7 @@ export const userRouter = createTRPCRouter({
   getStructureMembers: protectedProcedure
     .input(z.number())
     .query(async ({ ctx, input }) => {
-      const [owner] = await ctx.db
-        .select({ userId: structures.owner })
-        .from(structures)
-        .where(eq(structures.id, input))
-        .limit(1)
-      const members: { userId: string; role: string }[] = await ctx.db
+      const members = await ctx.db
         .select({
           userId: usersStructures.userId,
           role: usersStructures.role,
@@ -31,8 +26,6 @@ export const userRouter = createTRPCRouter({
         .from(usersStructures)
         .where(eq(usersStructures.structureId, input))
         .orderBy(desc(usersStructures.role))
-
-      if (owner) members.unshift({ ...owner, role: "Owner" })
 
       const clerkUsers = await Promise.all(
         members.map((member) => clerkClient.users.getUser(member.userId)),
@@ -142,7 +135,7 @@ export const userRouter = createTRPCRouter({
       z.object({
         structureId: z.number(),
         userId: z.string(),
-        role: z.enum(["Admin", "Guest"]),
+        role: z.enum(["Owner", "Admin", "Guest"]),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -179,6 +172,12 @@ export const userRouter = createTRPCRouter({
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You do not have permission to demote an Admin",
+        })
+
+      if (ctx.currentStructureUser.role !== "Owner" && input.role === "Owner")
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to promote a user to Owner",
         })
 
       await ctx.db

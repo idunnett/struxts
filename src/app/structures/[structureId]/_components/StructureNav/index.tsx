@@ -1,12 +1,5 @@
 "use client"
 
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "~/components/ui/navigation-menu"
 import MembersMenuItem from "./MembersMenuItem"
 import { Suspense, useState } from "react"
 import {
@@ -19,7 +12,7 @@ import {
 } from "~/components/ui/dialog"
 import Spinner from "~/components/Spinner"
 import ManageMembers from "./ManageMembers"
-import { Button } from "~/components/ui/button"
+import { Button, buttonVariants } from "~/components/ui/button"
 import InviteMemberForm from "../InviteMemberForm"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -48,32 +41,42 @@ export default function StructureNav({
   return (
     <>
       <div className="border-b px-4 py-1">
-        <NavigationMenu className="flex-initial">
-          <NavigationMenuList>
-            <MembersMenuItem
-              structureId={structure.id}
-              currentStructureUser={currentStructureUser}
-              onAddMember={() => setAddMemberDialogOpen(true)}
-              onManageMembers={() => setManageMembersDialogOpen(true)}
-            />
-            {isOwner(currentStructureUser.role) && (
-              <NavigationMenuItem className="relative">
-                <Link
-                  href={`/structures/${structure.id}/settings`}
-                  legacyBehavior
-                  passHref
-                >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Settings
-                  </NavigationMenuLink>
-                </Link>
-                {pathname === `/structures/${structure.id}/settings` && (
-                  <div className="absolute top-full h-[1px] w-full translate-y-1 bg-primary" />
-                )}
-              </NavigationMenuItem>
+        <div className="flex flex-initial items-center gap-4">
+          <div className="relative">
+            <Link
+              href={`/structures/${structure.id}`}
+              className={buttonVariants({
+                variant: "ghost",
+              })}
+            >
+              Structure
+            </Link>
+            {pathname === `/structures/${structure.id}` && (
+              <div className="absolute top-full h-[1px] w-full translate-y-1 bg-primary" />
             )}
-          </NavigationMenuList>
-        </NavigationMenu>
+          </div>
+          <MembersMenuItem
+            structureId={structure.id}
+            currentStructureUser={currentStructureUser}
+            onAddMember={() => setAddMemberDialogOpen(true)}
+            onManageMembers={() => setManageMembersDialogOpen(true)}
+          />
+          {isOwner(currentStructureUser.role) && (
+            <div className="relative">
+              <Link
+                href={`/structures/${structure.id}/settings`}
+                className={buttonVariants({
+                  variant: "ghost",
+                })}
+              >
+                Settings
+              </Link>
+              {pathname === `/structures/${structure.id}/settings` && (
+                <div className="absolute top-full h-[1px] w-full translate-y-1 bg-primary" />
+              )}
+            </div>
+          )}
+        </div>
       </div>
       <Dialog open={addMemberDialogOpen} onOpenChange={setAddMemberDialogOpen}>
         <DialogContent className="sm:max-w-md">

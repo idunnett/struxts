@@ -1,13 +1,14 @@
-import {
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuTrigger,
-} from "~/components/ui/navigation-menu"
 import MembersMenu from "./MembersMenu"
 import { api } from "~/trpc/react"
 import Image from "next/image"
 import { Skeleton } from "~/components/ui/skeleton"
 import { cn } from "~/lib/utils"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "~/components/ui/popover"
+import { Button } from "~/components/ui/button"
 
 interface Props {
   structureId: number
@@ -28,32 +29,34 @@ export default function MembersMenuItem({
   const { data: members, isPending } =
     api.user.getStructureMembers.useQuery(structureId)
   return (
-    <NavigationMenuItem>
-      <NavigationMenuTrigger className="flex gap-2">
-        <div className="flex items-center">
-          {isPending && (
-            <>
-              <Skeleton className="h-6 w-6 rounded-full border" />
-              <Skeleton className="-ml-2 h-6 w-6 rounded-full border" />
-              <Skeleton className="-ml-2 h-6 w-6 rounded-full border" />
-            </>
-          )}
-          {members
-            ?.slice(0, 3)
-            ?.map((member, i) => (
-              <Image
-                key={member.clerkUser.id}
-                src={member.clerkUser.imageUrl}
-                alt={member.clerkUser.fullName ?? "Member picture"}
-                width={24}
-                height={24}
-                className={cn("rounded-full", i !== 0 && "-ml-2")}
-              />
-            ))}
-        </div>
-        Members
-      </NavigationMenuTrigger>
-      <NavigationMenuContent>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="flex items-center gap-2">
+          <div className="flex items-center">
+            {isPending && (
+              <>
+                <Skeleton className="h-6 w-6 rounded-full border" />
+                <Skeleton className="-ml-2 h-6 w-6 rounded-full border" />
+                <Skeleton className="-ml-2 h-6 w-6 rounded-full border" />
+              </>
+            )}
+            {members
+              ?.slice(0, 3)
+              ?.map((member, i) => (
+                <Image
+                  key={member.clerkUser.id}
+                  src={member.clerkUser.imageUrl}
+                  alt={member.clerkUser.fullName ?? "Member picture"}
+                  width={24}
+                  height={24}
+                  className={cn("rounded-full", i !== 0 && "-ml-2")}
+                />
+              ))}
+          </div>
+          Members
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent sideOffset={10}>
         {isPending && <Skeleton className="h-[20px] w-[100px] rounded-full" />}
         {members && (
           <MembersMenu
@@ -63,7 +66,7 @@ export default function MembersMenuItem({
             onManageMembers={onManageMembers}
           />
         )}
-      </NavigationMenuContent>
-    </NavigationMenuItem>
+      </PopoverContent>
+    </Popover>
   )
 }
