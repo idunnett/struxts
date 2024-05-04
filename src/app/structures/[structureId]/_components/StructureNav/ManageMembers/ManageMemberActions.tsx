@@ -56,7 +56,7 @@ export default function ManageMemberActions({
                 updateUserRole.mutate({
                   structureId,
                   userId: member.clerkUser.id,
-                  role: value === "Admin" ? "Admin" : "Guest",
+                  role: value as StruxtUser["role"],
                 })
               }}
               disabled={updateUserRole.isPending}
