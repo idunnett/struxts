@@ -160,7 +160,7 @@ export default function BasicNode({
             >
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="account">Info</TabsTrigger>
+                  <TabsTrigger value="info">Info</TabsTrigger>
                   <TabsTrigger value="files">Files</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">
