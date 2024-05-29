@@ -1,20 +1,20 @@
 "use client"
 
-import { Info, Trash, Circle, CircleSlash } from "lucide-react"
+import { Circle, CircleSlash, Info, Trash } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Handle, type NodeProps, Position } from "reactflow"
+import LineWrappingInput from "react-line-wrapping-input"
+import { Handle, Position, type NodeProps } from "reactflow"
 import { Button } from "~/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+import { colours } from "~/lib/constants"
 import { cn } from "~/lib/utils"
 import { type NodeData } from "~/types"
-import LineWrappingInput from "react-line-wrapping-input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
 import TipTapEditor from "../TipTapEditor"
-import { colours } from "~/lib/constants"
 
 export default function BasicNode({
   id,
@@ -59,6 +59,10 @@ export default function BasicNode({
   useEffect(() => {
     if (dragging) setToolbarPopoverOpen(false)
   }, [dragging])
+
+  useEffect(() => {
+    data.onInfoOpenChange?.(infoPopoverOpen)
+  }, [data, infoPopoverOpen])
 
   return (
     <Popover
@@ -154,12 +158,12 @@ export default function BasicNode({
                 e.stopPropagation()
               }}
             >
-              <Tabs defaultValue="account" className="w-full">
+              <Tabs defaultValue="info" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="account">Info</TabsTrigger>
-                  <TabsTrigger value="password">Files</TabsTrigger>
+                  <TabsTrigger value="files">Files</TabsTrigger>
                 </TabsList>
-                <TabsContent value="account">
+                <TabsContent value="info">
                   <TipTapEditor
                     editable={data.editable}
                     info={data.info}
@@ -168,6 +172,7 @@ export default function BasicNode({
                     }
                   />
                 </TabsContent>
+                <TabsContent value="files">Files</TabsContent>
               </Tabs>
             </PopoverContent>
           </Popover>

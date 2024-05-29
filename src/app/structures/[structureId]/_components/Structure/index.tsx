@@ -1,40 +1,39 @@
 "use client"
 
 import {
-  type MouseEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
   useTransition,
-  useEffect,
+  type MouseEvent,
 } from "react"
 import ReactFlow, {
-  type Connection,
-  type Edge,
-  type Node,
+  Background,
+  BackgroundVariant,
+  ConnectionLineType,
+  ConnectionMode,
+  ControlButton,
+  Controls,
+  MarkerType,
+  Panel,
   addEdge,
   useEdgesState,
   useNodesState,
-  Controls,
-  MiniMap,
-  BackgroundVariant,
-  Background,
-  ConnectionLineType,
-  MarkerType,
-  ConnectionMode,
-  ControlButton,
-  Panel,
-  type ReactFlowInstance,
+  type Connection,
   type DefaultEdgeOptions,
+  type Edge,
+  type Node,
+  type ReactFlowInstance,
 } from "reactflow"
 
-import "reactflow/dist/style.css"
-import BasicNode from "./BasicNode"
-import FloatingEdge from "./FloatingEdge"
-import FloatingConnectionLine from "./FloatingConnectionLine"
-import { type EdgeData, type NodeData } from "~/types"
 import { Lock, Unlock } from "lucide-react"
+import { nanoid } from "nanoid"
+import { useRouter } from "next/navigation"
+import "reactflow/dist/style.css"
+import { toast } from "sonner"
+import Spinner from "~/components/Spinner"
 import { Button } from "~/components/ui/button"
 import {
   ContextMenu,
@@ -42,17 +41,17 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "~/components/ui/context-menu"
-import { nanoid } from "nanoid"
 import {
   type UpdateEdge,
   type UpdateNode,
 } from "~/server/api/routers/structure"
 import { api } from "~/trpc/react"
 import { type api as serverApi } from "~/trpc/server"
-import Spinner from "~/components/Spinner"
-import { useRouter } from "next/navigation"
+import { type EdgeData, type NodeData } from "~/types"
+import BasicNode from "./BasicNode"
 import DownloadButton from "./DownloadButton"
-import { toast } from "sonner"
+import FloatingConnectionLine from "./FloatingConnectionLine"
+import FloatingEdge from "./FloatingEdge"
 
 interface Props {
   structure: {
@@ -90,6 +89,7 @@ export default function Structure({
     bgColor: string
     borderColor: string
   }>({ bgColor: "#ffffff", borderColor: "#000000" })
+  const [isNodeInfoOpen, setIsNodeInfoOpen] = useState(false)
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialNodes.map((node) => ({
       ...node,
@@ -400,7 +400,7 @@ export default function Structure({
   return (
     <div className="h-full w-full" ref={reactFlowWrapper}>
       <ContextMenu>
-        <ContextMenuTrigger>
+        <ContextMenuTrigger disabled={isNodeInfoOpen}>
           <ReactFlow
             nodes={nodes.map((node) => ({
               ...node,
@@ -410,6 +410,7 @@ export default function Structure({
                 onNodeDataChange,
                 onDelete: (id: string) =>
                   reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
+                onInfoOpenChange: setIsNodeInfoOpen,
               },
             }))}
             edges={edges.map((edge) => ({
@@ -505,7 +506,7 @@ export default function Structure({
                 </ControlButton>
               </Controls>
             )}
-            <MiniMap />
+            {/* <MiniMap /> */}
             {editable && reactFlowInstance && currentUserCanEdit && (
               <Background
                 variant={BackgroundVariant.Dots}

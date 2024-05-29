@@ -9,6 +9,7 @@ export interface NodeData {
   bgColor: string
   onDelete?: (nodeId: string) => void
   onNodeDataChange?: (nodeId: string, data: Partial<NodeData>) => void
+  onInfoOpenChange?: (open: boolean) => void
 }
 
 export interface EdgeData {
