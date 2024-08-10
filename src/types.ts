@@ -7,9 +7,10 @@ export interface NodeData {
   editable: boolean
   borderColor: string
   bgColor: string
+  files: FileState[]
+  isActive: boolean
   onDelete?: (nodeId: string) => void
   onNodeDataChange?: (nodeId: string, data: Partial<NodeData>) => void
-  onInfoOpenChange?: (open: boolean) => void
 }
 
 export interface EdgeData {
@@ -20,6 +21,15 @@ export interface EdgeData {
   editable?: boolean
   onEdgeDataChange?: (edgeId: string, data: Partial<EdgeData>) => void
   onDelete?: (edgeId: string) => void
+}
+
+export interface FileState {
+  id: string
+  key: string | null
+  name: string
+  url: string | null
+  parentId: string | null
+  isFolder: boolean
 }
 
 export type ValuesOf<T extends unknown[]> = T[number]

@@ -1,5 +1,5 @@
 DO $$ BEGIN
- CREATE TYPE "users_structures_role" AS ENUM('Guest', 'Admin', 'Owner');
+ CREATE TYPE "public"."users_structures_role" AS ENUM('Guest', 'Admin', 'Owner');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -12,6 +12,16 @@ CREATE TABLE IF NOT EXISTS "edges" (
 	"label" text,
 	"endLabel" text,
 	"color" text DEFAULT '#000000' NOT NULL,
+	"structureId" serial NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "files" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"url" text,
+	"parentId" integer,
+	"uploadedBy" text NOT NULL,
+	"isFolder" boolean DEFAULT false NOT NULL,
 	"structureId" serial NOT NULL
 );
 --> statement-breakpoint
@@ -51,37 +61,49 @@ CREATE TABLE IF NOT EXISTS "users_structures" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "edges" ADD CONSTRAINT "edges_source_nodes_id_fk" FOREIGN KEY ("source") REFERENCES "nodes"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "edges" ADD CONSTRAINT "edges_source_nodes_id_fk" FOREIGN KEY ("source") REFERENCES "public"."nodes"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "edges" ADD CONSTRAINT "edges_target_nodes_id_fk" FOREIGN KEY ("target") REFERENCES "nodes"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "edges" ADD CONSTRAINT "edges_target_nodes_id_fk" FOREIGN KEY ("target") REFERENCES "public"."nodes"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "edges" ADD CONSTRAINT "edges_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "structures"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "edges" ADD CONSTRAINT "edges_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "nodes" ADD CONSTRAINT "nodes_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "structures"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "files" ADD CONSTRAINT "files_parentId_files_id_fk" FOREIGN KEY ("parentId") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "user_structure_invites" ADD CONSTRAINT "user_structure_invites_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "structures"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "files" ADD CONSTRAINT "files_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "users_structures" ADD CONSTRAINT "users_structures_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "structures"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "nodes" ADD CONSTRAINT "nodes_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "user_structure_invites" ADD CONSTRAINT "user_structure_invites_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "users_structures" ADD CONSTRAINT "users_structures_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

@@ -38,7 +38,7 @@ export default function MembersMenu({
                       alt={
                         member.clerkUser.fullName ?? "Structure Member Picture"
                       }
-                      className="rounded-full"
+                      className="h-6 w-6 rounded-full"
                       width={24}
                       height={24}
                     />

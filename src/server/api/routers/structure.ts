@@ -9,8 +9,26 @@ import {
   structureAdminProcedure,
   structureOwnerProcedure,
 } from "~/server/api/trpc"
-import { usersStructures, structures, nodes, edges } from "~/server/db/schema"
+import {
+  edges,
+  files,
+  nodes,
+  structures,
+  tempFiles,
+  usersStructures,
+} from "~/server/db/schema"
+import { deleteFile } from "../../actions/deleteFile"
+import { utapi } from "../../uploadthing"
 
+const updateFileSchema = z.object({
+  id: z.string(),
+  key: z.string().nullish(),
+  name: z.string(),
+  url: z.string().nullish(),
+  parentId: z.string().nullish(),
+  structureId: z.number(),
+  isFolder: z.boolean(),
+})
 const updateNodeSchema = z.object({
   id: z.string().optional(),
   position: z.object({
@@ -21,6 +39,7 @@ const updateNodeSchema = z.object({
   info: z.string().nullish(),
   borderColor: z.string().nullish(),
   bgColor: z.string().nullish(),
+  files: z.array(updateFileSchema),
 })
 export type UpdateNode = z.infer<typeof updateNodeSchema>
 const updateEdgeSchema = z.object({
@@ -107,6 +126,7 @@ export const structureRouter = createTRPCRouter({
         edges: z.array(updateEdgeSchema),
         nodesToDelete: z.array(z.number()),
         edgesToDelete: z.array(z.number()),
+        filesToDelete: z.array(z.number()),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -128,6 +148,11 @@ export const structureRouter = createTRPCRouter({
               eq(nodes.structureId, input.structureId),
             ),
           )
+      if (input.filesToDelete.length > 0)
+        for (const fileIdToDelete of input.filesToDelete) {
+          await deleteFile(ctx, fileIdToDelete)
+        }
+
       for (const inputNode of input.nodes) {
         let inputNodeId: number | undefined = undefined
         if (inputNode.id && !inputNode.id.startsWith("reactflow__")) {
@@ -168,6 +193,51 @@ export const structureRouter = createTRPCRouter({
             if (inputEdge.target === inputNode.id) inputEdge.target = newNode.id
           }
         }
+
+        const newFileIds: { newId: number; oldId: string }[] = []
+        for (const inputFile of inputNode.files) {
+          if (!inputFile.id || inputFile.id.startsWith("reactflow__")) {
+            let inputFileParentId: number | null = null
+            if (inputFile.parentId) {
+              if (!isNaN(Number(inputFile.parentId)))
+                inputFileParentId = Number(inputFile.parentId)
+            }
+            const [newFile] = await ctx.db
+              .insert(files)
+              .values({
+                id: undefined,
+                key: inputFile.key,
+                name: inputFile.name,
+                url: inputFile.url,
+                nodeId: newNode.id,
+                parentId: inputFileParentId,
+                structureId: input.structureId,
+                isFolder: inputFile.isFolder,
+              })
+              .returning({ id: files.id })
+            if (!newFile) continue
+            if (inputFile.key) {
+              await ctx.db
+                .delete(tempFiles)
+                .where(eq(tempFiles.key, inputFile.key))
+            }
+            newFileIds.push({ newId: newFile.id, oldId: inputFile.id })
+            inputFile.id = newFile.id.toString()
+          }
+          for (const inputFile of inputNode.files) {
+            if (!inputFile.parentId?.startsWith("reactflow__")) continue
+            const newId = Number(inputFile.id)
+            if (isNaN(newId)) continue
+            const newParentId = newFileIds.find(
+              (f) => f.oldId === inputFile.parentId,
+            )?.newId
+            if (!newParentId) continue
+            await ctx.db
+              .update(files)
+              .set({ parentId: newParentId })
+              .where(eq(files.id, newId))
+          }
+        }
       }
       for (const inputEdge of input.edges) {
         let inputEdgeId: number | undefined = undefined
@@ -177,7 +247,8 @@ export const structureRouter = createTRPCRouter({
         }
         const edgeSource = Number(inputEdge.source)
         const edgeTarget = Number(inputEdge.target)
-        if (isNaN(edgeSource) || isNaN(edgeTarget)) continue
+        if (isNaN(edgeSource) || isNaN(edgeTarget) || edgeSource === edgeTarget)
+          continue
         await ctx.db
           .insert(edges)
           .values({
@@ -201,6 +272,21 @@ export const structureRouter = createTRPCRouter({
               color: inputEdge.color ?? "#000000",
             },
           })
+      }
+
+      const unusedTempFiles = await ctx.db
+        .select({ key: tempFiles.key })
+        .from(tempFiles)
+        .where(eq(tempFiles.structureId, input.structureId))
+
+      if (unusedTempFiles.length) {
+        const { success } = await utapi.deleteFiles(
+          unusedTempFiles.map((f) => f.key),
+        )
+        if (success)
+          await ctx.db
+            .delete(tempFiles)
+            .where(eq(tempFiles.structureId, input.structureId))
       }
 
       revalidatePath(`/structures/${input.structureId}`)

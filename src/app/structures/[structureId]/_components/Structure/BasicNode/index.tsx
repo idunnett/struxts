@@ -1,6 +1,6 @@
 "use client"
 
-import { Circle, CircleSlash, Info, Trash } from "lucide-react"
+import { Circle, CircleSlash, Trash } from "lucide-react"
 import { useEffect, useState } from "react"
 import LineWrappingInput from "react-line-wrapping-input"
 import { Handle, Position, type NodeProps } from "reactflow"
@@ -10,11 +10,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
 import { colours } from "~/lib/constants"
 import { cn } from "~/lib/utils"
 import { type NodeData } from "~/types"
-import TipTapEditor from "../TipTapEditor"
 
 export default function BasicNode({
   id,
@@ -23,56 +21,15 @@ export default function BasicNode({
   dragging,
 }: NodeProps<NodeData>) {
   const [toolbarPopoverOpen, setToolbarPopoverOpen] = useState(false)
-  const [infoPopoverOpen, setInfoPopoverOpen] = useState(false)
   const [focused, setFocused] = useState(false)
-  const [popoverSide, setPopoverSide] = useState<
-    "top" | "right" | "bottom" | "left"
-  >("left")
-  const [popovoerSideOffset, setPopoverSideOffset] = useState(10)
-  const [popoverAlignOffset, setPopoverAlignOffset] = useState(-18)
-
-  function handlePopoverOpen() {
-    setInfoPopoverOpen(true)
-    setTimeout(() => {
-      const popoverContent = document.getElementById(`popover-${id}`)
-      if (!popoverContent) return
-      const side = popoverContent.getAttribute("data-side")
-      if (side === "right") {
-        setPopoverSide("bottom")
-        setPopoverSideOffset(22)
-        setPopoverAlignOffset(-10)
-      } else {
-        setPopoverSide("left")
-        setPopoverSideOffset(10)
-        setPopoverAlignOffset(-18)
-      }
-    })
-  }
-
-  function handlePopoverClose() {
-    setInfoPopoverOpen(false)
-    setTimeout(() => {
-      setPopoverSide("left")
-    }, 100)
-  }
 
   useEffect(() => {
     if (dragging) setToolbarPopoverOpen(false)
   }, [dragging])
 
-  useEffect(() => {
-    data.onInfoOpenChange?.(infoPopoverOpen)
-  }, [data, infoPopoverOpen])
-
   return (
     <Popover
-      open={
-        selected &&
-        data.editable &&
-        !dragging &&
-        !infoPopoverOpen &&
-        toolbarPopoverOpen
-      }
+      open={selected && data.editable && !dragging && toolbarPopoverOpen}
       onOpenChange={(open) =>
         !open && !focused && !selected && setToolbarPopoverOpen(false)
       }
@@ -88,7 +45,7 @@ export default function BasicNode({
             data.label.length > 13 && "pl-6",
             data.label.length > 14 && "pl-7",
             data.label.length > 15 && "pl-8",
-            selected && "ring-2 ring-blue-500/50 ring-offset-1",
+            data.isActive && "ring-2 ring-blue-500/50 ring-offset-1",
             dragging && "cursor-grabbing",
           )}
           style={{
@@ -121,61 +78,6 @@ export default function BasicNode({
             readOnly={!data.editable || !focused}
             onBlur={() => setFocused(false)}
           />
-          <Popover
-            open={infoPopoverOpen}
-            onOpenChange={(open) => {
-              if (!open) handlePopoverClose()
-            }}
-          >
-            <PopoverTrigger
-              asChild
-              className="absolute left-1 top-1/2 -translate-y-1/2"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  if (!infoPopoverOpen) handlePopoverOpen()
-                  setToolbarPopoverOpen(false)
-                  setInfoPopoverOpen(true)
-                }}
-              >
-                <Info className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              id={`popover-${id}`}
-              side={popoverSide}
-              align="start"
-              alignOffset={popoverAlignOffset}
-              sideOffset={popovoerSideOffset}
-              className="w-[500px]"
-              onDoubleClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-              }}
-            >
-              <Tabs defaultValue="info" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="info">Info</TabsTrigger>
-                  <TabsTrigger value="files">Files</TabsTrigger>
-                </TabsList>
-                <TabsContent value="info">
-                  <TipTapEditor
-                    editable={data.editable}
-                    info={data.info}
-                    onInfoUpdate={(info) =>
-                      data.onNodeDataChange?.(id, { info })
-                    }
-                  />
-                </TabsContent>
-                <TabsContent value="files">Files</TabsContent>
-              </Tabs>
-            </PopoverContent>
-          </Popover>
           <Handle
             type="source"
             position={Position.Top}

@@ -1,13 +1,7 @@
-import React from "react"
-import {
-  Panel,
-  useReactFlow,
-  getRectOfNodes,
-  getTransformForBounds,
-} from "reactflow"
 import { toJpeg } from "html-to-image"
-import { Button } from "~/components/ui/button"
 import { Download } from "lucide-react"
+import { getRectOfNodes, getTransformForBounds, useReactFlow } from "reactflow"
+import { Button } from "~/components/ui/button"
 
 interface Props {
   structureName: string
@@ -60,17 +54,15 @@ function DownloadButton({ structureName }: Props) {
   }
 
   return (
-    <Panel position="top-right">
-      <Button
-        size="sm"
-        variant="secondary"
-        className="download-btn gap-2 text-xs"
-        onClick={onClick}
-      >
-        <Download className="h-3 w-3" />
-        Download Image
-      </Button>
-    </Panel>
+    <Button
+      size="sm"
+      variant="secondary"
+      className="download-btn gap-2 text-xs"
+      onClick={onClick}
+    >
+      <Download className="h-3 w-3" />
+      Download Image
+    </Button>
   )
 }
 

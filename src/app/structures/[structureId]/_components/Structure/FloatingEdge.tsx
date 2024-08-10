@@ -1,23 +1,23 @@
+import { Circle, Trash } from "lucide-react"
 import { useCallback, useEffect, useRef } from "react"
 import {
+  EdgeLabelRenderer,
+  getStraightPath,
   useStore,
   type EdgeProps,
-  getStraightPath,
-  EdgeLabelRenderer,
   type Node,
 } from "reactflow"
-import { getEdgeParams } from "../../_utils/edgeUtils"
-import { type EdgeData } from "~/types"
-import { cn } from "~/lib/utils"
+import updateInputWidth from "update-input-width"
+import { Button } from "~/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover"
-import { Button } from "~/components/ui/button"
-import { Circle, Trash } from "lucide-react"
 import { colours } from "~/lib/constants"
-import updateInputWidth from "update-input-width"
+import { cn } from "~/lib/utils"
+import { type EdgeData } from "~/types"
+import { getEdgeParams } from "../../_utils/edgeUtils"
 
 export default function FloatingEdge({
   id,

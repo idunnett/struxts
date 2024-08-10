@@ -1,8 +1,8 @@
+import { useAuth } from "@clerk/nextjs"
 import Image from "next/image"
+import { useMemo } from "react"
 import { api } from "~/trpc/react"
 import ManageMemberActions from "./ManageMemberActions"
-import { useMemo } from "react"
-import { useAuth } from "@clerk/nextjs"
 
 interface Props {
   structureId: number

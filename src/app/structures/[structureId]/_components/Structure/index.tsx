@@ -28,7 +28,7 @@ import ReactFlow, {
   type ReactFlowInstance,
 } from "reactflow"
 
-import { Lock, Unlock } from "lucide-react"
+import { Lock, LucideX, Unlock } from "lucide-react"
 import { nanoid } from "nanoid"
 import { useRouter } from "next/navigation"
 import "reactflow/dist/style.css"
@@ -47,8 +47,17 @@ import {
 } from "~/server/api/routers/structure"
 import { api } from "~/trpc/react"
 import { type api as serverApi } from "~/trpc/server"
-import { type EdgeData, type NodeData } from "~/types"
+import { type EdgeData, type FileState, type NodeData } from "~/types"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../../../components/ui/tabs"
+import { sortFiles } from "../../_utils/fileUtils"
 import BasicNode from "./BasicNode"
+import Files from "./BasicNode/Files"
+import TipTapEditor from "./BasicNode/TipTapEditor"
 import DownloadButton from "./DownloadButton"
 import FloatingConnectionLine from "./FloatingConnectionLine"
 import FloatingEdge from "./FloatingEdge"
@@ -60,6 +69,7 @@ interface Props {
   }
   initialNodes: Awaited<ReturnType<typeof serverApi.node.getByStructureId>>
   initialEdges: Awaited<ReturnType<typeof serverApi.edge.getByStructureId>>
+  initialFiles: Awaited<ReturnType<typeof serverApi.file.getByStructureId>>
   currentStructureUser: { userId: string; role: string }
 }
 
@@ -74,6 +84,7 @@ export default function Structure({
   structure,
   initialNodes,
   initialEdges,
+  initialFiles,
   currentStructureUser,
 }: Props) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
@@ -84,12 +95,12 @@ export default function Structure({
   const [editable, setEditable] = useState(true)
   const [nodesToDelete, setNodesToDelete] = useState<number[]>([])
   const [edgesToDelete, setEdgesToDelete] = useState<number[]>([])
+  const [filesToDelete, setFilesToDelete] = useState<number[]>([])
   const [lastUsedEdgeColor, setLastUsedEdgeColor] = useState("#000000")
   const [lastUsedNodeColors, setLastUsedNodeColors] = useState<{
     bgColor: string
     borderColor: string
   }>({ bgColor: "#ffffff", borderColor: "#000000" })
-  const [isNodeInfoOpen, setIsNodeInfoOpen] = useState(false)
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
     initialNodes.map((node) => ({
       ...node,
@@ -100,9 +111,23 @@ export default function Structure({
         borderColor: node.data.borderColor,
         bgColor: node.data.bgColor,
         editable: false,
+        isActive: false,
+        files: initialFiles
+          .filter((file) => file.nodeId === node.id)
+          .map((file) => ({
+            ...file,
+            id: file.id.toString(),
+            parentId: file.parentId?.toString() ?? null,
+            nodeId: file.nodeId.toString(),
+          })),
       },
       type: "basic",
     })),
+  )
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
+  const activeNode = useMemo(
+    () => nodes.find((node) => node.id === activeNodeId) ?? null,
+    [activeNodeId, nodes],
   )
   const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>(
     initialEdges.map((edge) => ({
@@ -222,10 +247,39 @@ export default function Structure({
     },
     [initialEdges, edgesToDelete],
   )
+  const onFileDelete = useCallback(
+    (fileId: string) => {
+      const initialFile = initialFiles.find(
+        (file) => file.id.toString() === fileId,
+      )
+      if (!initialFile) return
+      if (filesToDelete.includes(initialFile.id)) return
+      setFilesToDelete((filesToDelete) => filesToDelete.concat(initialFile.id))
+    },
+    [initialFiles, filesToDelete],
+  )
+
+  function filesHasChanges(
+    initialFiles: Awaited<ReturnType<typeof serverApi.file.getByStructureId>>,
+    files: FileState[],
+  ) {
+    for (const file of files) {
+      const initialFile = initialFiles.find((f) => f.id.toString() === file.id)
+      if (!initialFile) return true
+      if (file.name !== initialFile.name) return true
+      if (file.url !== initialFile.url) return true
+      if (file.parentId !== (initialFile.parentId?.toString() ?? null))
+        return true
+      if (file.isFolder !== initialFile.isFolder) return true
+      if (file.key !== initialFile.key) return true
+    }
+    return false
+  }
 
   const hasChanges = useMemo(() => {
     if (nodesToDelete.length > 0) return true
     if (edgesToDelete.length > 0) return true
+    if (filesToDelete.length > 0) return true
     for (const node of nodes) {
       const initialNode = initialNodes.find((n) => n.id.toString() === node.id)
       if (!initialNode) return true
@@ -235,6 +289,13 @@ export default function Structure({
       if (node.data.info !== (initialNode.data.info ?? "")) return true
       if (node.data.borderColor !== initialNode.data.borderColor) return true
       if (node.data.bgColor !== initialNode.data.bgColor) return true
+      if (
+        filesHasChanges(
+          initialFiles.filter((file) => file.nodeId.toString() === node.id),
+          node.data.files,
+        )
+      )
+        return true
     }
     for (const edge of edges) {
       const initialEdge = initialEdges.find((e) => e.id.toString() === edge.id)
@@ -252,6 +313,8 @@ export default function Structure({
     edgesToDelete.length,
     initialEdges,
     initialNodes,
+    initialFiles,
+    filesToDelete.length,
     nodes,
     nodesToDelete.length,
   ])
@@ -268,6 +331,7 @@ export default function Structure({
             bgColor: lastUsedNodeColors.bgColor,
             borderColor: lastUsedNodeColors.borderColor,
             editable,
+            files: [],
           },
           type: "basic",
           position: reactFlowInstance?.screenToFlowPosition({
@@ -295,12 +359,23 @@ export default function Structure({
           borderColor: node.data.borderColor,
           bgColor: node.data.bgColor,
           editable: false,
+          isActive: false,
+          files: sortFiles(
+            initialFiles
+              .filter((file) => file.nodeId === node.id)
+              .map((file) => ({
+                ...file,
+                id: file.id.toString(),
+                parentId: file.parentId?.toString() ?? null,
+                nodeId: file.nodeId.toString(),
+              })),
+          ),
         },
         type: "basic",
       })),
     )
     setNodesToDelete([])
-  }, [initialNodes, setNodes])
+  }, [initialNodes, initialFiles, setNodes])
   const resetEdges = useCallback(() => {
     setEdges(
       initialEdges.map((edge) => ({
@@ -338,6 +413,7 @@ export default function Structure({
   useEffect(() => {
     resetEdges()
   }, [initialEdges, resetEdges])
+  useEffect(() => setFilesToDelete([]), [initialFiles])
 
   function handleSaveChanges() {
     const nodesToUpdate: UpdateNode[] = []
@@ -352,7 +428,11 @@ export default function Structure({
         node.position.y !== initialNode.position.y ||
         node.data.info !== (initialNode.data.info ?? "") ||
         node.data.borderColor !== initialNode.data.borderColor ||
-        node.data.bgColor !== initialNode.data.bgColor
+        node.data.bgColor !== initialNode.data.bgColor ||
+        filesHasChanges(
+          initialFiles.filter((file) => file.nodeId === initialNode.id),
+          node.data.files,
+        )
       ) {
         nodesToUpdate.push({
           id: node.id,
@@ -361,6 +441,15 @@ export default function Structure({
           info: node.data.info || null,
           borderColor: node.data.borderColor || null,
           bgColor: node.data.bgColor || null,
+          files: node.data.files.map((file) => ({
+            id: file.id,
+            key: file.key,
+            name: file.name,
+            url: file.url,
+            parentId: file.parentId,
+            structureId: structure.id,
+            isFolder: file.isFolder,
+          })),
         })
       }
     }
@@ -394,23 +483,24 @@ export default function Structure({
       edges: edgesToUpdate,
       nodesToDelete,
       edgesToDelete,
+      filesToDelete,
     })
   }
 
   return (
     <div className="h-full w-full" ref={reactFlowWrapper}>
       <ContextMenu>
-        <ContextMenuTrigger disabled={isNodeInfoOpen}>
+        <ContextMenuTrigger>
           <ReactFlow
             nodes={nodes.map((node) => ({
               ...node,
               data: {
                 ...node.data,
                 editable: editable && !!reactFlowInstance && currentUserCanEdit,
+                isActive: activeNodeId === node.id,
                 onNodeDataChange,
                 onDelete: (id: string) =>
                   reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
-                onInfoOpenChange: setIsNodeInfoOpen,
               },
             }))}
             edges={edges.map((edge) => ({
@@ -430,6 +520,7 @@ export default function Structure({
                 color: edge.data?.color ?? "#000000",
               },
             }))}
+            onNodeClick={(_e, node: Node<NodeData>) => setActiveNodeId(node.id)}
             onNodesChange={(nodeChanges) => {
               if (editable && reactFlowInstance && currentUserCanEdit)
                 onNodesChange(nodeChanges)
@@ -483,6 +574,10 @@ export default function Structure({
               if (editable && reactFlowInstance && currentUserCanEdit)
                 onEdgesDelete(edges)
             }}
+            onError={(code, msg) => {
+              if (code === "002") return
+              console.warn(code, msg)
+            }}
           >
             {reactFlowInstance && (
               <Controls showInteractive={false}>
@@ -514,7 +609,7 @@ export default function Structure({
                 size={1}
               />
             )}
-            <Panel position="top-right">
+            <Panel position="top-left">
               {editable &&
                 reactFlowInstance &&
                 currentUserCanEdit &&
@@ -529,6 +624,7 @@ export default function Structure({
                       onClick={() => {
                         resetEdges()
                         resetNodes()
+                        setFilesToDelete([])
                       }}
                     >
                       Reset
@@ -551,6 +647,67 @@ export default function Structure({
                 <DownloadButton structureName={structure.name} />
               )}
             </Panel>
+            {activeNode && (
+              <Panel
+                key={activeNode.id}
+                position="bottom-right"
+                className="relative !m-0 flex h-full w-[500px] flex-col gap-2 bg-card p-4 pb-0 shadow-lg"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-lg font-semibold">
+                    {activeNode.data.label}
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8"
+                    onClick={() => setActiveNodeId(null)}
+                  >
+                    <LucideX className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Tabs
+                  defaultValue="info"
+                  className="relative flex min-h-0 w-full grow flex-col"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="info">Info</TabsTrigger>
+                    <TabsTrigger value="files">Files</TabsTrigger>
+                  </TabsList>
+                  <TabsContent
+                    value="info"
+                    className="data-state-[active]:grow flex min-h-0 flex-col"
+                  >
+                    <TipTapEditor
+                      editable={editable}
+                      info={activeNode.data.info}
+                      onInfoUpdate={(info) => {
+                        if (editable && reactFlowInstance && currentUserCanEdit)
+                          onNodeDataChange?.(activeNode.id, {
+                            info,
+                          })
+                      }}
+                    />
+                  </TabsContent>
+                  <TabsContent
+                    value="files"
+                    className="!mt-0 flex min-h-0 grow flex-col"
+                  >
+                    <Files
+                      files={activeNode.data.files}
+                      editable={editable}
+                      onFilesChange={(files) => {
+                        if (editable && reactFlowInstance && currentUserCanEdit)
+                          onNodeDataChange?.(activeNode.id, {
+                            files,
+                          })
+                      }}
+                      onFileDelete={onFileDelete}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </Panel>
+            )}
           </ReactFlow>
           {editable && reactFlowInstance && currentUserCanEdit && (
             <ContextMenuContent>

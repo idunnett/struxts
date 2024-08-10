@@ -1,17 +1,17 @@
 import Document from "@tiptap/extension-document"
 import UnderlineExtension from "@tiptap/extension-underline"
 // import Placeholder from "@tiptap/extension-placeholder"
-import { useEditor, EditorContent, type Editor } from "@tiptap/react"
+import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import {
   Bold,
   Italic,
-  Strikethrough,
-  Underline,
   List,
   ListOrdered,
-  Undo,
   Redo,
+  Strikethrough,
+  Underline,
+  Undo,
 } from "lucide-react"
 import { Button } from "~/components/ui/button"
 import { Toggle } from "~/components/ui/toggle"
@@ -24,6 +24,7 @@ interface Props {
 
 export default function TipTapEditor({ editable, info, onInfoUpdate }: Props) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       Document,
       UnderlineExtension,
@@ -44,7 +45,7 @@ export default function TipTapEditor({ editable, info, onInfoUpdate }: Props) {
   })
 
   return (
-    <div className="relative flex max-h-[600px] flex-col">
+    <div className="relative flex max-h-96 flex-col">
       {editable && <MenuBar editor={editor} />}
       <EditorContent editor={editor} className="overflow-auto" />
     </div>

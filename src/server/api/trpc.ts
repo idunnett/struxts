@@ -7,14 +7,14 @@
  * need to use are documented accordingly near the end.
  */
 
+import { auth } from "@clerk/nextjs/server"
 import { initTRPC, TRPCError } from "@trpc/server"
 import superjson from "superjson"
 import { ZodError } from "zod"
-import { auth } from "@clerk/nextjs/server"
 
+import { isAdmin, isOwner } from "~/lib/utils"
 import { db } from "~/server/db"
 import { getCurrentStructureUser } from "../actions/getCurrentStructureUser"
-import { isAdmin, isOwner } from "~/lib/utils"
 
 /**
  * 1. CONTEXT

@@ -1,12 +1,14 @@
 import {
+  boolean,
   integer,
-  primaryKey,
-  pgTable,
-  text,
-  serial,
-  timestamp,
-  real,
   pgEnum,
+  pgTable,
+  primaryKey,
+  real,
+  serial,
+  text,
+  timestamp,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core"
 
 /**
@@ -92,6 +94,28 @@ export const edges = pgTable("edges", {
   label: text("label"),
   endLabel: text("endLabel"),
   color: text("color").notNull().default("#000000"),
+  structureId: serial("structureId")
+    .notNull()
+    .references(() => structures.id),
+})
+
+export const files = pgTable("files", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url"),
+  key: text("key"),
+  nodeId: serial("nodeId")
+    .notNull()
+    .references(() => nodes.id),
+  parentId: integer("parentId").references((): AnyPgColumn => files.id),
+  isFolder: boolean("isFolder").notNull().default(false),
+  structureId: serial("structureId")
+    .notNull()
+    .references(() => structures.id),
+})
+
+export const tempFiles = pgTable("temp_files", {
+  key: text("key").primaryKey(),
   structureId: serial("structureId")
     .notNull()
     .references(() => structures.id),

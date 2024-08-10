@@ -1,14 +1,14 @@
-import MembersMenu from "./MembersMenu"
-import { api } from "~/trpc/react"
 import Image from "next/image"
-import { Skeleton } from "~/components/ui/skeleton"
-import { cn } from "~/lib/utils"
+import { Button } from "~/components/ui/button"
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from "~/components/ui/popover"
-import { Button } from "~/components/ui/button"
+import { Skeleton } from "~/components/ui/skeleton"
+import { cn } from "~/lib/utils"
+import { api } from "~/trpc/react"
+import MembersMenu from "./MembersMenu"
 
 interface Props {
   structureId: number
@@ -49,7 +49,7 @@ export default function MembersMenuItem({
                   alt={member.clerkUser.fullName ?? "Member picture"}
                   width={24}
                   height={24}
-                  className={cn("rounded-full", i !== 0 && "-ml-2")}
+                  className={cn("h-6 w-6 rounded-full", i !== 0 && "-ml-2")}
                 />
               ))}
           </div>

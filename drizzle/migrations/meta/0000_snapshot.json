@@ -1,10 +1,10 @@
 {
-  "id": "dcaf96d9-05e4-40db-9291-b3b291f607ed",
+  "id": "e0923be4-b2d0-4443-aa92-64f398cce279",
   "prevId": "00000000-0000-0000-0000-000000000000",
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "tables": {
-    "edges": {
+    "public.edges": {
       "name": "edges",
       "schema": "",
       "columns": {
@@ -103,7 +103,87 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "nodes": {
+    "public.files": {
+      "name": "files",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parentId": {
+          "name": "parentId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uploadedBy": {
+          "name": "uploadedBy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isFolder": {
+          "name": "isFolder",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "structureId": {
+          "name": "structureId",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "files_parentId_files_id_fk": {
+          "name": "files_parentId_files_id_fk",
+          "tableFrom": "files",
+          "tableTo": "files",
+          "columnsFrom": [
+            "parentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "files_structureId_structures_id_fk": {
+          "name": "files_structureId_structures_id_fk",
+          "tableFrom": "files",
+          "tableTo": "structures",
+          "columnsFrom": [
+            "structureId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.nodes": {
       "name": "nodes",
       "schema": "",
       "columns": {
@@ -189,7 +269,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "structures": {
+    "public.structures": {
       "name": "structures",
       "schema": "",
       "columns": {
@@ -230,7 +310,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "user_structure_invites": {
+    "public.user_structure_invites": {
       "name": "user_structure_invites",
       "schema": "",
       "columns": {
@@ -281,7 +361,7 @@
       },
       "uniqueConstraints": {}
     },
-    "users_structures": {
+    "public.users_structures": {
       "name": "users_structures",
       "schema": "",
       "columns": {
@@ -300,6 +380,7 @@
         "role": {
           "name": "role",
           "type": "users_structures_role",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'Guest'"
@@ -334,17 +415,18 @@
     }
   },
   "enums": {
-    "users_structures_role": {
+    "public.users_structures_role": {
       "name": "users_structures_role",
-      "values": {
-        "Guest": "Guest",
-        "Admin": "Admin",
-        "Maintainer": "Maintainer",
-        "Owner": "Owner"
-      }
+      "schema": "public",
+      "values": [
+        "Guest",
+        "Admin",
+        "Owner"
+      ]
     }
   },
   "schemas": {},
+  "sequences": {},
   "_meta": {
     "columns": {},
     "schemas": {},

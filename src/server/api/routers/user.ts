@@ -1,15 +1,15 @@
+import { clerkClient } from "@clerk/nextjs/server"
+import { TRPCError } from "@trpc/server"
+import { and, desc, eq } from "drizzle-orm"
 import { z } from "zod"
+import { getCurrentStructureUser } from "~/server/actions/getCurrentStructureUser"
+import { usersStructures } from "~/server/db/schema"
+import { type StruxtUser } from "~/types"
 import {
   createTRPCRouter,
   protectedProcedure,
   structureAdminProcedure,
 } from "../trpc"
-import { usersStructures } from "~/server/db/schema"
-import { and, desc, eq } from "drizzle-orm"
-import { clerkClient } from "@clerk/nextjs/server"
-import { TRPCError } from "@trpc/server"
-import { type StruxtUser } from "~/types"
-import { getCurrentStructureUser } from "~/server/actions/getCurrentStructureUser"
 
 export const userRouter = createTRPCRouter({
   getCurrentStructureUser: protectedProcedure
@@ -28,7 +28,7 @@ export const userRouter = createTRPCRouter({
         .orderBy(desc(usersStructures.role))
 
       const clerkUsers = await Promise.all(
-        members.map((member) => clerkClient.users.getUser(member.userId)),
+        members.map((member) => clerkClient().users.getUser(member.userId)),
       )
 
       return clerkUsers.map((user, i) => ({

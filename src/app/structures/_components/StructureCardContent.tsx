@@ -1,7 +1,7 @@
 import { formatDate } from "date-fns"
-import { api } from "~/trpc/server"
 import Image from "next/image"
 import { cn } from "~/lib/utils"
+import { api } from "~/trpc/server"
 
 export default async function StructureCardContent({
   structure,

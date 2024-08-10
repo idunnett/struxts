@@ -1,7 +1,7 @@
-import { api } from "~/trpc/server"
-import Structure from "./_components/Structure"
 import { notFound } from "next/navigation"
 import ErrorDisplay from "~/components/ErrorDisplay"
+import { api } from "~/trpc/server"
+import Structure from "./_components/Structure"
 
 interface Props {
   params: {
@@ -16,9 +16,10 @@ export default async function StructurePage({
 
   if (!structure) notFound()
 
-  const [nodes, edges, currentStructureUser] = await Promise.all([
+  const [nodes, edges, files, currentStructureUser] = await Promise.all([
     api.node.getByStructureId(structure.id),
     api.edge.getByStructureId(structure.id),
+    api.file.getByStructureId(structure.id),
     api.user.getCurrentStructureUser(structure.id),
   ])
 
@@ -36,6 +37,7 @@ export default async function StructurePage({
       structure={structure}
       initialNodes={nodes}
       initialEdges={edges}
+      initialFiles={files}
       currentStructureUser={currentStructureUser}
     />
   )
