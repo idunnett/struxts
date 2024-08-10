@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 import { nanoid } from "nanoid"
 import { useParams } from "next/navigation"
-import { useMemo, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -136,10 +136,9 @@ const Files: React.FC<Props> = ({
                 if (index === activeParentIds.length - 1) return null
                 const file = files.find((f) => f.id === id)
                 if (!file) return null
-                console.log("key", id)
                 return (
-                  <>
-                    <BreadcrumbItem key={id}>
+                  <Fragment key={id}>
+                    <BreadcrumbItem>
                       <BreadcrumbLink asChild>
                         <button
                           onClick={() =>
@@ -155,7 +154,7 @@ const Files: React.FC<Props> = ({
                     <BreadcrumbSeparator>
                       <LucideSlash />
                     </BreadcrumbSeparator>
-                  </>
+                  </Fragment>
                 )
               })
             )}
