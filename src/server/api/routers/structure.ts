@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server"
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, isNull } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -139,7 +139,16 @@ export const structureRouter = createTRPCRouter({
               eq(edges.structureId, input.structureId),
             ),
           )
-      if (input.nodesToDelete.length > 0)
+      if (input.nodesToDelete.length > 0) {
+        for (const nodeId of input.nodesToDelete) {
+          const nodeFiles = await ctx.db
+            .select({ id: files.id })
+            .from(files)
+            .where(and(eq(files.nodeId, nodeId), isNull(files.parentId)))
+          for (const file of nodeFiles) {
+            await deleteFile(ctx, file.id)
+          }
+        }
         await ctx.db
           .delete(nodes)
           .where(
@@ -148,6 +157,7 @@ export const structureRouter = createTRPCRouter({
               eq(nodes.structureId, input.structureId),
             ),
           )
+      }
       if (input.filesToDelete.length > 0)
         for (const fileIdToDelete of input.filesToDelete) {
           await deleteFile(ctx, fileIdToDelete)

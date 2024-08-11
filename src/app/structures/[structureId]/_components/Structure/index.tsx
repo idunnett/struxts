@@ -125,6 +125,7 @@ export default function Structure({
     })),
   )
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
+  // const [showNodeInfo, setShowNodeInfo] = useState(false)
   const activeNode = useMemo(
     () => nodes.find((node) => node.id === activeNodeId) ?? null,
     [activeNodeId, nodes],
@@ -653,6 +654,7 @@ export default function Structure({
                 position="bottom-right"
                 className="relative !m-0 flex h-full w-[500px] flex-col gap-2 bg-card p-4 pb-0 shadow-lg"
               >
+                {/* <div className="absolute  top-0">Hide Info</div> */}
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="text-lg font-semibold">
                     {activeNode.data.label}
