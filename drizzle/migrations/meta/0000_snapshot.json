@@ -1,5 +1,5 @@
 {
-  "id": "e0923be4-b2d0-4443-aa92-64f398cce279",
+  "id": "13acbff0-508a-4107-8f2e-9970b73df483",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -125,17 +125,23 @@
           "primaryKey": false,
           "notNull": false
         },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nodeId": {
+          "name": "nodeId",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
         "parentId": {
           "name": "parentId",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
-        },
-        "uploadedBy": {
-          "name": "uploadedBy",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
         },
         "isFolder": {
           "name": "isFolder",
@@ -153,6 +159,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "files_nodeId_nodes_id_fk": {
+          "name": "files_nodeId_nodes_id_fk",
+          "tableFrom": "files",
+          "tableTo": "nodes",
+          "columnsFrom": [
+            "nodeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "files_parentId_files_id_fk": {
           "name": "files_parentId_files_id_fk",
           "tableFrom": "files",
@@ -307,6 +326,42 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.temp_files": {
+      "name": "temp_files",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "structureId": {
+          "name": "structureId",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "temp_files_structureId_structures_id_fk": {
+          "name": "temp_files_structureId_structures_id_fk",
+          "tableFrom": "temp_files",
+          "tableTo": "structures",
+          "columnsFrom": [
+            "structureId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },

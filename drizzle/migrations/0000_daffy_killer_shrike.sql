@@ -19,8 +19,9 @@ CREATE TABLE IF NOT EXISTS "files" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"url" text,
+	"key" text,
+	"nodeId" serial NOT NULL,
 	"parentId" integer,
-	"uploadedBy" text NOT NULL,
 	"isFolder" boolean DEFAULT false NOT NULL,
 	"structureId" serial NOT NULL
 );
@@ -44,6 +45,11 @@ CREATE TABLE IF NOT EXISTS "structures" (
 	"createdById" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "temp_files" (
+	"key" text PRIMARY KEY NOT NULL,
+	"structureId" serial NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_structure_invites" (
@@ -79,6 +85,12 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "files" ADD CONSTRAINT "files_nodeId_nodes_id_fk" FOREIGN KEY ("nodeId") REFERENCES "public"."nodes"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "files" ADD CONSTRAINT "files_parentId_files_id_fk" FOREIGN KEY ("parentId") REFERENCES "public"."files"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -92,6 +104,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "nodes" ADD CONSTRAINT "nodes_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "temp_files" ADD CONSTRAINT "temp_files_structureId_structures_id_fk" FOREIGN KEY ("structureId") REFERENCES "public"."structures"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
