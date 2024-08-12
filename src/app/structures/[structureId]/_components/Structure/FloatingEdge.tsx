@@ -1,12 +1,12 @@
-import { Circle, Trash } from "lucide-react"
-import { useCallback, useEffect, useRef } from "react"
 import {
   EdgeLabelRenderer,
   getStraightPath,
   useStore,
   type EdgeProps,
   type Node,
-} from "reactflow"
+} from "@xyflow/react"
+import { Circle, Trash } from "lucide-react"
+import { useCallback, useEffect, useRef } from "react"
 import updateInputWidth from "update-input-width"
 import { Button } from "~/components/ui/button"
 import {
@@ -16,7 +16,7 @@ import {
 } from "~/components/ui/popover"
 import { colours } from "~/lib/constants"
 import { cn } from "~/lib/utils"
-import { type EdgeData } from "~/types"
+import { type TFloatingEdge } from "~/types"
 import { getEdgeParams } from "../../_utils/edgeUtils"
 
 export default function FloatingEdge({
@@ -28,12 +28,12 @@ export default function FloatingEdge({
   selected,
   style,
   interactionWidth,
-}: EdgeProps<EdgeData>) {
+}: EdgeProps<TFloatingEdge>) {
   const sourceNode = useStore(
-    useCallback((store) => store.nodeInternals.get(source), [source]),
+    useCallback((store) => store.nodeLookup.get(source), [source]),
   )
   const targetNode = useStore(
-    useCallback((store) => store.nodeInternals.get(target), [target]),
+    useCallback((store) => store.nodeLookup.get(target), [target]),
   )
   if (!sourceNode || !targetNode) return null
 

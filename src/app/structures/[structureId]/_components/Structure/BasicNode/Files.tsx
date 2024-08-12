@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  LucideCheck,
   LucideChevronLeft,
   LucideEllipsisVertical,
   LucideFileText,
@@ -8,6 +9,7 @@ import {
   LucideFolderPlus,
   LucideSlash,
   LucideTrash2,
+  LucideX,
 } from "lucide-react"
 import { nanoid } from "nanoid"
 import { useParams } from "next/navigation"
@@ -36,7 +38,7 @@ import {
 } from "../../../../../../components/ui/popover"
 import { type FileState } from "../../../../../../types"
 import { UploadButton } from "../../../../../_components/uploadthing"
-import { sortFiles } from "../../../_utils/fileUtils"
+import { getAllFileDescendantsIds, sortFiles } from "../../../_utils/fileUtils"
 
 interface Props {
   files: FileState[]
@@ -62,6 +64,7 @@ const Files: React.FC<Props> = ({
 
   const [showNewFolderInput, setShowNewFolderInput] = useState(false)
   const [activeParentIds, setActiveParentIds] = useState<string[]>([])
+  const [newFolderName, setNewFolderName] = useState("")
 
   const activeParent = useMemo(() => {
     if (!activeParentIds.length) return null
@@ -69,6 +72,25 @@ const Files: React.FC<Props> = ({
     if (!id) return null
     return files.find((f) => f.id === id) ?? null
   }, [activeParentIds, files])
+
+  function onCreateFolder() {
+    if (!newFolderName.length) return
+    onFilesChange(
+      sortFiles([
+        ...files,
+        {
+          id: `reactflow__${nanoid()}`,
+          key: null,
+          isFolder: true,
+          name: newFolderName,
+          url: null,
+          parentId: activeParent?.id ?? null,
+        },
+      ]),
+    )
+    setShowNewFolderInput(false)
+    setNewFolderName("")
+  }
 
   return (
     <div className="relative flex min-h-0 grow flex-col items-start justify-start pb-2">
@@ -214,32 +236,38 @@ const Files: React.FC<Props> = ({
       <div className="flex h-full min-h-0 w-full grow flex-col overflow-y-auto overflow-x-hidden pt-1">
         {showNewFolderInput && (
           <div className="mb-1 flex !h-10 items-center !justify-start rounded-sm py-1 pl-4 pr-2 hover:bg-transparent">
-            <LucideFolderClosed className="mr-2 h-4 w-4" />
+            <LucideFolderClosed className="mr-2 h-4 w-4 shrink-0" />
             <Input
               autoFocus
-              className="h-full rounded-sm font-medium"
-              onBlur={() => setShowNewFolderInput(false)}
+              className="h-full rounded-sm rounded-r-none font-medium !outline-none !ring-0 !ring-transparent !ring-offset-transparent focus:border-primary"
+              placeholder="New folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDownCapture={(e) => {
                 if (e.key !== "Enter") return
-                const value = e.currentTarget.value
-                if (!value) return
-                onFilesChange(
-                  sortFiles([
-                    ...files,
-                    {
-                      id: `reactflow__${nanoid()}`,
-                      key: null,
-                      isFolder: true,
-                      name: value,
-                      url: null,
-                      parentId: activeParent?.id ?? null,
-                    },
-                  ]),
-                )
-                e.currentTarget.value = ""
-                setShowNewFolderInput(false)
+                onCreateFolder()
               }}
             />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-full rounded-none"
+              onClick={() => {
+                setShowNewFolderInput(false)
+                setNewFolderName("")
+              }}
+            >
+              <LucideX className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              className="h-full rounded-l-none"
+              onClick={onCreateFolder}
+            >
+              <LucideCheck className="h-4 w-4" />
+            </Button>
           </div>
         )}
         {files
@@ -292,8 +320,15 @@ const Files: React.FC<Props> = ({
                       variant="ghost"
                       className="h-8 w-full gap-1 text-xs"
                       onClick={() => {
-                        onFilesChange(files.filter((f) => f.id !== file.id))
                         onFileDelete(file.id)
+                        const descendants = getAllFileDescendantsIds(
+                          files,
+                          file.id,
+                        )
+                        const newFiles = files.filter(
+                          (f) => ![file.id, ...descendants].includes(f.id),
+                        )
+                        onFilesChange(newFiles)
                       }}
                     >
                       <LucideTrash2 className="h-3.5 w-3.5" />

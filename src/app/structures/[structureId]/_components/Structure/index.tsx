@@ -1,15 +1,6 @@
 "use client"
 
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-  type MouseEvent,
-} from "react"
-import ReactFlow, {
   Background,
   BackgroundVariant,
   ConnectionLineType,
@@ -18,6 +9,7 @@ import ReactFlow, {
   Controls,
   MarkerType,
   Panel,
+  ReactFlow,
   addEdge,
   useEdgesState,
   useNodesState,
@@ -26,12 +18,21 @@ import ReactFlow, {
   type Edge,
   type Node,
   type ReactFlowInstance,
-} from "reactflow"
+} from "@xyflow/react"
+import "@xyflow/react/dist/style.css"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from "react"
 
 import { Lock, LucideX, Unlock } from "lucide-react"
 import { nanoid } from "nanoid"
 import { useRouter } from "next/navigation"
-import "reactflow/dist/style.css"
 import { toast } from "sonner"
 import Spinner from "~/components/Spinner"
 import { Button } from "~/components/ui/button"
@@ -47,7 +48,13 @@ import {
 } from "~/server/api/routers/structure"
 import { api } from "~/trpc/react"
 import { type api as serverApi } from "~/trpc/server"
-import { type EdgeData, type FileState, type NodeData } from "~/types"
+import {
+  type EdgeData,
+  type FileState,
+  type NodeData,
+  type TBasicNode,
+  type TFloatingEdge,
+} from "~/types"
 import {
   Tabs,
   TabsContent,
@@ -89,7 +96,7 @@ export default function Structure({
 }: Props) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance>()
+    useState<ReactFlowInstance<TBasicNode, TFloatingEdge>>()
   const [isTransitionStarted, startTransition] = useTransition()
   const router = useRouter()
   const [editable, setEditable] = useState(true)
@@ -101,7 +108,7 @@ export default function Structure({
     bgColor: string
     borderColor: string
   }>({ bgColor: "#ffffff", borderColor: "#000000" })
-  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(
+  const [nodes, setNodes, onNodesChange] = useNodesState<TBasicNode>(
     initialNodes.map((node) => ({
       ...node,
       id: node.id.toString(),
@@ -112,6 +119,7 @@ export default function Structure({
         bgColor: node.data.bgColor,
         editable: false,
         isActive: false,
+        showNodeInfo: false,
         files: initialFiles
           .filter((file) => file.nodeId === node.id)
           .map((file) => ({
@@ -125,12 +133,12 @@ export default function Structure({
     })),
   )
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
-  // const [showNodeInfo, setShowNodeInfo] = useState(false)
+  const [showNodeInfo, setShowNodeInfo] = useState(false)
   const activeNode = useMemo(
     () => nodes.find((node) => node.id === activeNodeId) ?? null,
     [activeNodeId, nodes],
   )
-  const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>(
+  const [edges, setEdges, onEdgesChange] = useEdgesState<TFloatingEdge>(
     initialEdges.map((edge) => ({
       ...edge,
       id: edge.id.toString(),
@@ -151,9 +159,9 @@ export default function Structure({
     })),
   )
   const onConnect = useCallback(
-    (params: Edge | Connection) => {
+    (params: TFloatingEdge | Connection) => {
       setEdges((eds) =>
-        addEdge(
+        addEdge<TFloatingEdge>(
           {
             ...params,
             type: "floating",
@@ -321,11 +329,12 @@ export default function Structure({
   ])
 
   function handleAddNode(e: MouseEvent<HTMLDivElement>) {
+    const newId = `reactflow__${nanoid()}`
     onNodesChange([
       {
         type: "add",
         item: {
-          id: `reactflow__${nanoid()}`,
+          id: newId,
           data: {
             label: "",
             info: "",
@@ -333,6 +342,8 @@ export default function Structure({
             borderColor: lastUsedNodeColors.borderColor,
             editable,
             files: [],
+            isActive: true,
+            showNodeInfo,
           },
           type: "basic",
           position: reactFlowInstance?.screenToFlowPosition({
@@ -342,6 +353,7 @@ export default function Structure({
         },
       },
     ])
+    setActiveNodeId(newId)
   }
 
   const updateStructure = api.structure.update.useMutation({
@@ -361,6 +373,7 @@ export default function Structure({
           bgColor: node.data.bgColor,
           editable: false,
           isActive: false,
+          showNodeInfo: false,
           files: sortFiles(
             initialFiles
               .filter((file) => file.nodeId === node.id)
@@ -492,16 +505,21 @@ export default function Structure({
     <div className="h-full w-full" ref={reactFlowWrapper}>
       <ContextMenu>
         <ContextMenuTrigger>
-          <ReactFlow
+          <ReactFlow<TBasicNode, TFloatingEdge>
             nodes={nodes.map((node) => ({
               ...node,
               data: {
                 ...node.data,
                 editable: editable && !!reactFlowInstance && currentUserCanEdit,
                 isActive: activeNodeId === node.id,
+                showNodeInfo,
                 onNodeDataChange,
                 onDelete: (id: string) =>
                   reactFlowInstance?.deleteElements({ nodes: [{ id }] }),
+                onShowInfoChange: (id: string, showInfo: boolean) => {
+                  setShowNodeInfo(showInfo)
+                  if (showInfo) setActiveNodeId(id)
+                },
               },
             }))}
             edges={edges.map((edge) => ({
@@ -509,6 +527,7 @@ export default function Structure({
               data: {
                 ...edge.data,
                 editable: editable && !!reactFlowInstance && currentUserCanEdit,
+                color: edge.data?.color ?? "#000000",
                 onEdgeDataChange,
                 onDelete: (id: string) =>
                   reactFlowInstance?.deleteElements({ edges: [{ id }] }),
@@ -521,7 +540,9 @@ export default function Structure({
                 color: edge.data?.color ?? "#000000",
               },
             }))}
-            onNodeClick={(_e, node: Node<NodeData>) => setActiveNodeId(node.id)}
+            onNodeClick={(_e, node) => {
+              setActiveNodeId(node.id)
+            }}
             onNodesChange={(nodeChanges) => {
               if (editable && reactFlowInstance && currentUserCanEdit)
                 onNodesChange(nodeChanges)
@@ -546,7 +567,7 @@ export default function Structure({
             snapToGrid
             snapGrid={[12.5, 12.5]}
             fitView
-            edgesUpdatable={
+            edgesReconnectable={
               editable && !!reactFlowInstance && currentUserCanEdit
             }
             nodesDraggable={
@@ -561,7 +582,7 @@ export default function Structure({
             edgesFocusable={
               editable && !!reactFlowInstance && currentUserCanEdit
             }
-            edgeUpdaterRadius={12.5}
+            reconnectRadius={12.5}
             zoomOnDoubleClick={false}
             onInit={(instance) => {
               setReactFlowInstance(instance)
@@ -648,7 +669,7 @@ export default function Structure({
                 <DownloadButton structureName={structure.name} />
               )}
             </Panel>
-            {activeNode && (
+            {activeNode && showNodeInfo && (
               <Panel
                 key={activeNode.id}
                 position="bottom-right"
@@ -663,7 +684,10 @@ export default function Structure({
                     variant="ghost"
                     size="icon"
                     className="h-8"
-                    onClick={() => setActiveNodeId(null)}
+                    onClick={() => {
+                      setShowNodeInfo(false)
+                      setActiveNodeId(null)
+                    }}
                   >
                     <LucideX className="h-4 w-4" />
                   </Button>
@@ -678,7 +702,7 @@ export default function Structure({
                   </TabsList>
                   <TabsContent
                     value="info"
-                    className="data-state-[active]:grow flex min-h-0 flex-col"
+                    className="data-state-[active]:grow !mt-0 flex min-h-0 flex-col"
                   >
                     <TipTapEditor
                       editable={editable}
@@ -693,7 +717,7 @@ export default function Structure({
                   </TabsContent>
                   <TabsContent
                     value="files"
-                    className="!mt-0 flex min-h-0 grow flex-col"
+                    className="data-state-[active]:grow flex min-h-0 flex-col"
                   >
                     <Files
                       files={activeNode.data.files}

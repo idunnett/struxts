@@ -2,7 +2,7 @@ import {
   type ConnectionLineComponentProps,
   type Node,
   getStraightPath,
-} from "reactflow"
+} from "@xyflow/react"
 import { getEdgeParams } from "../../_utils/edgeUtils"
 
 interface Props extends ConnectionLineComponentProps {
@@ -23,8 +23,7 @@ function FloatingConnectionLine({
     id: "connection-target",
     width: 1,
     height: 1,
-    positionAbsolute: { x: toX, y: toY },
-    data: null,
+    data: {},
     position: { x: toX, y: toY },
   }
 

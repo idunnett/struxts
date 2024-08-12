@@ -1,18 +1,17 @@
-import { type Node, Position, type XYPosition } from "reactflow"
+import { type Node, Position, type XYPosition } from "@xyflow/react"
 
 // this helper function returns the intersection point
 // of the line between the center of the intersectionNode and the target node
 function getNodeIntersection(intersectionNode: Node, targetNode: Node) {
   // https://math.stackexchange.com/questions/1724792/an-algorithm-for-finding-the-intersection-point-between-a-center-of-vision-and-a
   const {
-    width: intersectionNodeWidth,
-    height: intersectionNodeHeight,
-    positionAbsolute: intersectionNodePosition,
+    measured: intersectionNodeMeasured,
+    position: intersectionNodePosition,
   } = intersectionNode
-  const targetPosition = targetNode.positionAbsolute
+  const targetPosition = targetNode.position
 
-  const w = (intersectionNodeWidth ?? 0) / 2
-  const h = (intersectionNodeHeight ?? 0) / 2
+  const w = (intersectionNodeMeasured?.width ?? 0) / 2
+  const h = (intersectionNodeMeasured?.height ?? 0) / 2
 
   const x2 = (intersectionNodePosition?.x ?? 0) + w
   const y2 = (intersectionNodePosition?.y ?? 0) + h
@@ -32,7 +31,7 @@ function getNodeIntersection(intersectionNode: Node, targetNode: Node) {
 
 // returns the position (top,right,bottom or right) passed node compared to the intersection point
 function getEdgePosition(node: Node, intersectionPoint: XYPosition) {
-  const n = { ...node.positionAbsolute, ...node }
+  const n = { ...node.position, ...node }
   const nx = Math.round(n.x ?? 0)
   const ny = Math.round(n.y ?? 0)
   const px = Math.round(intersectionPoint.x)

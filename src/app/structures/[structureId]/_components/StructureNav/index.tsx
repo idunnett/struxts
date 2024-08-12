@@ -1,7 +1,10 @@
 "use client"
 
-import MembersMenuItem from "./MembersMenuItem"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Suspense, useState } from "react"
+import Spinner from "~/components/Spinner"
+import { Button, buttonVariants } from "~/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -10,13 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
-import Spinner from "~/components/Spinner"
-import ManageMembers from "./ManageMembers"
-import { Button, buttonVariants } from "~/components/ui/button"
-import InviteMemberForm from "./InviteMemberForm"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { isOwner } from "~/lib/utils"
+import InviteMemberForm from "./InviteMemberForm"
+import ManageMembers from "./ManageMembers"
+import MembersMenuItem from "./MembersMenuItem"
 
 interface Props {
   structure: {
@@ -47,6 +47,7 @@ export default function StructureNav({
               href={`/structures/${structure.id}`}
               className={buttonVariants({
                 variant: "ghost",
+                className: "h-8",
               })}
             >
               Structure
@@ -67,6 +68,7 @@ export default function StructureNav({
                 href={`/structures/${structure.id}/settings`}
                 className={buttonVariants({
                   variant: "ghost",
+                  className: "h-8",
                 })}
               >
                 Settings

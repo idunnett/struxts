@@ -1,6 +1,10 @@
+import {
+  getNodesBounds,
+  getViewportForBounds,
+  useReactFlow,
+} from "@xyflow/react"
 import { toJpeg } from "html-to-image"
 import { Download } from "lucide-react"
-import { getRectOfNodes, getTransformForBounds, useReactFlow } from "reactflow"
 import { Button } from "~/components/ui/button"
 
 interface Props {
@@ -24,13 +28,14 @@ function DownloadButton({ structureName }: Props) {
     // we calculate a transform for the nodes so that all nodes are visible
     // we then overwrite the transform of the `.react-flow__viewport` element
     // with the style option of the html-to-image library
-    const nodesBounds = getRectOfNodes(getNodes())
-    const transform = getTransformForBounds(
+    const nodesBounds = getNodesBounds(getNodes())
+    const transform = getViewportForBounds(
       nodesBounds,
       imageWidth,
       imageHeight,
       0.5,
       2,
+      0,
     )
 
     const reactFlowViewport: HTMLElement = document.querySelector(
@@ -44,7 +49,7 @@ function DownloadButton({ structureName }: Props) {
       style: {
         width: imageWidth.toString(),
         height: imageHeight.toString(),
-        transform: `translate(${transform[0]}px, ${transform[1]}px) scale(${transform[2]})`,
+        transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.zoom})`,
       },
       type: "image/jpeg",
       quality: 1,

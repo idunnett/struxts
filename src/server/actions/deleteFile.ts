@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { and, eq, not } from "drizzle-orm"
 import { type TRPCContext } from "../api/trpc"
 import { files } from "../db/schema"
 import { utapi } from "../uploadthing"
@@ -8,7 +8,7 @@ async function getAllDescendants(ctx: TRPCContext, fileId: number) {
   const children = await ctx.db
     .select({ id: files.id, key: files.key })
     .from(files)
-    .where(eq(files.parentId, fileId))
+    .where(and(eq(files.parentId, fileId), not(eq(files.id, fileId))))
 
   let allDescendants: { id: number; key: string | null }[] = []
 

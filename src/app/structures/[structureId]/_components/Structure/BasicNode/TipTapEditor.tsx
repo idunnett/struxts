@@ -37,7 +37,7 @@ export default function TipTapEditor({ editable, info, onInfoUpdate }: Props) {
     editorProps: {
       attributes: {
         class:
-          "prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-xl my-4 focus:outline-none grow min-h-0",
+          "prose dark:prose-invert prose-base my-4 focus:outline-none grow min-h-0 prose-p:my-0 prose-h2:mt-[1em] prose-h2:mb-[0.5em] prose-h3:mb-[0.3em] prose-h3:mt-[0.8em] prose-h4:mb-[0.2em] prose-li:my-0",
       },
     },
     content: info,
@@ -45,9 +45,9 @@ export default function TipTapEditor({ editable, info, onInfoUpdate }: Props) {
   })
 
   return (
-    <div className="relative flex max-h-96 flex-col">
+    <div className="relative flex min-h-0 grow flex-col">
       {editable && <MenuBar editor={editor} />}
-      <EditorContent editor={editor} className="overflow-auto" />
+      <EditorContent editor={editor} className="grow overflow-auto" />
     </div>
   )
 }
@@ -56,7 +56,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
   if (!editor) return null
 
   return (
-    <div className="flex w-full shrink-0 flex-col gap-2 pb-4">
+    <div className="flex w-full shrink-0 flex-col gap-2 py-2">
       <div className="flex items-center gap-3">
         <div className="flex gap-1">
           <Button

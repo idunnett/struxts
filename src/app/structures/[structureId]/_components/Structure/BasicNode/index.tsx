@@ -1,25 +1,31 @@
 "use client"
 
-import { Circle, CircleSlash, Trash } from "lucide-react"
+import { Handle, Position, type NodeProps } from "@xyflow/react"
+import {
+  Circle,
+  CircleSlash,
+  LucideMaximize2,
+  LucideMinimize2,
+  Trash,
+} from "lucide-react"
 import { useEffect, useState } from "react"
 import LineWrappingInput from "react-line-wrapping-input"
-import { Handle, Position, type NodeProps } from "reactflow"
 import { Button } from "~/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover"
-import { colours } from "~/lib/constants"
 import { cn } from "~/lib/utils"
-import { type NodeData } from "~/types"
+import { type TBasicNode } from "~/types"
+import ColourPicker from "../../../../../../components/ColourPicker"
 
 export default function BasicNode({
   id,
   data,
   selected,
   dragging,
-}: NodeProps<NodeData>) {
+}: NodeProps<TBasicNode>) {
   const [toolbarPopoverOpen, setToolbarPopoverOpen] = useState(false)
   const [focused, setFocused] = useState(false)
 
@@ -38,14 +44,8 @@ export default function BasicNode({
         <div
           id={id}
           className={cn(
-            "relative w-[162px] cursor-pointer rounded-sm border p-2",
-            data.label.length > 10 && "pl-3",
-            data.label.length > 11 && "pl-4",
-            data.label.length > 12 && "pl-5",
-            data.label.length > 13 && "pl-6",
-            data.label.length > 14 && "pl-7",
-            data.label.length > 15 && "pl-8",
-            data.isActive && "ring-2 ring-blue-500/50 ring-offset-1",
+            "group relative w-[162px] cursor-pointer rounded-sm border p-2",
+            data.isActive && "ring-2 ring-primary/25 ring-offset-2",
             dragging && "cursor-grabbing",
           )}
           style={{
@@ -65,6 +65,24 @@ export default function BasicNode({
             })
           }}
         >
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className={cn(
+              "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md transition-opacity duration-150 ease-in-out group-hover:opacity-100",
+              data.isActive ? "opacity-100" : "opacity-0",
+            )}
+            onClick={() =>
+              data.onShowInfoChange?.(id, !(data.isActive && data.showNodeInfo))
+            }
+          >
+            {data.isActive && data.showNodeInfo ? (
+              <LucideMinimize2 className="h-3.5 w-3.5" />
+            ) : (
+              <LucideMaximize2 className="h-3.5 w-3.5" />
+            )}
+          </Button>
           <LineWrappingInput
             id={`line-wrapping-input-${id}`}
             value={data.label}
@@ -104,14 +122,14 @@ export default function BasicNode({
           />
         </div>
       </PopoverTrigger>
-      <PopoverContent side="top" sideOffset={12} className="w-fit p-2">
-        <div className="flex gap-2">
+      <PopoverContent side="top" sideOffset={12} className="w-fit p-1">
+        <div className="flex items-center gap-1">
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                size="sm"
-                variant="outline"
-                className="text-xs"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-xs"
                 style={{
                   color: data.borderColor,
                 }}
@@ -129,36 +147,23 @@ export default function BasicNode({
             <PopoverContent
               side="top"
               sideOffset={12}
-              className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+              className="w-fit max-w-96 p-2"
             >
-              {colours.map((colour) => (
-                <button
-                  key={colour.value}
-                  className="rounded-full border transition-all hover:border-blue-500/50"
-                  style={{
-                    color: colour.value,
-                  }}
-                  onClick={() =>
-                    data.onNodeDataChange?.(id, {
-                      borderColor: colour.value,
-                    })
-                  }
-                >
-                  {colour.value === "transparent" ? (
-                    <CircleSlash className="stroke-muted-foreground" />
-                  ) : (
-                    <Circle className="fill-current stroke-current" />
-                  )}
-                </button>
-              ))}
+              <ColourPicker
+                onColourChoose={(colour) =>
+                  data.onNodeDataChange?.(id, {
+                    borderColor: colour,
+                  })
+                }
+              />
             </PopoverContent>
           </Popover>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                size="sm"
-                variant="outline"
-                className="text-xs"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-xs"
                 style={{
                   color: data.bgColor,
                 }}
@@ -173,34 +178,23 @@ export default function BasicNode({
             <PopoverContent
               side="top"
               sideOffset={12}
-              className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+              className="w-fit max-w-96 p-2"
             >
-              {colours.map((colour) => (
-                <button
-                  key={colour.value}
-                  className="rounded-full border transition-all hover:border-blue-500/50"
-                  style={{
-                    color: colour.value,
-                  }}
-                  onClick={() =>
-                    data.onNodeDataChange?.(id, {
-                      bgColor: colour.value,
-                    })
-                  }
-                >
-                  {colour.value === "transparent" ? (
-                    <CircleSlash className="stroke-muted-foreground" />
-                  ) : (
-                    <Circle className="fill-current stroke-current" />
-                  )}
-                </button>
-              ))}
+              <ColourPicker
+                onColourChoose={(colour) =>
+                  data.onNodeDataChange?.(id, {
+                    bgColor: colour,
+                  })
+                }
+              />
             </PopoverContent>
           </Popover>
+          <div className="h-6 w-px bg-secondary" />
           <Button
-            size="sm"
-            variant="outline"
-            className="text-xs"
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-xs"
             onClick={() => data?.onDelete?.(id)}
           >
             <Trash className="h-4 w-4 text-red-500" />

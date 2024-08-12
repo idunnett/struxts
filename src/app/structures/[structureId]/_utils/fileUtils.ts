@@ -7,3 +7,19 @@ export function sortFiles(files: FileState[]): FileState[] {
     return a.name.localeCompare(b.name)
   })
 }
+
+export function getAllFileDescendantsIds(files: FileState[], fileId: string) {
+  const children = files.filter(
+    (file) => file.parentId === fileId && file.id !== fileId,
+  )
+
+  let allDescendantsIds: string[] = []
+
+  for (const child of children) {
+    allDescendantsIds.push(child.id)
+    const descendantsOfChild = getAllFileDescendantsIds(files, child.id)
+    allDescendantsIds = allDescendantsIds.concat(descendantsOfChild)
+  }
+
+  return allDescendantsIds
+}
