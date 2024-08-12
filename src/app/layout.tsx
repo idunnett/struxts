@@ -8,6 +8,8 @@ import { TRPCReactProvider } from "~/trpc/react"
 
 import { extractRouterConfig } from "uploadthing/server"
 import "~/styles/globals.css"
+import PostHogPageView from "./_analytics/PostHogPageView"
+import { PHProvider } from "./_analytics/provider"
 import { ourFileRouter } from "./api/uploadthing/core"
 
 const inter = Inter({
@@ -28,13 +30,8 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider signInFallbackRedirectUrl="/">
-      <html lang="en">
-        <body
-          className={cn(
-            "relative flex h-screen flex-col bg-background font-sans antialiased",
-            inter.variable,
-          )}
-        >
+      <PHProvider>
+        <html lang="en">
           <NextSSRPlugin
             /**
              * The `extractRouterConfig` will extract **only** the route configs
@@ -44,13 +41,23 @@ export default function RootLayout({
              */
             routerConfig={extractRouterConfig(ourFileRouter)}
           />
-          <TRPCReactProvider>
-            <NavBar />
-            <main className="min-h-0 grow overflow-auto">{children}</main>
-          </TRPCReactProvider>
-          <Toaster />
-        </body>
-      </html>
+          <body
+            className={cn(
+              "relative flex h-screen flex-col bg-background font-sans antialiased",
+              inter.variable,
+            )}
+          >
+            <TRPCReactProvider>
+              <NavBar />
+              <main className="min-h-0 grow overflow-auto">
+                <PostHogPageView />
+                {children}
+              </main>
+            </TRPCReactProvider>
+            <Toaster />
+          </body>
+        </html>
+      </PHProvider>
     </ClerkProvider>
   )
 }
