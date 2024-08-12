@@ -9,7 +9,7 @@ import { env } from "../../env"
 if (typeof window !== "undefined") {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: "/ingest",
-    person_profiles: "always",
+    person_profiles: "identified_only",
     capture_pageview: false, // Disable automatic pageview capture, as we capture manually
     ui_host: "https://us.posthog.com",
   })
