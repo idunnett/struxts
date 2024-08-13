@@ -1,22 +1,29 @@
-import { type Node, Position, type XYPosition } from "@xyflow/react"
+import {
+  type InternalNode,
+  type Node,
+  Position,
+  type XYPosition,
+} from "@xyflow/react"
 
 // this helper function returns the intersection point
 // of the line between the center of the intersectionNode and the target node
-function getNodeIntersection(intersectionNode: Node, targetNode: Node) {
+function getNodeIntersection(
+  intersectionNode: InternalNode<Node>,
+  targetNode: InternalNode<Node>,
+) {
   // https://math.stackexchange.com/questions/1724792/an-algorithm-for-finding-the-intersection-point-between-a-center-of-vision-and-a
-  const {
-    measured: intersectionNodeMeasured,
-    position: intersectionNodePosition,
-  } = intersectionNode
-  const targetPosition = targetNode.position
+  const { width: intersectionNodeWidth, height: intersectionNodeHeight } =
+    intersectionNode.measured
+  const intersectionNodePosition = intersectionNode.internals.positionAbsolute
+  const targetPosition = targetNode.internals.positionAbsolute
 
-  const w = (intersectionNodeMeasured?.width ?? 0) / 2
-  const h = (intersectionNodeMeasured?.height ?? 0) / 2
+  const w = (intersectionNodeWidth ?? 0) / 2
+  const h = (intersectionNodeHeight ?? 0) / 2
 
-  const x2 = (intersectionNodePosition?.x ?? 0) + w
-  const y2 = (intersectionNodePosition?.y ?? 0) + h
-  const x1 = (targetPosition?.x ?? 0) + (targetNode?.width ?? 0) / 2
-  const y1 = (targetPosition?.y ?? 0) + (targetNode?.height ?? 0) / 2
+  const x2 = (intersectionNodePosition.x ?? 0) + w
+  const y2 = (intersectionNodePosition.y ?? 0) + h
+  const x1 = (targetPosition.x ?? 0) + (targetNode.measured.width ?? 0) / 2
+  const y1 = (targetPosition.y ?? 0) + (targetNode.measured.height ?? 0) / 2
 
   const xx1 = (x1 - x2) / (2 * w) - (y1 - y2) / (2 * h)
   const yy1 = (x1 - x2) / (2 * w) + (y1 - y2) / (2 * h)
@@ -30,8 +37,11 @@ function getNodeIntersection(intersectionNode: Node, targetNode: Node) {
 }
 
 // returns the position (top,right,bottom or right) passed node compared to the intersection point
-function getEdgePosition(node: Node, intersectionPoint: XYPosition) {
-  const n = { ...node.position, ...node }
+function getEdgePosition(
+  node: InternalNode<Node>,
+  intersectionPoint: XYPosition,
+) {
+  const n = { ...node.internals.positionAbsolute, ...node }
   const nx = Math.round(n.x ?? 0)
   const ny = Math.round(n.y ?? 0)
   const px = Math.round(intersectionPoint.x)
@@ -46,7 +56,7 @@ function getEdgePosition(node: Node, intersectionPoint: XYPosition) {
   if (py <= ny + 1) {
     return Position.Top
   }
-  if (py >= (n.y ?? 0) + (n.height ?? 0) - 1) {
+  if (py >= (n.y ?? 0) + (n.measured.height ?? 0) - 1) {
     return Position.Bottom
   }
 
@@ -54,7 +64,10 @@ function getEdgePosition(node: Node, intersectionPoint: XYPosition) {
 }
 
 // returns the parameters (sx, sy, tx, ty, sourcePos, targetPos) you need to create an edge
-export function getEdgeParams(source: Node, target: Node) {
+export function getEdgeParams(
+  source: InternalNode<Node>,
+  target: InternalNode<Node>,
+) {
   const sourceIntersectionPoint = getNodeIntersection(source, target)
   const targetIntersectionPoint = getNodeIntersection(target, source)
 

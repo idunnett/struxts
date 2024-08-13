@@ -1,5 +1,6 @@
 import {
   type ConnectionLineComponentProps,
+  type InternalNode,
   type Node,
   getStraightPath,
 } from "@xyflow/react"
@@ -19,12 +20,23 @@ function FloatingConnectionLine({
 }: Props) {
   if (!fromNode) return null
 
-  const targetNode: Node = {
+  const targetNode: InternalNode<Node> = {
     id: "connection-target",
     width: 1,
     height: 1,
     data: {},
     position: { x: toX, y: toY },
+    measured: { width: 1, height: 1 },
+    internals: {
+      positionAbsolute: { x: toX, y: toY },
+      z: 0,
+      userNode: {
+        id: "connection-target",
+        type: "connection-target",
+        position: { x: toX, y: toY },
+        data: {},
+      },
+    },
   }
 
   const { sx, sy } = getEdgeParams(fromNode, targetNode)

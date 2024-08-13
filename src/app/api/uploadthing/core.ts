@@ -40,7 +40,6 @@ export const ourFileRouter = {
           ),
         )
         .limit(1)
-      console.log("currentStructureUser", currentStructureUser)
 
       if (!currentStructureUser || !isAdmin(currentStructureUser.role))
         throw new UploadThingError("Unauthorized")

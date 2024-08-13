@@ -14,6 +14,7 @@ import {
 import { nanoid } from "nanoid"
 import { useParams } from "next/navigation"
 import { Fragment, useMemo, useState } from "react"
+import { toast } from "sonner"
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -229,6 +230,9 @@ const Files: React.FC<Props> = ({
                 })
               }
               onFilesChange([...files, ...tempFiles])
+            }}
+            onUploadError={(error) => {
+              toast.error(error.message)
             }}
           />
         </div>

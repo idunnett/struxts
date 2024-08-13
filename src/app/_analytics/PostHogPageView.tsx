@@ -9,8 +9,9 @@ export default function PostHogPageView(): null {
   const searchParams = useSearchParams()
   const posthog = usePostHog()
   useEffect(() => {
-    // Track pageviews
+    if (process.env.NODE_ENV !== "production") return
     if (pathname && posthog) {
+      // Track pageviews
       let url = window.origin + pathname
       if (searchParams.toString()) {
         url = url + `?${searchParams.toString()}`
