@@ -318,14 +318,7 @@ export default function Structure({
       if (edge.target !== initialEdge.target.toString()) return true
       if (edge.data?.color !== initialEdge.data.color) return true
       if (edgeLabelsHasChanges(initialEdge.data.labels, edge.data.labels))
-        for (const label of edge.data.labels) {
-          const existingEdgeLabel = initialEdge.data.labels.find(
-            (l) => l.id.toString() === label.id,
-          )
-          if (!existingEdgeLabel) return true
-          if (label.label !== existingEdgeLabel.label) return true
-          if (label.offset !== existingEdgeLabel.offset) return true
-        }
+        return true
     }
     return false
   }, [
@@ -345,6 +338,7 @@ export default function Structure({
     >[0]["data"]["labels"],
     labels: EdgeData["labels"],
   ) {
+    if (initialLabels.length !== labels.length) return true
     for (const label of labels) {
       const initialLabel = initialLabels.find(
         (l) => l.id.toString() === label.id,

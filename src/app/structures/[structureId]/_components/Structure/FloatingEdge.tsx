@@ -108,7 +108,7 @@ export default function FloatingEdge({
           >
             <div className="flex gap-2">
               <Button
-                disabled={data?.label != null}
+                disabled={data?.labels.length > 2}
                 size="sm"
                 variant="outline"
                 className="text-xs"
