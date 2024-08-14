@@ -90,13 +90,19 @@ export const edges = pgTable("edges", {
   target: serial("target")
     .notNull()
     .references(() => nodes.id),
-  startLabel: text("startLabel"),
-  label: text("label"),
-  endLabel: text("endLabel"),
   color: text("color").notNull().default("#000000"),
   structureId: serial("structureId")
     .notNull()
     .references(() => structures.id),
+})
+
+export const edgeLabels = pgTable("edge_labels", {
+  id: serial("id").primaryKey(),
+  edgeId: integer("edgeId")
+    .notNull()
+    .references(() => edges.id),
+  label: text("label").notNull(),
+  offset: integer("offset").notNull().default(50),
 })
 
 export const files = pgTable("files", {

@@ -10,6 +10,7 @@ import {
   structureOwnerProcedure,
 } from "~/server/api/trpc"
 import {
+  edgeLabels,
   edges,
   files,
   nodes,
@@ -46,9 +47,15 @@ const updateEdgeSchema = z.object({
   id: z.string().optional(),
   source: z.string().or(z.number()),
   target: z.string().or(z.number()),
-  startLabel: z.string().nullish(),
-  endLabel: z.string().nullish(),
-  label: z.string().nullish(),
+  labels: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        offset: z.number(),
+      }),
+    )
+    .nullish(),
   color: z.string().nullish(),
 })
 export type UpdateEdge = z.infer<typeof updateEdgeSchema>
@@ -130,174 +137,192 @@ export const structureRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.edgesToDelete.length > 0)
-        await ctx.db
-          .delete(edges)
-          .where(
-            and(
-              inArray(edges.id, input.edgesToDelete),
-              eq(edges.structureId, input.structureId),
-            ),
-          )
-      if (input.nodesToDelete.length > 0) {
-        for (const nodeId of input.nodesToDelete) {
-          const nodeFiles = await ctx.db
-            .select({ id: files.id })
-            .from(files)
-            .where(and(eq(files.nodeId, nodeId), isNull(files.parentId)))
-          for (const file of nodeFiles) {
-            await deleteFile(ctx, file.id)
+      await ctx.db.transaction(async (trx) => {
+        if (input.edgesToDelete.length > 0)
+          await trx
+            .delete(edges)
+            .where(
+              and(
+                inArray(edges.id, input.edgesToDelete),
+                eq(edges.structureId, input.structureId),
+              ),
+            )
+        if (input.nodesToDelete.length > 0) {
+          for (const nodeId of input.nodesToDelete) {
+            const nodeFiles = await trx
+              .select({ id: files.id })
+              .from(files)
+              .where(and(eq(files.nodeId, nodeId), isNull(files.parentId)))
+            for (const file of nodeFiles) {
+              await deleteFile(ctx, file.id)
+            }
           }
+          await trx
+            .delete(nodes)
+            .where(
+              and(
+                inArray(nodes.id, input.nodesToDelete),
+                eq(nodes.structureId, input.structureId),
+              ),
+            )
         }
-        await ctx.db
-          .delete(nodes)
-          .where(
-            and(
-              inArray(nodes.id, input.nodesToDelete),
-              eq(nodes.structureId, input.structureId),
-            ),
-          )
-      }
-      if (input.filesToDelete.length > 0)
-        for (const fileIdToDelete of input.filesToDelete) {
-          await deleteFile(ctx, fileIdToDelete)
-        }
+        if (input.filesToDelete.length > 0)
+          for (const fileIdToDelete of input.filesToDelete) {
+            await deleteFile(ctx, fileIdToDelete)
+          }
 
-      for (const inputNode of input.nodes) {
-        let inputNodeId: number | undefined = undefined
-        if (inputNode.id && !inputNode.id.startsWith("reactflow__")) {
-          inputNodeId = Number(inputNode.id)
-          if (isNaN(inputNodeId)) inputNodeId = undefined
-        }
-        const [newNode] = await ctx.db
-          .insert(nodes)
-          .values({
-            id: inputNodeId,
-            x: inputNode.position.x,
-            y: inputNode.position.y,
-            label: inputNode.label,
-            info: inputNode.info,
-            borderColor: inputNode.borderColor ?? "#000000",
-            bgColor: inputNode.bgColor ?? "#ffffff",
-            h: 100,
-            w: 100,
-            structureId: input.structureId,
-          })
-          .onConflictDoUpdate({
-            target: nodes.id,
-            set: {
+        for (const inputNode of input.nodes) {
+          let inputNodeId: number | undefined = undefined
+          if (inputNode.id && !inputNode.id.startsWith("reactflow__")) {
+            inputNodeId = Number(inputNode.id)
+            if (isNaN(inputNodeId)) inputNodeId = undefined
+          }
+          const [newNode] = await trx
+            .insert(nodes)
+            .values({
+              id: inputNodeId,
               x: inputNode.position.x,
               y: inputNode.position.y,
               label: inputNode.label,
               info: inputNode.info,
               borderColor: inputNode.borderColor ?? "#000000",
               bgColor: inputNode.bgColor ?? "#ffffff",
-            },
-          })
-          .returning({ id: nodes.id })
+              h: 100,
+              w: 100,
+              structureId: input.structureId,
+            })
+            .onConflictDoUpdate({
+              target: nodes.id,
+              set: {
+                x: inputNode.position.x,
+                y: inputNode.position.y,
+                label: inputNode.label,
+                info: inputNode.info,
+                borderColor: inputNode.borderColor ?? "#000000",
+                bgColor: inputNode.bgColor ?? "#ffffff",
+              },
+            })
+            .returning({ id: nodes.id })
 
-        if (!newNode) continue
-        if (inputNode.id?.startsWith("reactflow__")) {
-          for (const inputEdge of input.edges) {
-            if (inputEdge.source === inputNode.id) inputEdge.source = newNode.id
-            if (inputEdge.target === inputNode.id) inputEdge.target = newNode.id
+          if (!newNode) continue
+          if (inputNode.id?.startsWith("reactflow__")) {
+            for (const inputEdge of input.edges) {
+              if (inputEdge.source === inputNode.id)
+                inputEdge.source = newNode.id
+              if (inputEdge.target === inputNode.id)
+                inputEdge.target = newNode.id
+            }
           }
-        }
 
-        const newFileIds: { newId: number; oldId: string }[] = []
-        for (const inputFile of inputNode.files) {
-          if (!inputFile.id || inputFile.id.startsWith("reactflow__")) {
-            let inputFileParentId: number | null = null
-            if (inputFile.parentId) {
-              if (!isNaN(Number(inputFile.parentId)))
-                inputFileParentId = Number(inputFile.parentId)
-            }
-            const [newFile] = await ctx.db
-              .insert(files)
-              .values({
-                id: undefined,
-                key: inputFile.key,
-                name: inputFile.name,
-                url: inputFile.url,
-                nodeId: newNode.id,
-                parentId: inputFileParentId,
-                structureId: input.structureId,
-                isFolder: inputFile.isFolder,
-              })
-              .returning({ id: files.id })
-            if (!newFile) continue
-            if (inputFile.key) {
-              await ctx.db
-                .delete(tempFiles)
-                .where(eq(tempFiles.key, inputFile.key))
-            }
-            newFileIds.push({ newId: newFile.id, oldId: inputFile.id })
-            inputFile.id = newFile.id.toString()
-          }
+          const newFileIds: { newId: number; oldId: string }[] = []
           for (const inputFile of inputNode.files) {
-            if (!inputFile.parentId?.startsWith("reactflow__")) continue
-            const newId = Number(inputFile.id)
-            if (isNaN(newId)) continue
-            const newParentId = newFileIds.find(
-              (f) => f.oldId === inputFile.parentId,
-            )?.newId
-            if (!newParentId) continue
-            await ctx.db
-              .update(files)
-              .set({ parentId: newParentId })
-              .where(eq(files.id, newId))
+            if (!inputFile.id || inputFile.id.startsWith("reactflow__")) {
+              let inputFileParentId: number | null = null
+              if (inputFile.parentId) {
+                if (!isNaN(Number(inputFile.parentId)))
+                  inputFileParentId = Number(inputFile.parentId)
+              }
+              const [newFile] = await trx
+                .insert(files)
+                .values({
+                  id: undefined,
+                  key: inputFile.key,
+                  name: inputFile.name,
+                  url: inputFile.url,
+                  nodeId: newNode.id,
+                  parentId: inputFileParentId,
+                  structureId: input.structureId,
+                  isFolder: inputFile.isFolder,
+                })
+                .returning({ id: files.id })
+              if (!newFile) continue
+              if (inputFile.key) {
+                await trx
+                  .delete(tempFiles)
+                  .where(eq(tempFiles.key, inputFile.key))
+              }
+              newFileIds.push({ newId: newFile.id, oldId: inputFile.id })
+              inputFile.id = newFile.id.toString()
+            }
+            for (const inputFile of inputNode.files) {
+              if (!inputFile.parentId?.startsWith("reactflow__")) continue
+              const newId = Number(inputFile.id)
+              if (isNaN(newId)) continue
+              const newParentId = newFileIds.find(
+                (f) => f.oldId === inputFile.parentId,
+              )?.newId
+              if (!newParentId) continue
+              await trx
+                .update(files)
+                .set({ parentId: newParentId })
+                .where(eq(files.id, newId))
+            }
           }
         }
-      }
-      for (const inputEdge of input.edges) {
-        let inputEdgeId: number | undefined = undefined
-        if (inputEdge.id && !inputEdge.id.startsWith("reactflow__")) {
-          inputEdgeId = Number(inputEdge.id)
-          if (isNaN(inputEdgeId)) inputEdgeId = undefined
-        }
-        const edgeSource = Number(inputEdge.source)
-        const edgeTarget = Number(inputEdge.target)
-        if (isNaN(edgeSource) || isNaN(edgeTarget) || edgeSource === edgeTarget)
-          continue
-        await ctx.db
-          .insert(edges)
-          .values({
-            id: inputEdgeId,
-            source: edgeSource,
-            target: edgeTarget,
-            startLabel: inputEdge.startLabel,
-            label: inputEdge.label,
-            endLabel: inputEdge.endLabel,
-            color: inputEdge.color ?? "#000000",
-            structureId: input.structureId,
-          })
-          .onConflictDoUpdate({
-            target: edges.id,
-            set: {
+        for (const inputEdge of input.edges) {
+          let inputEdgeId: number | undefined = undefined
+          if (inputEdge.id && !inputEdge.id.startsWith("reactflow__")) {
+            inputEdgeId = Number(inputEdge.id)
+            if (isNaN(inputEdgeId)) inputEdgeId = undefined
+          }
+          const edgeSource = Number(inputEdge.source)
+          const edgeTarget = Number(inputEdge.target)
+          if (
+            isNaN(edgeSource) ||
+            isNaN(edgeTarget) ||
+            edgeSource === edgeTarget
+          )
+            continue
+
+          await trx
+            .insert(edges)
+            .values({
+              id: inputEdgeId,
               source: edgeSource,
               target: edgeTarget,
-              startLabel: inputEdge.startLabel,
-              label: inputEdge.label,
-              endLabel: inputEdge.endLabel,
               color: inputEdge.color ?? "#000000",
-            },
-          })
-      }
+              structureId: input.structureId,
+            })
+            .onConflictDoUpdate({
+              target: edges.id,
+              set: {
+                source: edgeSource,
+                target: edgeTarget,
+                color: inputEdge.color ?? "#000000",
+              },
+            })
 
-      const unusedTempFiles = await ctx.db
-        .select({ key: tempFiles.key })
-        .from(tempFiles)
-        .where(eq(tempFiles.structureId, input.structureId))
+          if (inputEdgeId) {
+            await trx
+              .delete(edgeLabels)
+              .where(eq(edgeLabels.edgeId, inputEdgeId))
 
-      if (unusedTempFiles.length) {
-        const { success } = await utapi.deleteFiles(
-          unusedTempFiles.map((f) => f.key),
-        )
-        if (success)
-          await ctx.db
-            .delete(tempFiles)
-            .where(eq(tempFiles.structureId, input.structureId))
-      }
+            for (const { label, offset } of inputEdge.labels ?? []) {
+              if (!label.length) continue
+              await trx.insert(edgeLabels).values({
+                edgeId: inputEdgeId,
+                label: label,
+                offset,
+              })
+            }
+          }
+        }
+
+        const unusedTempFiles = await trx
+          .select({ key: tempFiles.key })
+          .from(tempFiles)
+          .where(eq(tempFiles.structureId, input.structureId))
+
+        if (unusedTempFiles.length) {
+          const { success } = await utapi.deleteFiles(
+            unusedTempFiles.map((f) => f.key),
+          )
+          if (success)
+            await trx
+              .delete(tempFiles)
+              .where(eq(tempFiles.structureId, input.structureId))
+        }
+      })
 
       revalidatePath(`/structures/${input.structureId}`)
     }),

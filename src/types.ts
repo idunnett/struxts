@@ -19,9 +19,7 @@ export interface NodeData extends Record<string, unknown> {
 export type TBasicNode = Node<NodeData, "basic">
 
 export interface EdgeData extends Record<string, unknown> {
-  startLabel?: string | null
-  label?: string | null
-  endLabel?: string | null
+  labels: { id: string; label: string; offset: number }[]
   color: string
   editable?: boolean
   onEdgeDataChange?: (edgeId: string, data: Partial<EdgeData>) => void

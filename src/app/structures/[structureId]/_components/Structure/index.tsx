@@ -147,6 +147,10 @@ export default function Structure({
       target: edge.target.toString(),
       data: {
         ...edge.data,
+        labels: edge.data.labels.map((label) => ({
+          ...label,
+          id: label.id.toString(),
+        })),
         editable: false,
       },
       markerEnd: {
@@ -166,6 +170,7 @@ export default function Structure({
             ...params,
             type: "floating",
             data: {
+              labels: [],
               color: lastUsedEdgeColor,
             },
             markerEnd: {
@@ -311,10 +316,16 @@ export default function Structure({
       if (!initialEdge) return true
       if (edge.source !== initialEdge.source.toString()) return true
       if (edge.target !== initialEdge.target.toString()) return true
-      if (edge.data?.startLabel !== initialEdge.data.startLabel) return true
-      if (edge.data?.label !== initialEdge.data.label) return true
-      if (edge.data?.endLabel !== initialEdge.data.endLabel) return true
       if (edge.data?.color !== initialEdge.data.color) return true
+      if (edgeLabelsHasChanges(initialEdge.data.labels, edge.data.labels))
+        for (const label of edge.data.labels) {
+          const existingEdgeLabel = initialEdge.data.labels.find(
+            (l) => l.id.toString() === label.id,
+          )
+          if (!existingEdgeLabel) return true
+          if (label.label !== existingEdgeLabel.label) return true
+          if (label.offset !== existingEdgeLabel.offset) return true
+        }
     }
     return false
   }, [
@@ -327,6 +338,23 @@ export default function Structure({
     nodes,
     nodesToDelete.length,
   ])
+
+  function edgeLabelsHasChanges(
+    initialLabels: Awaited<
+      ReturnType<typeof serverApi.edge.getByStructureId>
+    >[0]["data"]["labels"],
+    labels: EdgeData["labels"],
+  ) {
+    for (const label of labels) {
+      const initialLabel = initialLabels.find(
+        (l) => l.id.toString() === label.id,
+      )
+      if (!initialLabel) return true
+      if (label.label !== initialLabel.label) return true
+      if (label.offset !== initialLabel.offset) return true
+    }
+    return false
+  }
 
   function handleAddNode(e: MouseEvent<HTMLDivElement>) {
     const newId = `reactflow__${nanoid()}`
@@ -400,6 +428,10 @@ export default function Structure({
         target: edge.target.toString(),
         data: {
           ...edge.data,
+          labels: edge.data.labels.map((label) => ({
+            ...label,
+            id: label.id.toString(),
+          })),
           editable: false,
         },
         markerEnd: {
@@ -473,19 +505,14 @@ export default function Structure({
         !initialEdge ||
         edge.source !== initialEdge.source.toString() ||
         edge.target !== initialEdge.target.toString() ||
-        edge.data?.startLabel !== initialEdge.data?.startLabel ||
-        edge.data?.label !== initialEdge.data?.label ||
-        edge.data?.endLabel !== initialEdge.data?.endLabel ||
-        edge.data?.label !== initialEdge.data?.label ||
-        edge.data?.color !== initialEdge.data?.color
+        edge.data?.color !== initialEdge.data?.color ||
+        edgeLabelsHasChanges(initialEdge.data.labels, edge.data.labels)
       ) {
         edgesToUpdate.push({
           id: edge.id,
           source: edge.source,
           target: edge.target,
-          startLabel: edge.data?.startLabel,
-          endLabel: edge.data?.endLabel,
-          label: edge.data?.label,
+          labels: edge.data?.labels,
           color: edge.data?.color,
         })
       }
@@ -526,6 +553,7 @@ export default function Structure({
               ...edge,
               data: {
                 ...edge.data,
+                labels: edge.data?.labels ?? [],
                 editable: editable && !!reactFlowInstance && currentUserCanEdit,
                 color: edge.data?.color ?? "#000000",
                 onEdgeDataChange,

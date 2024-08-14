@@ -40,88 +40,86 @@ export default function BasicNode({
         !open && !focused && !selected && setToolbarPopoverOpen(false)
       }
     >
-      <PopoverTrigger asChild>
-        <div
-          id={id}
+      <div
+        id={id}
+        className={cn(
+          "group relative w-[162px] cursor-pointer rounded-sm border p-2",
+          data.isActive && "ring-2 ring-primary/25 ring-offset-2",
+          dragging && "cursor-grabbing",
+        )}
+        style={{
+          borderColor: data.borderColor,
+          backgroundColor: data.bgColor,
+        }}
+        onClick={() => setToolbarPopoverOpen(true)}
+        onDoubleClick={() => {
+          if (focused) return
+          setFocused(true)
+          setTimeout(() => {
+            const input = document.getElementById(
+              `line-wrapping-input-${id}`,
+            ) as HTMLTextAreaElement
+            if (!input) return
+            input.select()
+          })
+        }}
+      >
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
           className={cn(
-            "group relative w-[162px] cursor-pointer rounded-sm border p-2",
-            data.isActive && "ring-2 ring-primary/25 ring-offset-2",
+            "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md transition-opacity duration-150 ease-in-out group-hover:opacity-100",
+            data.isActive ? "opacity-100" : "opacity-0",
+          )}
+          onClick={() =>
+            data.onShowInfoChange?.(id, !(data.isActive && data.showNodeInfo))
+          }
+        >
+          {data.isActive && data.showNodeInfo ? (
+            <LucideMinimize2 className="h-3.5 w-3.5" />
+          ) : (
+            <LucideMaximize2 className="h-3.5 w-3.5" />
+          )}
+        </Button>
+        <LineWrappingInput
+          id={`line-wrapping-input-${id}`}
+          value={data.label}
+          onChange={(e) =>
+            data.onNodeDataChange?.(id, { label: e.target.value })
+          }
+          className={cn(
+            "nodrag w-full break-words bg-transparent text-center text-sm outline-none",
             dragging && "cursor-grabbing",
           )}
-          style={{
-            borderColor: data.borderColor,
-            backgroundColor: data.bgColor,
-          }}
-          onClick={() => setToolbarPopoverOpen(true)}
-          onDoubleClick={() => {
-            if (focused) return
-            setFocused(true)
-            setTimeout(() => {
-              const input = document.getElementById(
-                `line-wrapping-input-${id}`,
-              ) as HTMLTextAreaElement
-              if (!input) return
-              input.select()
-            })
-          }}
-        >
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className={cn(
-              "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md transition-opacity duration-150 ease-in-out group-hover:opacity-100",
-              data.isActive ? "opacity-100" : "opacity-0",
-            )}
-            onClick={() =>
-              data.onShowInfoChange?.(id, !(data.isActive && data.showNodeInfo))
-            }
-          >
-            {data.isActive && data.showNodeInfo ? (
-              <LucideMinimize2 className="h-3.5 w-3.5" />
-            ) : (
-              <LucideMaximize2 className="h-3.5 w-3.5" />
-            )}
-          </Button>
-          <LineWrappingInput
-            id={`line-wrapping-input-${id}`}
-            value={data.label}
-            onChange={(e) =>
-              data.onNodeDataChange?.(id, { label: e.target.value })
-            }
-            className={cn(
-              "nodrag w-full break-words bg-transparent text-center text-sm outline-none",
-              dragging && "cursor-grabbing",
-            )}
-            readOnly={!data.editable || !focused}
-            onBlur={() => setFocused(false)}
-          />
-          <Handle
-            type="source"
-            position={Position.Top}
-            id="a"
-            className={cn(!data.editable && "hidden")}
-          />
-          <Handle
-            type="source"
-            position={Position.Right}
-            id="b"
-            className={cn(!data.editable && "hidden")}
-          />
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            id="c"
-            className={cn(!data.editable && "hidden")}
-          />
-          <Handle
-            type="source"
-            position={Position.Left}
-            id="d"
-            className={cn(!data.editable && "hidden")}
-          />
-        </div>
-      </PopoverTrigger>
+          readOnly={!data.editable || !focused}
+          onBlur={() => setFocused(false)}
+        />
+        <Handle
+          type="source"
+          position={Position.Top}
+          id="a"
+          className={cn(!data.editable && "hidden")}
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="b"
+          className={cn(!data.editable && "hidden")}
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          id="c"
+          className={cn(!data.editable && "hidden")}
+        />
+        <Handle
+          type="source"
+          position={Position.Left}
+          id="d"
+          className={cn(!data.editable && "hidden")}
+        />
+      </div>
       <PopoverContent side="top" sideOffset={12} className="w-fit p-1">
         <div className="flex items-center gap-1">
           <Popover>

@@ -1,9 +1,58 @@
 {
-  "id": "2f0e78e9-5bd2-4b3b-9746-6708dab3a944",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "a653f9a7-2849-4eba-b4fa-70a6f735e02d",
+  "prevId": "2f0e78e9-5bd2-4b3b-9746-6708dab3a944",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.edge_labels": {
+      "name": "edge_labels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "edgeId": {
+          "name": "edgeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "offset": {
+          "name": "offset",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 50
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "edge_labels_edgeId_edges_id_fk": {
+          "name": "edge_labels_edgeId_edges_id_fk",
+          "tableFrom": "edge_labels",
+          "tableTo": "edges",
+          "columnsFrom": [
+            "edgeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.edges": {
       "name": "edges",
       "schema": "",
@@ -25,24 +74,6 @@
           "type": "serial",
           "primaryKey": false,
           "notNull": true
-        },
-        "startLabel": {
-          "name": "startLabel",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "endLabel": {
-          "name": "endLabel",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         },
         "color": {
           "name": "color",

@@ -1,12 +1,12 @@
 import {
   EdgeLabelRenderer,
   getStraightPath,
-  useStore,
+  useInternalNode,
   type EdgeProps,
-  type Node,
 } from "@xyflow/react"
-import { Circle, Trash } from "lucide-react"
-import { useCallback, useEffect, useRef } from "react"
+import { Circle, LucideTrash2 } from "lucide-react"
+import { nanoid } from "nanoid"
+import { useEffect, useRef } from "react"
 import updateInputWidth from "update-input-width"
 import { Button } from "~/components/ui/button"
 import {
@@ -17,6 +17,8 @@ import {
 import { colours } from "~/lib/constants"
 import { cn } from "~/lib/utils"
 import { type TFloatingEdge } from "~/types"
+import { Input } from "../../../../../components/ui/input"
+import { Slider } from "../../../../../components/ui/slider"
 import { getEdgeParams } from "../../_utils/edgeUtils"
 
 export default function FloatingEdge({
@@ -29,12 +31,9 @@ export default function FloatingEdge({
   style,
   interactionWidth,
 }: EdgeProps<TFloatingEdge>) {
-  const sourceNode = useStore(
-    useCallback((store) => store.nodeLookup.get(source), [source]),
-  )
-  const targetNode = useStore(
-    useCallback((store) => store.nodeLookup.get(target), [target]),
-  )
+  // Adjust this value between 0 and 100 to control label position
+  const sourceNode = useInternalNode(source)
+  const targetNode = useInternalNode(target)
   if (!sourceNode || !targetNode) return null
 
   const {
@@ -45,7 +44,7 @@ export default function FloatingEdge({
     // sourcePos, targetPos
   } = getEdgeParams(sourceNode, targetNode)
 
-  const [edgePath, labelX, labelY] = getStraightPath({
+  const [edgePath] = getStraightPath({
     sourceX: sx,
     sourceY: sy,
     // sourcePosition: sourcePos,
@@ -54,36 +53,23 @@ export default function FloatingEdge({
     targetY: ty,
   })
 
-  function getXTranslate(x: number, node: Node | undefined) {
-    if (x === node?.position.x) return -100
-    const width = node?.width ?? 162
-    if (x === (node?.position.x ?? 0) + width) return 0
-
-    return -50
+  function handelAddLabel() {
+    const newId = `reactflow__${nanoid()}`
+    data?.onEdgeDataChange?.(id, {
+      labels: [...(data?.labels ?? []), { id: newId, label: "", offset: 50 }],
+    })
+    setTimeout(() => document.getElementById(`label-input-${newId}`)?.focus())
   }
-
-  function getYTanslate(y: number, node: Node | undefined) {
-    if (y === node?.position.y) return -100
-    if (y === (node?.position.y ?? 0) + (node?.height ?? 100)) return 0
-
-    return -50
-  }
-
-  function handleAddStartLabel() {
-    data?.onEdgeDataChange?.(id, { startLabel: "" })
-    setTimeout(() =>
-      document.getElementById(`${id}-start-label-input`)?.focus(),
-    )
-  }
-  function handleAddEndLabel() {
-    data?.onEdgeDataChange?.(id, { endLabel: "" })
-    setTimeout(() => document.getElementById(`${id}-end-label-input`)?.focus())
-  }
-  function handelAddCenterLabel() {
-    data?.onEdgeDataChange?.(id, { label: "" })
-    setTimeout(() =>
-      document.getElementById(`${id}-middle-label-input`)?.focus(),
-    )
+  function calculateOffsetPosition(
+    sx: number,
+    sy: number,
+    tx: number,
+    ty: number,
+    offset: number,
+  ) {
+    const offsetX = sx + ((tx - sx) * offset) / 100
+    const offsetY = sy + ((ty - sy) * offset) / 100
+    return { offsetX, offsetY }
   }
 
   return (
@@ -95,6 +81,7 @@ export default function FloatingEdge({
         className={cn(
           "stroke-current stroke-2 marker:fill-current",
           selected && "outline-dashed outline-blue-500/50",
+          !data?.editable && "pointer-events-none",
         )}
         d={edgePath}
         markerEnd={markerEnd}
@@ -103,130 +90,176 @@ export default function FloatingEdge({
           color: data?.color,
         }}
       />
-      <Popover open={selected && data?.editable}>
-        <PopoverTrigger asChild>
-          <path
-            d={edgePath}
-            fill="none"
-            strokeOpacity={0}
-            strokeWidth={interactionWidth ?? 20}
-            className="react-flow__edge-interaction"
-          />
-        </PopoverTrigger>
-        <PopoverContent className="w-fit p-2" side="top" sideOffset={12}>
-          <div className="flex gap-2">
-            <Button
-              disabled={data?.startLabel != null}
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              onClick={handleAddStartLabel}
-            >
-              + Start Label
-            </Button>
-            <Button
-              disabled={data?.label != null}
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              onClick={handelAddCenterLabel}
-            >
-              + Center Label
-            </Button>
-            <Button
-              disabled={data?.endLabel != null}
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              onClick={handleAddEndLabel}
-            >
-              + End Label
-            </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  style={{
-                    color: data?.color ?? "#000000",
-                  }}
-                >
-                  <Circle
-                    strokeWidth={3}
-                    className="h-4 w-4 rounded-full border fill-current stroke-current"
-                  />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="top"
-                sideOffset={12}
-                className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+      {!!data?.editable && (
+        <Popover open={selected && data?.editable}>
+          <PopoverTrigger asChild disabled={!data?.editable}>
+            <path
+              d={edgePath}
+              fill="none"
+              strokeOpacity={0}
+              strokeWidth={interactionWidth ?? 20}
+              className="react-flow__edge-interaction"
+            />
+          </PopoverTrigger>
+          <PopoverContent
+            className="flex w-fit flex-col gap-1 p-2"
+            side="top"
+            sideOffset={12}
+          >
+            <div className="flex gap-2">
+              <Button
+                disabled={data?.label != null}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={handelAddLabel}
               >
-                {colours
-                  .filter((c) => c.value !== "transparent")
-                  .map((colour) => (
-                    <button
-                      key={colour.value}
-                      className="rounded-full border transition-all hover:border-blue-500/50"
-                      style={{
-                        color: colour.value,
-                      }}
-                      onClick={() =>
-                        data?.onEdgeDataChange?.(id, {
+                + Label
+              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    style={{
+                      color: data?.color ?? "#000000",
+                    }}
+                  >
+                    <Circle
+                      strokeWidth={3}
+                      className="h-4 w-4 rounded-full border fill-current stroke-current"
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="top"
+                  sideOffset={12}
+                  className="flex w-fit max-w-96 flex-wrap items-center justify-center gap-1 p-2"
+                >
+                  {colours
+                    .filter((c) => c.value !== "transparent")
+                    .map((colour) => (
+                      <button
+                        key={colour.value}
+                        className="rounded-full border transition-all hover:border-blue-500/50"
+                        style={{
                           color: colour.value,
-                        })
-                      }
-                    >
-                      <Circle className="fill-current stroke-current" />
-                    </button>
-                  ))}
-              </PopoverContent>
-            </Popover>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs"
-              onClick={() => data?.onDelete?.(id)}
-            >
-              <Trash className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+                        }}
+                        onClick={() =>
+                          data?.onEdgeDataChange?.(id, {
+                            color: colour.value,
+                          })
+                        }
+                      >
+                        <Circle className="fill-current stroke-current" />
+                      </button>
+                    ))}
+                </PopoverContent>
+              </Popover>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={() => data?.onDelete?.(id)}
+              >
+                <LucideTrash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
+            {data?.labels.map(({ id: labelId, label, offset }, index) => (
+              <div
+                key={labelId}
+                className="flex flex-col gap-1 rounded-md border p-2"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs text-muted-foreground">
+                    Label {index + 1}
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      data?.onEdgeDataChange?.(id, {
+                        labels: data.labels.filter((l) => l.id !== labelId),
+                      })
+                    }}
+                  >
+                    <LucideTrash2 className="h-3 w-3 text-red-500" />
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Input
+                    id={`label-input-${labelId}`}
+                    value={label ?? ""}
+                    className="h-8"
+                    onChange={(e) => {
+                      const labelIndex = data?.labels.findIndex(
+                        (l) => l.id === labelId,
+                      )
+                      if (labelIndex === -1) return
+                      const newLabels = [...data.labels]
+                      newLabels[labelIndex]!.label = e.target.value
+                      data?.onEdgeDataChange?.(id, {
+                        labels: newLabels,
+                      })
+                    }}
+                  />
+                  <Slider
+                    defaultValue={[50]}
+                    max={100}
+                    step={1}
+                    value={[offset]}
+                    onValueChange={([value]) => {
+                      if (value === undefined) return
+                      const labelIndex = data?.labels.findIndex(
+                        (l) => l.id === labelId,
+                      )
+                      if (labelIndex === -1) return
+                      const newLabels = [...data.labels]
+                      newLabels[labelIndex]!.offset = value
+                      data?.onEdgeDataChange?.(id, {
+                        labels: newLabels,
+                      })
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </PopoverContent>
+        </Popover>
+      )}
       <EdgeLabelRenderer>
-        {data?.startLabel != null && (
-          <EdgeLabel
-            id={id}
-            labelType="start"
-            transform={`translate(${getXTranslate(sx, sourceNode)}%, ${getYTanslate(sy, sourceNode)}%) translate(${sx}px,${sy}px)`}
-            label={data.startLabel ?? ""}
-            editable={!!data.editable}
-            onChange={(startLabel) =>
-              data.onEdgeDataChange?.(id, { startLabel })
-            }
-          />
-        )}
-        {data?.label != null && (
-          <EdgeLabel
-            id={id}
-            labelType="middle"
-            transform={`translate(-50%, -50%) translate(${labelX}px,${labelY}px)`}
-            label={data.label ?? ""}
-            editable={!!data.editable}
-            onChange={(label) => data.onEdgeDataChange?.(id, { label })}
-          />
-        )}
-        {data?.endLabel != null && (
-          <EdgeLabel
-            id={id}
-            labelType="end"
-            transform={`translate(${getXTranslate(tx, targetNode)}%, ${getYTanslate(ty, targetNode)}%) translate(${tx}px,${ty}px)`}
-            label={data.endLabel ?? ""}
-            editable={!!data.editable}
-            onChange={(endLabel) => data.onEdgeDataChange?.(id, { endLabel })}
-          />
-        )}
+        {data?.labels.map(({ id: labelId, label, offset }) => {
+          const { offsetX, offsetY } = calculateOffsetPosition(
+            sx,
+            sy,
+            tx,
+            ty,
+            offset,
+          )
+          return (
+            <EdgeLabel
+              key={labelId}
+              id={labelId}
+              transform={`translate(-50%, -50%) translate(${offsetX}px,${offsetY}px)`}
+              label={label ?? ""}
+              editable={!!data.editable}
+              onChange={(value) => {
+                const labelIndex = data?.labels.findIndex(
+                  (l) => l.id === labelId,
+                )
+                if (labelIndex === -1) return
+                const newLabels = [...data.labels]
+                newLabels[labelIndex]!.label = value
+                data?.onEdgeDataChange?.(id, {
+                  labels: newLabels,
+                })
+              }}
+            />
+          )
+        })}
       </EdgeLabelRenderer>
     </>
   )
@@ -235,7 +268,6 @@ export default function FloatingEdge({
 // this is a little helper component to render the actual edge label
 function EdgeLabel({
   id,
-  labelType,
   transform,
   label,
   editable,
@@ -243,12 +275,11 @@ function EdgeLabel({
   // groupHovering,
 }: {
   id: string
-  labelType: "start" | "end" | "middle"
   transform?: string
   label: string
   editable: boolean
   // groupHovering: boolean
-  onChange: (label: string | null) => void
+  onChange: (value: string) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -266,13 +297,10 @@ function EdgeLabel({
     >
       <input
         ref={inputRef}
-        id={`${id}-${labelType}-label-input`}
+        id={`edge-label-input-${id}`}
         className="pointer-events-auto min-w-4 bg-transparent text-center outline-none ring-blue-500/50 ring-offset-1 focus:ring-1"
         value={label}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={() => {
-          if (!label) onChange(null)
-        }}
         autoComplete="off"
         disabled={!editable}
       />
