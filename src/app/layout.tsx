@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/nextjs"
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin"
 import { Inter } from "next/font/google"
 import NavBar from "~/app/_components/nav-bar"
@@ -8,6 +7,7 @@ import { TRPCReactProvider } from "~/trpc/react"
 
 import { extractRouterConfig } from "uploadthing/server"
 import "~/styles/globals.css"
+import { ConvexClientProvider } from "./ConvexClientProvider"
 import PostHogPageView from "./_analytics/PostHogPageView"
 import { PHProvider } from "./_analytics/provider"
 import { ourFileRouter } from "./api/uploadthing/core"
@@ -29,24 +29,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider signInFallbackRedirectUrl="/">
-      <PHProvider>
-        <html lang="en">
-          <NextSSRPlugin
-            /**
-             * The `extractRouterConfig` will extract **only** the route configs
-             * from the router to prevent additional information from being
-             * leaked to the client. The data passed to the client is the same
-             * as if you were to fetch `/api/uploadthing` directly.
-             */
-            routerConfig={extractRouterConfig(ourFileRouter)}
-          />
-          <body
-            className={cn(
-              "relative flex h-screen flex-col bg-background font-sans antialiased",
-              inter.variable,
-            )}
-          >
+    <html lang="en">
+      <body
+        className={cn(
+          "relative flex h-screen flex-col bg-background font-sans antialiased",
+          inter.variable,
+        )}
+      >
+        <NextSSRPlugin
+          /**
+           * The `extractRouterConfig` will extract **only** the route configs
+           * from the router to prevent additional information from being
+           * leaked to the client. The data passed to the client is the same
+           * as if you were to fetch `/api/uploadthing` directly.
+           */
+          routerConfig={extractRouterConfig(ourFileRouter)}
+        />
+        <ConvexClientProvider>
+          <PHProvider>
             <TRPCReactProvider>
               <NavBar />
               <main className="min-h-0 grow overflow-auto">
@@ -55,9 +55,9 @@ export default function RootLayout({
               </main>
             </TRPCReactProvider>
             <Toaster />
-          </body>
-        </html>
-      </PHProvider>
-    </ClerkProvider>
+          </PHProvider>
+        </ConvexClientProvider>
+      </body>
+    </html>
   )
 }

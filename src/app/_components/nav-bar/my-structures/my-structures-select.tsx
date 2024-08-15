@@ -33,17 +33,14 @@ export default function MyStructuresSelect({ myStructures }: Props) {
 
   return (
     <>
-      <div className="h-3/4 w-[1px] rotate-12 bg-muted-foreground" />
+      <div className="h-1/2 w-[1px] rotate-12 bg-muted-foreground" />
       <Select
         key={selectedStructureId}
         value={selectedStructureId}
         onValueChange={handleStructureChange}
       >
-        <SelectTrigger className="max-w-96 gap-2 border-none text-lg font-semibold !ring-0">
-          <SelectValue
-            placeholder="Select a structure"
-            className="shrink truncate"
-          />
+        <SelectTrigger className="max-w-96 gap-2 border-none font-medium !ring-0">
+          <SelectValue placeholder="Select a structure" className="truncate" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
