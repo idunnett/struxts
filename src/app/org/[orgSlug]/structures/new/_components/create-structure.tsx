@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
+import { Organization } from "@clerk/nextjs/server"
 import { api } from "~/trpc/react"
 import { Button } from "../../../../../../components/ui/button"
 import {
@@ -16,7 +17,11 @@ import {
 import { Input } from "../../../../../../components/ui/input"
 import { Label } from "../../../../../../components/ui/label"
 
-export function CreateStructure() {
+interface Props {
+  org: Organization | null
+}
+
+export function CreateStructure({ org }: Props) {
   const router = useRouter()
   const [name, setName] = useState("")
 
@@ -38,7 +43,8 @@ export function CreateStructure() {
         <CardHeader>
           <CardTitle>Create Structure</CardTitle>
           <CardDescription>
-            Create a new structure to organize your data
+            Create a new structure in{" "}
+            <b className="text-primary">{org?.name ?? "Personal"}</b>
           </CardDescription>
         </CardHeader>
         <CardContent>

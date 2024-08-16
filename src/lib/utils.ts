@@ -17,5 +17,5 @@ export function isOwner(role: string | undefined | null) {
 export function isCustomConvexError(
   error: CustomConvexError | unknown,
 ): error is CustomConvexError {
-  return (error as CustomConvexError).data.statusCode !== undefined
+  return (error as CustomConvexError)?.data?.statusCode !== undefined
 }

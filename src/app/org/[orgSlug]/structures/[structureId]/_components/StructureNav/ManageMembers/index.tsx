@@ -1,3 +1,5 @@
+"use client"
+
 import { useAuth } from "@clerk/nextjs"
 import Image from "next/image"
 import { useMemo } from "react"

@@ -8,6 +8,9 @@ await import("./src/env.js")
 
 /** @type {import("next").NextConfig} */
 const coreConfig = {
+  experimental: {
+    reactCompiler: true,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

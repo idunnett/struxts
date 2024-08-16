@@ -1,13 +1,9 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
 
-const orgs = defineTable({
-  name: v.string(),
-  createdById: v.string(),
-})
-
 const structures = defineTable({
   name: v.string(),
+  orgId: v.union(v.string(), v.null()),
   createdById: v.string(),
   updatedAt: v.number(),
 })
@@ -24,27 +20,15 @@ const nodes = defineTable({
   bgColour: v.string(),
 }).index("by_structureId", ["structureId"])
 
-export const orgUsers = defineTable({
+export const orgStructureUsers = defineTable({
   userId: v.string(),
-  organizationId: v.id("orgs"),
-  role: v.union(
-    v.literal("Guest"),
-    v.literal("Member"),
-    v.literal("Admin"),
-    v.literal("Owner"),
-  ),
-}).index("by_userId", ["userId"])
-
-export const orgUserStructures = defineTable({
-  orgUserId: v.id("orgUsers"),
+  orgId: v.union(v.string(), v.null()),
   structureId: v.id("structures"),
   role: v.union(v.literal("Guest"), v.literal("Admin"), v.literal("Owner")),
 })
 
 export default defineSchema({
-  orgs,
-  orgUsers,
-  orgUserStructures,
+  orgStructureUsers,
   structures,
   nodes,
 })

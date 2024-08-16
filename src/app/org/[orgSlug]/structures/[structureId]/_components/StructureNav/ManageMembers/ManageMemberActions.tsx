@@ -1,3 +1,5 @@
+"use client"
+
 import { useAuth } from "@clerk/nextjs"
 import { toast } from "sonner"
 import Spinner from "~/components/Spinner"
