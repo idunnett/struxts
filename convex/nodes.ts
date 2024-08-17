@@ -3,12 +3,13 @@ import { mutation, query } from "./_generated/server"
 
 export const getByStructureId = query({
   args: {
-    structureId: v.id("structures"),
+    structureId: v.string(),
   },
   handler: async (ctx, args) => {
+    const serializedId = ctx.db.normalizeId("structures", args.structureId)
     return await ctx.db
       .query("nodes")
-      .filter((q) => q.eq(q.field("structureId"), args.structureId))
+      .filter((q) => q.eq(q.field("structureId"), serializedId))
       .collect()
   },
 })

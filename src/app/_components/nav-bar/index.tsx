@@ -1,8 +1,8 @@
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { buttonVariants } from "~/components/ui/button"
-import MyStructures from "./my-structures"
 import OrgSwitcher from "./OrgSwitcher"
+import StructureSwitcher from "./StructureSwitcher"
 
 export default async function NavBar() {
   return (
@@ -15,7 +15,7 @@ export default async function NavBar() {
           <SignedIn>
             <div className="h-1/2 w-[1px] rotate-12 bg-muted-foreground" />
             <OrgSwitcher />
-            <MyStructures />
+            <StructureSwitcher />
           </SignedIn>
         </div>
         <div>
