@@ -4,7 +4,7 @@ import {
   type Node,
   getStraightPath,
 } from "@xyflow/react"
-import { getEdgeParams } from "../../_utils/edgeUtils"
+import { getEdgeParams } from "../_utils/edgeUtils"
 
 interface Props extends ConnectionLineComponentProps {
   stroke: string

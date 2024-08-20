@@ -14,7 +14,9 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as edges from "../edges.js";
 import type * as nodes from "../nodes.js";
+import type * as orgStructureUsers from "../orgStructureUsers.js";
 import type * as structures from "../structures.js";
 
 /**
@@ -26,7 +28,9 @@ import type * as structures from "../structures.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  edges: typeof edges;
   nodes: typeof nodes;
+  orgStructureUsers: typeof orgStructureUsers;
   structures: typeof structures;
 }>;
 export declare const api: FilterApi<

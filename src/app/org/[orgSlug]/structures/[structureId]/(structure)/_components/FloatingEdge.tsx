@@ -4,8 +4,7 @@ import {
   useInternalNode,
   type EdgeProps,
 } from "@xyflow/react"
-import { Circle, LucideTrash2 } from "lucide-react"
-import { nanoid } from "nanoid"
+import { Circle, LucideTrash, LucideTrash2 } from "lucide-react"
 import { useEffect, useRef } from "react"
 import updateInputWidth from "update-input-width"
 import { Button } from "~/components/ui/button"
@@ -19,7 +18,7 @@ import { cn } from "~/lib/utils"
 import { type TFloatingEdge } from "~/types"
 import { Input } from "../../../../../../../components/ui/input"
 import { Slider } from "../../../../../../../components/ui/slider"
-import { getEdgeParams } from "../../_utils/edgeUtils"
+import { getEdgeParams } from "../_utils/edgeUtils"
 
 export default function FloatingEdge({
   id,
@@ -54,11 +53,15 @@ export default function FloatingEdge({
   })
 
   function handelAddLabel() {
-    const newId = `reactflow__${nanoid()}`
+    const labels = data?.labels ?? []
     data?.onEdgeDataChange?.(id, {
-      labels: [...(data?.labels ?? []), { id: newId, label: "", offset: 50 }],
+      labels: [...labels, { label: "", offset: 50 }],
     })
-    setTimeout(() => document.getElementById(`label-input-${newId}`)?.focus())
+    setTimeout(() =>
+      document
+        .getElementById(`edge-${id}-label-input-${labels.length}`)
+        ?.focus(),
+    )
   }
   function calculateOffsetPosition(
     sx: number,
@@ -80,14 +83,14 @@ export default function FloatingEdge({
         fill="none"
         className={cn(
           "stroke-current stroke-2 marker:fill-current",
-          selected && "outline-dashed outline-blue-500/50",
+          selected && "outline-dashed outline-ring",
           !data?.editable && "pointer-events-none",
         )}
         d={edgePath}
         markerEnd={markerEnd}
         style={{
           ...style,
-          color: data?.color,
+          color: data?.colour ?? "#000000",
         }}
       />
       {!!data?.editable && (
@@ -102,16 +105,16 @@ export default function FloatingEdge({
             />
           </PopoverTrigger>
           <PopoverContent
-            className="flex w-fit flex-col gap-1 p-2"
+            className="flex w-fit flex-col gap-1 p-1"
             side="top"
             sideOffset={12}
           >
-            <div className="flex gap-2">
+            <div className="flex items-center gap-1">
               <Button
                 disabled={data?.labels.length > 2}
                 size="sm"
-                variant="outline"
-                className="text-xs"
+                variant="ghost"
+                className="h-8 text-xs"
                 onClick={handelAddLabel}
               >
                 + Label
@@ -119,11 +122,11 @@ export default function FloatingEdge({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-xs"
                     style={{
-                      color: data?.color ?? "#000000",
+                      color: data?.colour ?? "#000000",
                     }}
                   >
                     <Circle
@@ -148,7 +151,7 @@ export default function FloatingEdge({
                         }}
                         onClick={() =>
                           data?.onEdgeDataChange?.(id, {
-                            color: colour.value,
+                            colour: colour.value,
                           })
                         }
                       >
@@ -157,18 +160,19 @@ export default function FloatingEdge({
                     ))}
                 </PopoverContent>
               </Popover>
+              <div className="h-6 w-px bg-secondary" />
               <Button
-                size="sm"
-                variant="outline"
-                className="text-xs"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-xs"
                 onClick={() => data?.onDelete?.(id)}
               >
-                <LucideTrash2 className="h-4 w-4 text-red-500" />
+                <LucideTrash className="h-4 w-4 text-red-500" />
               </Button>
             </div>
-            {data?.labels.map(({ id: labelId, label, offset }, index) => (
+            {data?.labels.map(({ label, offset }, index) => (
               <div
-                key={labelId}
+                key={index}
                 className="flex flex-col gap-1 rounded-md border p-2"
               >
                 <div className="flex items-center justify-between">
@@ -181,8 +185,10 @@ export default function FloatingEdge({
                     size="icon"
                     className="h-6 w-6"
                     onClick={() => {
+                      const newLabels = [...data.labels]
+                      newLabels.splice(index, 1)
                       data?.onEdgeDataChange?.(id, {
-                        labels: data.labels.filter((l) => l.id !== labelId),
+                        labels: newLabels,
                       })
                     }}
                   >
@@ -191,16 +197,12 @@ export default function FloatingEdge({
                 </div>
                 <div className="flex flex-col gap-3">
                   <Input
-                    id={`label-input-${labelId}`}
+                    id={`edge-${id}-label-input-${index}`}
                     value={label ?? ""}
                     className="h-8"
                     onChange={(e) => {
-                      const labelIndex = data?.labels.findIndex(
-                        (l) => l.id === labelId,
-                      )
-                      if (labelIndex === -1) return
                       const newLabels = [...data.labels]
-                      newLabels[labelIndex]!.label = e.target.value
+                      newLabels[index]!.label = e.target.value
                       data?.onEdgeDataChange?.(id, {
                         labels: newLabels,
                       })
@@ -213,12 +215,8 @@ export default function FloatingEdge({
                     value={[offset]}
                     onValueChange={([value]) => {
                       if (value === undefined) return
-                      const labelIndex = data?.labels.findIndex(
-                        (l) => l.id === labelId,
-                      )
-                      if (labelIndex === -1) return
                       const newLabels = [...data.labels]
-                      newLabels[labelIndex]!.offset = value
+                      newLabels[index]!.offset = value
                       data?.onEdgeDataChange?.(id, {
                         labels: newLabels,
                       })
@@ -231,7 +229,7 @@ export default function FloatingEdge({
         </Popover>
       )}
       <EdgeLabelRenderer>
-        {data?.labels.map(({ id: labelId, label, offset }) => {
+        {data?.labels.map(({ label, offset }, index) => {
           const { offsetX, offsetY } = calculateOffsetPosition(
             sx,
             sy,
@@ -241,18 +239,14 @@ export default function FloatingEdge({
           )
           return (
             <EdgeLabel
-              key={labelId}
-              id={labelId}
+              key={index}
+              id={`edge-${id}-label-${index}`}
               transform={`translate(-50%, -50%) translate(${offsetX}px,${offsetY}px)`}
               label={label ?? ""}
               editable={!!data.editable}
               onChange={(value) => {
-                const labelIndex = data?.labels.findIndex(
-                  (l) => l.id === labelId,
-                )
-                if (labelIndex === -1) return
                 const newLabels = [...data.labels]
-                newLabels[labelIndex]!.label = value
+                newLabels[index]!.label = value
                 data?.onEdgeDataChange?.(id, {
                   labels: newLabels,
                 })

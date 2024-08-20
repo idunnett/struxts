@@ -1,4 +1,4 @@
-import { type FileState } from "../../../../../../types"
+import { type FileState } from "../../../../../../../types"
 
 export function sortFiles(files: FileState[]): FileState[] {
   return files.sort((a, b) => {

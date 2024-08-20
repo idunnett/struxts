@@ -5,10 +5,16 @@ import { mutation, query } from "./_generated/server"
 
 export const getById = query({
   args: {
-    id: v.optional(v.string()),
+    id: v.string(),
   },
   handler: async (ctx, args) => {
-    if (!args.id) return null
+    const currentUser = await ctx.auth.getUserIdentity()
+    if (!currentUser)
+      throw new CustomConvexError({
+        statusCode: 401,
+        message: "You must be logged in to view structures",
+      })
+
     const serializedId = ctx.db.normalizeId("structures", args.id)
     if (!serializedId) return null
     return await ctx.db.get(serializedId)

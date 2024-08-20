@@ -1,14 +1,11 @@
 "use client"
 
-import Link from "next/link"
-import { useParams, usePathname } from "next/navigation"
-import { Suspense, useState } from "react"
+import { LucideCircleCheck, LucideRefreshCcw } from "lucide-react"
+import { useParams } from "next/navigation"
+import { Suspense, use, useState } from "react"
 import { api } from "../../../../../../../../convex/_generated/api"
 import Spinner from "../../../../../../../components/Spinner"
-import {
-  Button,
-  buttonVariants,
-} from "../../../../../../../components/ui/button"
+import { Button } from "../../../../../../../components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -18,6 +15,7 @@ import {
   DialogTitle,
 } from "../../../../../../../components/ui/dialog"
 import { usePrefetchedAuthQuery } from "../../../../../../../hooks/usePrefetchedQuery"
+import { StructureContext } from "../StructureProvider"
 import InviteMemberForm from "./InviteMemberForm"
 
 interface Props {
@@ -25,41 +23,41 @@ interface Props {
 }
 
 export default function StructureNav({ prefetchedStructure }: Props) {
-  const { orgSlug, structureId } = useParams() as {
-    orgSlug: string
-    structureId: string
-  }
+  const { structureId } = useParams() as { structureId: string }
   const structure = usePrefetchedAuthQuery(
     api.structures.getById,
     prefetchedStructure,
     { id: structureId },
   )
 
+  const { isSaving } = use(StructureContext)
+
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false)
   const [manageMembersDialogOpen, setManageMembersDialogOpen] = useState(false)
-
-  const pathname = usePathname()
 
   if (!structure) return null
 
   return (
     <>
-      <div className="border-b bg-card px-4 py-1">
-        <div className="flex flex-initial items-center gap-4">
-          <div className="relative">
-            <Link
-              href={`/org/${orgSlug}/structures/${structure._id}`}
-              className={buttonVariants({
-                variant: "ghost",
-                className: "h-8",
-              })}
-            >
-              Structure
-            </Link>
-            {pathname === `/structures/${structure._id}` && (
-              <div className="absolute top-full h-[1px] w-full translate-y-1 bg-primary" />
-            )}
+      <div className="border-b bg-card px-8 py-1">
+        <div className="flex flex-initial items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-semibold">{structure.name}</h1>
+            <div className="flex items-center gap-1 pt-1 text-xs text-muted-foreground">
+              {!isSaving ? (
+                <>
+                  <LucideCircleCheck className="h-3 w-3" />
+                  <span>Saved</span>
+                </>
+              ) : (
+                <>
+                  <LucideRefreshCcw className="h-3 w-3" />
+                  <span>Saving...</span>
+                </>
+              )}
+            </div>
           </div>
+
           {/* <MembersMenuItem
             structureId={structure._id}
             currentStructureUser={currentStructureUser}

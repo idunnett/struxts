@@ -20,6 +20,14 @@ const nodes = defineTable({
   bgColour: v.string(),
 }).index("by_structureId", ["structureId"])
 
+export const edges = defineTable({
+  source: v.id("nodes"),
+  target: v.id("nodes"),
+  colour: v.string(),
+  structureId: v.id("structures"),
+  labels: v.array(v.object({ label: v.string(), offset: v.number() })),
+}).index("by_structureId", ["structureId"])
+
 export const orgStructureUsers = defineTable({
   userId: v.string(),
   orgId: v.union(v.string(), v.null()),
@@ -31,4 +39,5 @@ export default defineSchema({
   orgStructureUsers,
   structures,
   nodes,
+  edges,
 })

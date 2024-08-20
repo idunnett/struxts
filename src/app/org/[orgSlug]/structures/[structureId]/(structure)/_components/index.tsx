@@ -30,7 +30,7 @@ import {
   type MouseEvent,
 } from "react"
 
-import { Lock, LucideX, Unlock } from "lucide-react"
+import { Lock, Unlock } from "lucide-react"
 import { nanoid } from "nanoid"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -55,16 +55,8 @@ import {
   type TBasicNode,
   type TFloatingEdge,
 } from "~/types"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../../../../../components/ui/tabs"
-import { sortFiles } from "../../_utils/fileUtils"
+import { sortFiles } from "../_utils/fileUtils"
 import BasicNode from "./BasicNode"
-import Files from "./BasicNode/Files"
-import TipTapEditor from "./BasicNode/TipTapEditor"
 import DownloadButton from "./DownloadButton"
 import FloatingConnectionLine from "./FloatingConnectionLine"
 import FloatingEdge from "./FloatingEdge"
@@ -691,71 +683,6 @@ export default function Structure({
                 <DownloadButton structureName={structure.name} />
               )}
             </Panel>
-            {activeNode && showNodeInfo && (
-              <Panel
-                key={activeNode.id}
-                position="bottom-right"
-                className="relative !m-0 flex h-full w-[500px] flex-col gap-2 bg-card p-4 pb-0 shadow-lg"
-              >
-                {/* <div className="absolute  top-0">Hide Info</div> */}
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-lg font-semibold">
-                    {activeNode.data.label}
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8"
-                    onClick={() => {
-                      setShowNodeInfo(false)
-                      setActiveNodeId(null)
-                    }}
-                  >
-                    <LucideX className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Tabs
-                  defaultValue="info"
-                  className="relative flex min-h-0 w-full grow flex-col"
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="info">Info</TabsTrigger>
-                    <TabsTrigger value="files">Files</TabsTrigger>
-                  </TabsList>
-                  <TabsContent
-                    value="info"
-                    className="data-state-[active]:grow !mt-0 flex min-h-0 flex-col"
-                  >
-                    <TipTapEditor
-                      editable={editable}
-                      info={activeNode.data.info}
-                      onInfoUpdate={(info) => {
-                        if (editable && reactFlowInstance && currentUserCanEdit)
-                          onNodeDataChange?.(activeNode.id, {
-                            info,
-                          })
-                      }}
-                    />
-                  </TabsContent>
-                  <TabsContent
-                    value="files"
-                    className="data-state-[active]:grow flex min-h-0 flex-col"
-                  >
-                    <Files
-                      files={activeNode.data.files}
-                      editable={editable}
-                      onFilesChange={(files) => {
-                        if (editable && reactFlowInstance && currentUserCanEdit)
-                          onNodeDataChange?.(activeNode.id, {
-                            files,
-                          })
-                      }}
-                      onFileDelete={onFileDelete}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </Panel>
-            )}
           </ReactFlow>
           {editable && reactFlowInstance && currentUserCanEdit && (
             <ContextMenuContent>

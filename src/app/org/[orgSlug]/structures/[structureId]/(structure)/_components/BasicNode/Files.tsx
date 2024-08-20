@@ -42,7 +42,7 @@ import {
 } from "../../../../../../../../components/ui/popover"
 import { type FileState } from "../../../../../../../../types"
 import { UploadButton } from "../../../../../../../_components/uploadthing"
-import { getAllFileDescendantsIds, sortFiles } from "../../../_utils/fileUtils"
+import { getAllFileDescendantsIds, sortFiles } from "../../_utils/fileUtils"
 
 interface Props {
   files: FileState[]

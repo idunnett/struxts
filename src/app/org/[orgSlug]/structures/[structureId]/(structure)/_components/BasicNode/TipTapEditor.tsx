@@ -13,17 +13,27 @@ import {
   Underline,
   Undo,
 } from "lucide-react"
+import { Ref, useEffect } from "react"
 import { Button } from "~/components/ui/button"
 import { Toggle } from "~/components/ui/toggle"
 
 interface Props {
   editable: boolean
+  contentRef: Ref<HTMLDivElement>
   info: string
   onInfoUpdate: (content: string) => void
+  onDestroy: () => void
 }
 
-export default function TipTapEditor({ editable, info, onInfoUpdate }: Props) {
+export default function TipTapEditor({
+  editable,
+  contentRef,
+  info,
+  onInfoUpdate,
+  onDestroy,
+}: Props) {
   const editor = useEditor({
+    onDestroy,
     immediatelyRender: false,
     extensions: [
       Document,
@@ -44,10 +54,20 @@ export default function TipTapEditor({ editable, info, onInfoUpdate }: Props) {
     onUpdate: ({ editor }) => onInfoUpdate(editor.getHTML()),
   })
 
+  useEffect(() => {
+    if (!editor || editor.isFocused) return
+    editor.commands.setContent(info)
+  }, [info, editor?.isFocused])
+
   return (
     <div className="relative flex min-h-0 grow flex-col">
       {editable && <MenuBar editor={editor} />}
-      <EditorContent editor={editor} className="grow overflow-auto" />
+      <EditorContent
+        id="tip-tap-editor-content"
+        ref={contentRef}
+        editor={editor}
+        className="grow overflow-auto"
+      />
     </div>
   )
 }

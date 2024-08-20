@@ -66,7 +66,7 @@ function DownloadButton({ structureName }: Props) {
       onClick={onClick}
     >
       <Download className="h-3 w-3" />
-      Download Image
+      {/* Download Image */}
     </Button>
   )
 }

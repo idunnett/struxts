@@ -7,21 +7,19 @@ export interface NodeData extends Record<string, unknown> {
   label: string
   info: string
   editable: boolean
-  borderColor: string
-  bgColor: string
+  borderColour: string
+  bgColour: string
   files: FileState[]
   isActive: boolean
-  showNodeInfo: boolean
   onDelete?: (nodeId: string) => void
   onNodeDataChange?: (nodeId: string, data: Partial<NodeData>) => void
-  onShowInfoChange?: (nodeId: string, showInfo: boolean) => void
 }
 
 export type TBasicNode = Node<NodeData, "basic">
 
 export interface EdgeData extends Record<string, unknown> {
-  labels: { id: string; label: string; offset: number }[]
-  color: string
+  labels: { label: string; offset: number }[]
+  colour: string
   editable?: boolean
   onEdgeDataChange?: (edgeId: string, data: Partial<EdgeData>) => void
   onDelete?: (edgeId: string) => void

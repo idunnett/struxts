@@ -6,11 +6,13 @@ import {
   CircleSlash,
   LucideMaximize2,
   LucideMinimize2,
-  Trash,
+  LucideTrash,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
+import { useState } from "react"
 import LineWrappingInput from "react-line-wrapping-input"
-import { Button } from "~/components/ui/button"
+import { Button, buttonVariants } from "~/components/ui/button"
 import {
   Popover,
   PopoverContent,
@@ -28,10 +30,7 @@ export default function BasicNode({
 }: NodeProps<TBasicNode>) {
   const [toolbarPopoverOpen, setToolbarPopoverOpen] = useState(false)
   const [focused, setFocused] = useState(false)
-
-  useEffect(() => {
-    if (dragging) setToolbarPopoverOpen(false)
-  }, [dragging])
+  const params = useParams() as { orgSlug: string; structureId: string }
 
   return (
     <Popover
@@ -40,16 +39,15 @@ export default function BasicNode({
         !open && !focused && !selected && setToolbarPopoverOpen(false)
       }
     >
-      <div
+      <PopoverTrigger
         id={id}
         className={cn(
           "group relative w-[162px] cursor-pointer rounded-sm border p-2",
-          data.isActive && "ring-2 ring-primary/25 ring-offset-2",
           dragging && "cursor-grabbing",
         )}
         style={{
-          borderColor: data.borderColor,
-          backgroundColor: data.bgColor,
+          borderColor: data.borderColour,
+          backgroundColor: data.bgColour,
         }}
         onClick={() => setToolbarPopoverOpen(true)}
         onDoubleClick={() => {
@@ -64,24 +62,30 @@ export default function BasicNode({
           })
         }}
       >
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className={cn(
-            "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md transition-opacity duration-150 ease-in-out group-hover:opacity-100",
-            data.isActive ? "opacity-100" : "opacity-0",
-          )}
-          onClick={() =>
-            data.onShowInfoChange?.(id, !(data.isActive && data.showNodeInfo))
+        {selected && (
+          <div className="absolute left-1/2 top-1/2 h-[calc(100%+20px)] w-[calc(100%+20px)] -translate-x-1/2 -translate-y-1/2 border border-dashed border-ring/50 bg-transparent" />
+        )}
+        <Link
+          href={
+            data.isActive
+              ? `/org/${params.orgSlug}/structures/${params.structureId}`
+              : `/org/${params.orgSlug}/structures/${params.structureId}/nodes/${id}/info`
           }
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+            className: cn(
+              "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md transition-opacity duration-150 ease-in-out group-hover:opacity-100",
+              data.isActive ? "opacity-100" : "opacity-0",
+            ),
+          })}
         >
-          {data.isActive && data.showNodeInfo ? (
+          {data.isActive ? (
             <LucideMinimize2 className="h-3.5 w-3.5" />
           ) : (
             <LucideMaximize2 className="h-3.5 w-3.5" />
           )}
-        </Button>
+        </Link>
         <LineWrappingInput
           id={`line-wrapping-input-${id}`}
           value={data.label}
@@ -119,7 +123,7 @@ export default function BasicNode({
           id="d"
           className={cn(!data.editable && "hidden")}
         />
-      </div>
+      </PopoverTrigger>
       <PopoverContent side="top" sideOffset={12} className="w-fit p-1">
         <div className="flex items-center gap-1">
           <Popover>
@@ -129,10 +133,10 @@ export default function BasicNode({
                 variant="ghost"
                 className="h-8 w-8 text-xs"
                 style={{
-                  color: data.borderColor,
+                  color: data.borderColour,
                 }}
               >
-                {data.borderColor === "transparent" ? (
+                {data.borderColour === "transparent" ? (
                   <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
                 ) : (
                   <Circle
@@ -150,7 +154,7 @@ export default function BasicNode({
               <ColourPicker
                 onColourChoose={(colour) =>
                   data.onNodeDataChange?.(id, {
-                    borderColor: colour,
+                    borderColour: colour,
                   })
                 }
               />
@@ -163,10 +167,10 @@ export default function BasicNode({
                 variant="ghost"
                 className="h-8 w-8 text-xs"
                 style={{
-                  color: data.bgColor,
+                  color: data.bgColour,
                 }}
               >
-                {data.bgColor === "transparent" ? (
+                {data.bgColour === "transparent" ? (
                   <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
                 ) : (
                   <Circle className="h-4 w-4 rounded-full border fill-current stroke-current" />
@@ -181,7 +185,7 @@ export default function BasicNode({
               <ColourPicker
                 onColourChoose={(colour) =>
                   data.onNodeDataChange?.(id, {
-                    bgColor: colour,
+                    bgColour: colour,
                   })
                 }
               />
@@ -195,7 +199,7 @@ export default function BasicNode({
             className="h-8 w-8 text-xs"
             onClick={() => data?.onDelete?.(id)}
           >
-            <Trash className="h-4 w-4 text-red-500" />
+            <LucideTrash className="h-4 w-4 text-red-500" />
           </Button>
         </div>
       </PopoverContent>
