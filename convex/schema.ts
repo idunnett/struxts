@@ -35,9 +35,20 @@ export const orgStructureUsers = defineTable({
   role: v.union(v.literal("Guest"), v.literal("Admin"), v.literal("Owner")),
 })
 
+export const files = defineTable({
+  storageId: v.string(),
+  nodeId: v.id("nodes"),
+  structureId: v.id("structures"),
+  orgId: v.union(v.string(), v.null()),
+  name: v.string(),
+  size: v.number(),
+  type: v.string(),
+})
+
 export default defineSchema({
   orgStructureUsers,
   structures,
   nodes,
   edges,
+  files,
 })

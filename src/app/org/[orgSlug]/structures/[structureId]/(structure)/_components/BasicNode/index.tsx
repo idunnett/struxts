@@ -75,7 +75,7 @@ export default function BasicNode({
             variant: "ghost",
             size: "icon",
             className: cn(
-              "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md transition-opacity duration-150 ease-in-out group-hover:opacity-100",
+              "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md group-hover:opacity-100",
               data.isActive ? "opacity-100" : "opacity-0",
             ),
           })}

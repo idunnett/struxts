@@ -17,7 +17,7 @@ interface Props {
   statusCode?: number
   message?: string
   error?: unknown
-  type?: "page" | "component"
+  type?: "page" | "component" | "icon"
 }
 
 export default function ErrorDisplay({
@@ -40,7 +40,7 @@ export default function ErrorDisplay({
     return errorDetails
   }, [error])
 
-  if (type === "component")
+  if (type === "icon")
     return (
       <TooltipProvider>
         <Tooltip>
@@ -56,6 +56,18 @@ export default function ErrorDisplay({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+    )
+
+  if (type === "component")
+    return (
+      <div className="flex w-full flex-col items-center justify-center gap-2 py-4">
+        <LucideTriangleAlert className="h-5 w-5 text-primary" />
+        <div className="relative flex items-center gap-2">
+          <span className="font-bold">{errorDetails.statusCode}</span>
+          <div className="h-4 w-px bg-background" />
+          <p>{errorDetails.message}</p>
+        </div>
+      </div>
     )
 
   const hasActiveOrg = !!(session.orgSlug ?? session.userId)
