@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/nextjs"
 import { ColumnDef } from "@tanstack/react-table"
+import axios from "axios"
 import { useQuery } from "convex/react"
 import { formatDate } from "date-fns"
 import {
@@ -60,6 +61,16 @@ export default function FilesTable({ nodeId, structureId }: Props) {
     }
     return <FaFile className="h-4 w-4 text-gray-500" />
   }
+  async function downloadFile(storageId: string) {
+    const getFileUrl = new URL(`${env.NEXT_PUBLIC_CONVEX_SITE_URL}/getFile`)
+    getFileUrl.searchParams.set("storageId", storageId)
+    const res = await axios.get(getFileUrl.toString(), {
+      headers: {
+        Authorization: `Bearer ${await session.getToken()}`,
+      },
+    })
+    console.log(res)
+  }
 
   const columns: ColumnDef<Doc<"files">>[] = [
     {
@@ -69,19 +80,16 @@ export default function FilesTable({ nodeId, structureId }: Props) {
         const type = row.original.type
         const storageId = row.original.storageId
 
-        const getImageUrl = new URL(`${env.NEXT_PUBLIC_CONVEX_URL}/getFile`)
-        getImageUrl.searchParams.set("storageId", storageId)
-
         return (
           <div className="flex max-w-96 items-center gap-2">
             {getFileIcon(type)}
-            <a
+            <button
+              type="button"
               className="truncate text-primary"
-              target="_blank"
-              href={getImageUrl.href}
+              onClick={() => downloadFile(storageId)}
             >
               {row.getValue("name")}
-            </a>
+            </button>
           </div>
         )
       },

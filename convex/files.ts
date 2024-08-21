@@ -79,6 +79,7 @@ export const getNodeFileByStorageId = query({
     storageId: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log("getNodeFileByStorageId")
     const currentUser = await ctx.auth.getUserIdentity()
     if (!currentUser)
       throw new CustomConvexError({
