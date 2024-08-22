@@ -1,6 +1,5 @@
 import { type User } from "@clerk/nextjs/server"
 import { type Edge, type Node } from "@xyflow/react"
-import { ConvexError } from "convex/values"
 import { type usersStructuresRoleEnum } from "./server/db/schema"
 
 export interface NodeData extends Record<string, unknown> {
@@ -42,10 +41,3 @@ export interface StruxtUser {
   clerkUser: User
   role: ValuesOf<typeof usersStructuresRoleEnum.enumValues>
 }
-
-export type CustomConvexErrorData = {
-  statusCode: number
-  message: string
-}
-
-export interface CustomConvexError extends ConvexError<CustomConvexErrorData> {}

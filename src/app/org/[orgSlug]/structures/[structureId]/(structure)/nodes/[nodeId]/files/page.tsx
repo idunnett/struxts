@@ -8,7 +8,7 @@ import { api } from "../../../../../../../../../../convex/_generated/api"
 import ErrorDisplay from "../../../../../../../../../components/ErrorDisplay"
 import { buttonVariants } from "../../../../../../../../../components/ui/button"
 import { TabsContent } from "../../../../../../../../../components/ui/tabs"
-import FilesTable from "./_components/FilesTable"
+import Files from "./_components/Files"
 
 interface Props {
   params: {
@@ -42,7 +42,7 @@ export default function NodeFilesTabPage({
   return (
     <TabsContent
       value="files"
-      className="data-state-[active]:grow flex min-h-0 flex-col gap-4"
+      className="flex min-h-0 flex-col gap-4 data-[state=active]:grow"
     >
       <UploadButton
         className={(progress) =>
@@ -59,7 +59,7 @@ export default function NodeFilesTabPage({
           <ErrorDisplay error={error} type="component" />
         )}
       >
-        <FilesTable structureId={structureId} nodeId={nodeId} />
+        <Files structureId={structureId} nodeId={nodeId} />
       </ErrorBoundary>
     </TabsContent>
   )

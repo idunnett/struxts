@@ -25,6 +25,9 @@ const coreConfig = {
       {
         hostname: "www.gravatar.com",
       },
+      {
+        hostname: "deafening-pony-162.convex.site",
+      },
     ],
   },
   async rewrites() {

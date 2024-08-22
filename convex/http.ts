@@ -1,4 +1,7 @@
 import { httpRouter } from "convex/server"
+import { isCustomConvexError } from "../src/lib/custom-convex-error"
+import { api } from "./_generated/api"
+import { Doc, Id } from "./_generated/dataModel"
 import { httpAction } from "./_generated/server"
 
 const http = httpRouter()
@@ -24,8 +27,7 @@ http.route({
   method: "GET",
   handler: httpAction(async (ctx, request) => {
     const currentUser = await ctx.auth.getUserIdentity()
-    console.log(currentUser)
-    if (!request.headers.get("Authorization"))
+    if (!currentUser)
       return new Response(null, {
         status: 401,
         headers: {
@@ -33,60 +35,49 @@ http.route({
           Vary: "Origin",
         },
       })
-    else
-      return new Response(null, {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "http://localhost:3000",
-          Vary: "Origin",
-        },
+    const { searchParams } = new URL(request.url)
+    const storageId = searchParams.get("storageId")! as Id<"_storage">
+
+    let file: Doc<"files"> | null = null
+    try {
+      file = await ctx.runQuery(api.files.getNodeFileByStorageId, {
+        storageId,
       })
-    // const { searchParams } = new URL(request.url)
-    // const storageId = searchParams.get("storageId")! as Id<"_storage">
+    } catch (error) {
+      if (isCustomConvexError(error))
+        return new Response(
+          JSON.stringify({
+            message: error.data.message,
+            statusCode: error.data.statusCode,
+          }),
+          {
+            status: error.data.statusCode,
+          },
+        )
+      return new Response(null, {
+        status: 500,
+      })
+    }
 
-    // let file: Doc<"files"> | null = null
-    // try {
-    //   file = await ctx.runQuery(api.files.getNodeFileByStorageId, {
-    //     storageId,
-    //   })
-    // } catch (error) {
-    //   if (isCustomConvexError(error))
-    //     return new Response(null, {
-    //       status: error.data.statusCode,
-    //     })
-    //   return new Response(null, {
-    //     status: 500,
-    //   })
-    // }
+    if (!file)
+      return new Response("File not found", {
+        status: 404,
+      })
 
-    // return new Response(null, {
-    //   status: 200,
-    //   headers: {
-    //     "Access-Control-Allow-Origin": "http://localhost:3000",
-    //     Vary: "Origin",
-    //   },
-    // })
-
-    // if (!file)
-    //   return new Response("File not found", {
-    //     status: 404,
-    //   })
-
-    // const blob = await ctx.storage.get(storageId)
-    // if (blob === null) {
-    //   return new Response("File not found", {
-    //     status: 404,
-    //   })
-    // }
-    // return new Response(blob, {
-    //   headers: {
-    //     "Content-Type": file.type,
-    //     "Content-Disposition": `attachment; filename="${file.name}"`,
-    //     "Access-Control-Allow-Origin":
-    //       process.env.CLIENT_ORIGIN ?? "http://localhost",
-    //     Vary: "origin",
-    //   },
-    // })
+    const blob = await ctx.storage.get(storageId)
+    if (blob === null) {
+      return new Response("File not found", {
+        status: 404,
+      })
+    }
+    return new Response(blob, {
+      headers: {
+        "Content-Type": file.type,
+        "Content-Disposition": `attachment; filename="${file.name}"`,
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        Vary: "origin",
+      },
+    })
   }),
 })
 

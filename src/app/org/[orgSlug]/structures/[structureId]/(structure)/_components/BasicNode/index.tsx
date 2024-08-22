@@ -9,7 +9,7 @@ import {
   LucideTrash,
 } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import LineWrappingInput from "react-line-wrapping-input"
 import { Button, buttonVariants } from "~/components/ui/button"
@@ -31,6 +31,7 @@ export default function BasicNode({
   const [toolbarPopoverOpen, setToolbarPopoverOpen] = useState(false)
   const [focused, setFocused] = useState(false)
   const params = useParams() as { orgSlug: string; structureId: string }
+  const router = useRouter()
 
   return (
     <Popover
@@ -75,7 +76,7 @@ export default function BasicNode({
             variant: "ghost",
             size: "icon",
             className: cn(
-              "absolute -right-3 -top-3 h-6 w-6 rounded-full border bg-card p-1 shadow-md group-hover:opacity-100",
+              "absolute -right-3 -top-3 !h-6 !w-6 rounded-full border bg-card p-1 shadow-md group-hover:opacity-100",
               data.isActive ? "opacity-100" : "opacity-0",
             ),
           })}
@@ -197,7 +198,12 @@ export default function BasicNode({
             size="icon"
             variant="ghost"
             className="h-8 w-8 text-xs"
-            onClick={() => data?.onDelete?.(id)}
+            onClick={() => {
+              data?.onDelete?.(id)
+              router.replace(
+                `/org/${params.orgSlug}/structures/${params.structureId}`,
+              )
+            }}
           >
             <LucideTrash className="h-4 w-4 text-red-500" />
           </Button>

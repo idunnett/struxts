@@ -47,7 +47,7 @@ export default function NodeInfoTabPage() {
   return (
     <TabsContent
       value="info"
-      className="data-state-[active]:grow !mt-0 flex min-h-0 flex-col"
+      className="!mt-0 flex min-h-0 flex-col data-[state=active]:grow"
     >
       {editable && (
         <div className="flex items-center gap-1 pt-1 text-xs text-muted-foreground">

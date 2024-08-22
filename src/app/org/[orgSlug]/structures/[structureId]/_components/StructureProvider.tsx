@@ -56,6 +56,7 @@ interface IStructureContext {
     bgColour: string
     borderColour: string
   }
+  nodesInitialized: boolean
   onNodesChange: OnNodesChange<TBasicNode>
   onEdgesChange: OnEdgesChange<TFloatingEdge>
   setNodes: Dispatch<SetStateAction<TBasicNode[]>>
@@ -84,6 +85,7 @@ export const StructureContext = createContext<IStructureContext>({
   isSaving: false,
   lastUsedEdgeColour: "#000000",
   lastUsedNodeColours: { bgColour: "#ffffff", borderColour: "#000000" },
+  nodesInitialized: false,
   onNodesChange: () => {},
   setNodes: () => {},
   onEdgesChange: () => {},
@@ -123,6 +125,7 @@ export default function StructureProvider({
   )
 
   const [edgesInitialized, setEdgesInitialized] = useState(false)
+  const [nodesInitialized, setNodesInitialized] = useState(false)
   const params = useParams()
   const [nodes, setNodes, onNodesChange] = useNodesState<TBasicNode>([])
   const debouncedNodes = useDebounce(nodes, 3000)
@@ -301,6 +304,7 @@ export default function StructureProvider({
       })
     }
     setNodes(newNodes)
+    setNodesInitialized(true)
   }, [dbNodes])
 
   useEffect(() => {
@@ -391,6 +395,7 @@ export default function StructureProvider({
             isSaving,
             lastUsedEdgeColour,
             lastUsedNodeColours,
+            nodesInitialized,
             setLastUsedEdgeColour,
             setLastUsedNodeColours,
             onNodesChange,

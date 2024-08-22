@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs"
 import { LucideX } from "lucide-react"
 import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import { ReactNode, use } from "react"
 import { Button } from "../../../../../../../../components/ui/button"
 import {
@@ -28,10 +29,15 @@ export default function NodePage({
   const {
     activeNode,
     resizable: { separatorProps, x },
+    nodesInitialized,
   } = use(StructureContext)
   const session = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
 
-  if (!activeNode) return null
+  if (!activeNode && !nodesInitialized) return null
+  if (!activeNode)
+    return router.replace(`/org/${orgSlug}/structures/${structureId}`)
   return (
     <>
       <div
@@ -59,7 +65,7 @@ export default function NodePage({
           </Button>
         </div>
         <Tabs
-          defaultValue="info"
+          defaultValue={pathname.endsWith("files") ? "files" : "info"}
           className="relative flex min-h-0 w-full grow flex-col"
         >
           <TabsList className="grid w-full grid-cols-2">
