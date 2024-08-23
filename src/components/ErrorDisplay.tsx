@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/nextjs"
 import { LucideTriangleAlert } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
-import { isCustomConvexError } from "../lib/utils"
+import { isCustomConvexError } from "../lib/custom-convex-error"
 import { buttonVariants } from "./ui/button"
 import {
   Tooltip,
