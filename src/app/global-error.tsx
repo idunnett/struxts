@@ -10,9 +10,7 @@ export default function GlobalError({
   error: Error & { digest?: string }
 }) {
   useEffect(() => {
-    console.log("GlobalError", error)
-    console.log("env:", process.env.NODE_ENV)
-    if (process.env.NODE_ENV !== "production") return
+    if (process.env.VERCEL_ENV !== "production") return
     Sentry.captureException(error)
   }, [error])
 

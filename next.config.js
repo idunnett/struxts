@@ -31,7 +31,7 @@ const coreConfig = {
     ],
   },
   async rewrites() {
-    if (process.env.NODE_ENV !== "production") return []
+    if (process.env.VERCEL_ENV !== "production") return []
     return [
       {
         source: "/ingest/static/:path*",
