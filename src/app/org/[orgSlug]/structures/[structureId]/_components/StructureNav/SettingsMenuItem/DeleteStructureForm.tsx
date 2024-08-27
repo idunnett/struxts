@@ -1,5 +1,11 @@
 "use client"
 
+import { useAuth } from "@clerk/nextjs"
+import { useMutation } from "convex/react"
+import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
+import Spinner from "~/components/Spinner"
+import { Button } from "~/components/ui/button"
 import {
   Card,
   CardDescription,
@@ -7,12 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card"
-import { Button } from "~/components/ui/button"
-import Spinner from "~/components/Spinner"
-import { useState } from "react"
-import { api } from "~/trpc/react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogClose,
@@ -24,22 +24,19 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog"
 import { Input } from "~/components/ui/input"
+import { api } from "../../../../../../../../../convex/_generated/api"
 
 interface Props {
-  structureId: number
+  orgId: string | null
+  structureId: string
 }
 
-export default function DeleteStructureForm({ structureId }: Props) {
+export default function DeleteStructureForm({ orgId, structureId }: Props) {
+  const session = useAuth()
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [verifyText, setVerifyText] = useState("")
-
-  const deleteStructure = api.structure.delete.useMutation({
-    onSuccess: () => {
-      router.replace("/structures")
-      router.refresh()
-    },
-    onError: (error) => toast.error(error.message),
-  })
+  const deleteStructure = useMutation(api.structures.remove)
 
   return (
     <Card className="w-full">
@@ -57,7 +54,7 @@ export default function DeleteStructureForm({ structureId }: Props) {
               Delete
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md" forceMount>
+          <DialogContent className="sm:max-w-md" heightStyle="auto" forceMount>
             <DialogHeader>
               <DialogTitle>Delete Structure</DialogTitle>
               <DialogDescription>
@@ -65,7 +62,7 @@ export default function DeleteStructureForm({ structureId }: Props) {
                 action is irreversible and can not be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-2 py-2">
+            <div className="flex flex-col gap-2 px-6 py-2">
               <p className="text-sm">
                 To verify, type <b>delete this structure</b> below:
               </p>
@@ -75,17 +72,26 @@ export default function DeleteStructureForm({ structureId }: Props) {
                 onChange={(e) => setVerifyText(e.target.value)}
               />
             </div>
-            <DialogFooter className="gap-2">
-              <DialogClose type="button">Cancel</DialogClose>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="ghost">
+                  Cancel
+                </Button>
+              </DialogClose>
               <Button
                 variant="destructive"
-                disabled={
-                  deleteStructure.isPending ||
-                  verifyText !== "delete this structure"
-                }
-                onClick={() => deleteStructure.mutate({ structureId })}
+                disabled={verifyText !== "delete this structure"}
+                onClick={() => {
+                  startTransition(async () => {
+                    await deleteStructure({ orgId, structureId })
+                    router.replace(
+                      `/org/${session.orgSlug ?? session.userId}/structures`,
+                    )
+                    router.refresh()
+                  })
+                }}
               >
-                {deleteStructure.isPending && <Spinner className="mr-2" />}
+                {isPending && <Spinner className="mr-2" />}
                 Delete
               </Button>
             </DialogFooter>

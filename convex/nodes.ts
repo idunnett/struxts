@@ -1,6 +1,8 @@
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
+import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
+import { getNodeFiles } from "./files"
 
 export const getByStructureId = query({
   args: {
@@ -85,7 +87,9 @@ export const update = mutation({
 
 export const remove = mutation({
   args: {
+    orgId: v.union(v.string(), v.null()),
     nodeId: v.string(),
+    structureId: v.string(),
   },
   handler: async (ctx, args) => {
     const serializedId = ctx.db.normalizeId("nodes", args.nodeId)
@@ -94,6 +98,27 @@ export const remove = mutation({
         statusCode: 404,
         message: "Node not found",
       })
+
+    const edges = await ctx.db
+      .query("edges")
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("source"), serializedId),
+          q.eq(q.field("target"), serializedId),
+        ),
+      )
+      .collect()
+
+    const files = await getNodeFiles(ctx, args)
+
+    await Promise.all(
+      files.map(async (file) => {
+        await ctx.storage.delete(file.storageId as Id<"_storage">)
+        await ctx.db.delete(file._id)
+      }),
+    )
+
+    await Promise.all(edges.map(async (edge) => await ctx.db.delete(edge._id)))
     await ctx.db.delete(serializedId)
   },
 })

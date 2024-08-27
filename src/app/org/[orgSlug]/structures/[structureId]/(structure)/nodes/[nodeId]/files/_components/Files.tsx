@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react"
 import { formatDate } from "date-fns"
 import { LucideDownload, LucideTrash } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { use } from "react"
 import {
   FaFile,
   FaFileCsv,
@@ -14,6 +15,17 @@ import {
 import { toast } from "sonner"
 import { api } from "../../../../../../../../../../../convex/_generated/api"
 import Spinner from "../../../../../../../../../../components/Spinner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../../../../../../../../../components/ui/alert-dialog"
 import { Button } from "../../../../../../../../../../components/ui/button"
 import {
   Dialog,
@@ -30,6 +42,7 @@ import {
   TooltipTrigger,
 } from "../../../../../../../../../../components/ui/tooltip"
 import { cn, downloadFile } from "../../../../../../../../../../lib/utils"
+import { StructureContext } from "../../../../../_components/StructureProvider"
 import StorageImage from "./StorageImage"
 
 interface Props {
@@ -39,13 +52,14 @@ interface Props {
 
 export default function Files({ nodeId, structureId }: Props) {
   const session = useAuth()
-  const files = useQuery(api.files.getNodeFiles, {
+  const files = useQuery(api.files.getByNode, {
     nodeId,
     structureId,
     orgId: session.orgId ?? null,
   })
   const deleteFile = useMutation(api.files.deleteFile)
   const router = useRouter()
+  const { editable } = use(StructureContext)
   // function humanFileSize(size: number) {
   //   var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024))
   //   return (
@@ -204,26 +218,54 @@ export default function Files({ nodeId, structureId }: Props) {
                       <TooltipContent side="bottom">Download</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteFile(file.storageId)}
-                        >
-                          <LucideTrash className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Delete</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  {editable && (
+                    <AlertDialog>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <LucideTrash className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">Delete</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you absolutely sure?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete this file.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteFile(file.storageId)}
+                          >
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </div>
             </DialogHeader>
             <div className="flex h-full w-full items-center justify-center overflow-auto px-6 py-4">
-              {file.type.startsWith("image/") && (
+              {file.type.startsWith("image/") ? (
                 <StorageImage storageId={file.storageId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  {getFileIcon(file.type, "md")}
+                  <span className="text-xs text-muted-foreground">
+                    Download the file to view its content
+                  </span>
+                </div>
               )}
             </div>
           </DialogContent>

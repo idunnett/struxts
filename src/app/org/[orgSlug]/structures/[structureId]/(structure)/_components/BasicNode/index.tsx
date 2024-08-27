@@ -21,6 +21,17 @@ import {
 import { cn } from "~/lib/utils"
 import { type TBasicNode } from "~/types"
 import ColourPicker from "../../../../../../../../components/ColourPicker"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../../../../../../../components/ui/alert-dialog"
 
 export default function BasicNode({
   id,
@@ -193,20 +204,40 @@ export default function BasicNode({
             </PopoverContent>
           </Popover>
           <div className="h-6 w-px bg-secondary" />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-xs"
-            onClick={() => {
-              data?.onDelete?.(id)
-              router.replace(
-                `/org/${params.orgSlug}/structures/${params.structureId}`,
-              )
-            }}
-          >
-            <LucideTrash className="h-4 w-4 text-red-500" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-xs"
+              >
+                <LucideTrash className="h-4 w-4 text-red-500" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete all
+                  information and files attached to this node.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    data?.onDelete?.(id)
+                    router.replace(
+                      `/org/${params.orgSlug}/structures/${params.structureId}`,
+                    )
+                  }}
+                >
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </PopoverContent>
     </Popover>

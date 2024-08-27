@@ -64,7 +64,7 @@ export default function MyStructures({
                 href={`/org/${session.orgSlug ?? session.userId}/structures/${structure._id}`}
                 className="w-full"
               >
-                <Card className="w-full transition-all ease-in-out hover:shadow-md">
+                <Card className="group w-full border border-transparent transition-all ease-in-out hover:shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-xl text-primary">
                       <LucideWaypoints className="h-5 w-5" />

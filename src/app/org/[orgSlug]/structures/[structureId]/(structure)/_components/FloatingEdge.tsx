@@ -35,6 +35,14 @@ export default function FloatingEdge({
   const targetNode = useInternalNode(target)
   if (!sourceNode || !targetNode) return null
 
+  if (
+    isNaN(sourceNode.position.x) ||
+    isNaN(sourceNode.position.y) ||
+    isNaN(targetNode.position.x) ||
+    isNaN(targetNode.position.y)
+  )
+    return null
+
   const {
     sx,
     sy,

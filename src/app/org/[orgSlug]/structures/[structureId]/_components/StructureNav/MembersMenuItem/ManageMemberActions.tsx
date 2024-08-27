@@ -1,10 +1,11 @@
 "use client"
 
 import { useAuth } from "@clerk/nextjs"
-import { toast } from "sonner"
+import { useMutation } from "convex/react"
+import { useRouter } from "next/navigation"
+import { useTransition } from "react"
 import Spinner from "~/components/Spinner"
 import { Badge } from "~/components/ui/badge"
-import { Button } from "~/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -13,32 +14,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select"
-import { api } from "~/trpc/react"
-import { type StruxtUser } from "~/types"
+import { ClerkOrgStructureUser } from "~/types"
+import { api } from "../../../../../../../../../convex/_generated/api"
+import { Button } from "../../../../../../../../components/ui/button"
 
 interface Props {
-  structureId: number
-  member: StruxtUser
+  orgId: string
+  structureId: string
+  member: ClerkOrgStructureUser
   isCurrentUserOwner: boolean
 }
 
 export default function ManageMemberActions({
   member,
+  orgId,
   structureId,
   isCurrentUserOwner,
 }: Props) {
   const session = useAuth()
-  const trpcUtils = api.useUtils()
-  const removeUser = api.user.removeFromStructure.useMutation({
-    onError: (error) => toast.error(error.message),
-    onSettled: async () =>
-      await trpcUtils.user.getStructureMembers.invalidate(),
-  })
-  const updateUserRole = api.user.updateUserRole.useMutation({
-    onError: (error) => toast.error(error.message),
-    onSettled: async () =>
-      await trpcUtils.user.getStructureMembers.invalidate(),
-  })
+  const router = useRouter()
+  const [isPendingUpdateRole, startUpdateRoleTransition] = useTransition()
+  const [isPendingRemoveMember, startRemoveMemberTransition] = useTransition()
+  const updateOrgStructureUserRole = useMutation(
+    api.orgStructureUsers.updateRole,
+  )
+  const removeOrgStructureUser = useMutation(api.orgStructureUsers.remove)
 
   return (
     <div className="flex w-56 items-center gap-2">
@@ -51,21 +51,25 @@ export default function ManageMemberActions({
       ) : (
         <>
           {(isCurrentUserOwner || member.role === "Guest") &&
-          member.clerkUser.id !== session.userId ? (
+          member.userId !== session.userId ? (
             <Select
               value={member.role}
               onValueChange={(value) => {
-                updateUserRole.mutate({
-                  structureId,
-                  userId: member.clerkUser.id,
-                  role: value as StruxtUser["role"],
+                startUpdateRoleTransition(async () => {
+                  await updateOrgStructureUserRole({
+                    structureId,
+                    userId: member.userId,
+                    orgId: member.orgId,
+                    role: value as ClerkOrgStructureUser["role"],
+                  })
+                  router.refresh()
                 })
               }}
-              disabled={updateUserRole.isPending}
+              disabled={isPendingUpdateRole}
             >
               <SelectTrigger className="relative h-8 w-[180px] grow text-xs">
                 <SelectValue placeholder="Select a fruit" />
-                {updateUserRole.isPending && (
+                {isPendingUpdateRole && (
                   <div className="absolute right-6 top-1/2 -translate-y-1/2">
                     <Spinner className="h-3 w-3" />
                   </div>
@@ -96,19 +100,24 @@ export default function ManageMemberActions({
           )}
         </>
       )}
-      {member.role !== "Owner" && member.clerkUser.id !== session.userId && (
+      {member.role !== "Owner" && member.userId !== session.userId && (
         <Button
           variant="destructive"
           size="sm"
           className="h-8 text-xs"
           onClick={() => {
-            removeUser.mutate({
-              structureId,
-              userId: member.clerkUser.id,
+            startRemoveMemberTransition(async () => {
+              await removeOrgStructureUser({
+                orgId: orgId,
+                structureId,
+                userId: member.userId,
+              })
+              router.refresh()
             })
           }}
+          disabled={isPendingRemoveMember}
         >
-          {removeUser.isPending ? "Removing..." : "Remove"}
+          {isPendingRemoveMember ? "Removing..." : "Remove"}
         </Button>
       )}
     </div>

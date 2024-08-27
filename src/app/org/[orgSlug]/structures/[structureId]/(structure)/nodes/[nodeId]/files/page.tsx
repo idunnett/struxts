@@ -5,12 +5,14 @@ import { UploadFileResponse, useUploadFiles } from "@xixixao/uploadstuff/react"
 import { useMutation } from "convex/react"
 import { LucideUpload } from "lucide-react"
 import { ErrorBoundary } from "next/dist/client/components/error-boundary"
+import { use } from "react"
 import { toast } from "sonner"
 import { api } from "../../../../../../../../../../convex/_generated/api"
 import ErrorDisplay from "../../../../../../../../../components/ErrorDisplay"
 import { buttonVariants } from "../../../../../../../../../components/ui/button"
 import { Progress } from "../../../../../../../../../components/ui/progress"
 import { TabsContent } from "../../../../../../../../../components/ui/tabs"
+import { StructureContext } from "../../../../_components/StructureProvider"
 import Files from "./_components/Files"
 
 interface Props {
@@ -27,8 +29,10 @@ export default function NodeFilesTabPage({
   const session = useAuth()
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
   const saveFiles = useMutation(api.files.saveFiles)
+  const { editable } = use(StructureContext)
+
   const { startUpload } = useUploadFiles(generateUploadUrl, {
-    onUploadBegin: (files) => {
+    onUploadBegin: () => {
       toast(
         <div className="flex w-full flex-col">
           <p>Uploading files...</p>
@@ -50,7 +54,7 @@ export default function NodeFilesTabPage({
         },
       )
     },
-    onUploadError: (error) =>
+    onUploadError: () =>
       toast.error("Upload failed", { id: "uploading-toast" }),
     onUploadComplete: async (files) => {
       toast.loading("Saving files...", { id: "uploading-toast" })
@@ -78,37 +82,31 @@ export default function NodeFilesTabPage({
       value="files"
       className="flex min-h-0 flex-col gap-4 data-[state=active]:grow"
     >
-      <input
-        id="file-upload-input"
-        type="file"
-        multiple
-        onChange={(event) => {
-          const files = Array.from(event.target.files ?? [])
-          if (files.length === 0) return
-          startUpload(files)
-        }}
-        hidden
-      />
-      <label
-        htmlFor="file-upload-input"
-        className={buttonVariants({
-          variant: "outline",
-          className: "flex w-min cursor-pointer items-center gap-2",
-        })}
-      >
-        <LucideUpload className="h-4 w-4" />
-        Upload
-      </label>
-      {/* <UploadButton
-        className={(progress) =>
-          buttonVariants({ className: "w-32 cursor-pointer" })
-        }
-        uploadUrl={generateUploadUrl}
-        fileTypes={[".pdf", "image/*", ".txt", ".docx", ".xlsx", ".csv"]}
-        multiple
-        onUploadComplete={saveAfterUpload}
-        onUploadError={(error: unknown) => alert(`ERROR! ${error}`)}
-      /> */}
+      {editable && (
+        <>
+          <input
+            id="file-upload-input"
+            type="file"
+            multiple
+            onChange={(event) => {
+              const files = Array.from(event.target.files ?? [])
+              if (files.length === 0) return
+              startUpload(files)
+            }}
+            hidden
+          />
+          <label
+            htmlFor="file-upload-input"
+            className={buttonVariants({
+              variant: "outline",
+              className: "flex w-min cursor-pointer items-center gap-2",
+            })}
+          >
+            <LucideUpload className="h-4 w-4" />
+            Upload
+          </label>
+        </>
+      )}
       <ErrorBoundary
         errorComponent={(error) => (
           <ErrorDisplay error={error} type="component" />

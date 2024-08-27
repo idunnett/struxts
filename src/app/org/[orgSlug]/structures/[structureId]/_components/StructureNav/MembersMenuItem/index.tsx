@@ -1,76 +1,74 @@
 import Image from "next/image"
 import { Button } from "~/components/ui/button"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover"
-import { Skeleton } from "~/components/ui/skeleton"
 import { cn } from "~/lib/utils"
-import { api } from "~/trpc/react"
+import { Doc } from "../../../../../../../../../convex/_generated/dataModel"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../../../../../../../components/ui/dialog"
+import { ClerkOrgStructureUser } from "../../../../../../../../types"
+import InviteMemberForm from "../InviteMemberForm"
 import MembersMenu from "./MembersMenu"
 
 interface Props {
+  orgId: string
   structureId: string
-  currentStructureUser: {
-    role: string
-    userId: string
-  }
-  onAddMember: () => void
-  onManageMembers: () => void
+  currentOrgStructureUser: Doc<"orgStructureUsers">
+  orgStructureMembers: ClerkOrgStructureUser[]
 }
 
 export default function MembersMenuItem({
+  orgId,
   structureId,
-  currentStructureUser,
-  onAddMember,
-  onManageMembers,
+  currentOrgStructureUser,
+  orgStructureMembers,
 }: Props) {
-  const { data: members, isPending } =
-    api.user.getStructureMembers.useQuery(structureId)
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
           className="flex h-8 items-center gap-2"
         >
           <div className="flex items-center">
-            {isPending && (
-              <>
-                <Skeleton className="h-6 w-6 rounded-full border" />
-                <Skeleton className="-ml-2 h-6 w-6 rounded-full border" />
-                <Skeleton className="-ml-2 h-6 w-6 rounded-full border" />
-              </>
-            )}
-            {members
-              ?.slice(0, 3)
-              ?.map((member, i) => (
-                <Image
-                  key={member.clerkUser.id}
-                  src={member.clerkUser.imageUrl}
-                  alt={member.clerkUser.fullName ?? "Member picture"}
-                  width={24}
-                  height={24}
-                  className={cn("h-6 w-6 rounded-full", i !== 0 && "-ml-2")}
-                />
-              ))}
+            {orgStructureMembers.slice(0, 3).map((member, i) => (
+              <Image
+                key={member._id}
+                src={member.imageUrl}
+                alt={member.fullName ?? "Member picture"}
+                width={24}
+                height={24}
+                className={cn("h-6 w-6 rounded-full", i !== 0 && "-ml-2")}
+              />
+            ))}
           </div>
           Members
         </Button>
-      </PopoverTrigger>
-      <PopoverContent sideOffset={10}>
-        {isPending && <Skeleton className="h-[20px] w-[100px] rounded-full" />}
-        {members && (
-          <MembersMenu
-            members={members}
-            currentStructureUser={currentStructureUser}
-            onAddMember={onAddMember}
-            onManageMembers={onManageMembers}
-          />
-        )}
-      </PopoverContent>
-    </Popover>
+      </DialogTrigger>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle>Structure Members</DialogTitle>
+          <DialogDescription hidden>
+            Manage members of this structure
+          </DialogDescription>
+        </DialogHeader>
+        <InviteMemberForm
+          orgId={orgId}
+          structureId={structureId}
+          orgStructureMembers={orgStructureMembers}
+        />
+        <MembersMenu
+          orgId={orgId}
+          structureId={structureId}
+          orgStructureMembers={orgStructureMembers}
+          currentOrgStructureUser={currentOrgStructureUser}
+        />
+      </DialogContent>
+    </Dialog>
   )
 }

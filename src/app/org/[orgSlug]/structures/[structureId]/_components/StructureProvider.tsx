@@ -57,6 +57,7 @@ interface IStructureContext {
     borderColour: string
   }
   nodesInitialized: boolean
+  edgesInitialized: boolean
   onNodesChange: OnNodesChange<TBasicNode>
   onEdgesChange: OnEdgesChange<TFloatingEdge>
   setNodes: Dispatch<SetStateAction<TBasicNode[]>>
@@ -86,6 +87,7 @@ export const StructureContext = createContext<IStructureContext>({
   lastUsedEdgeColour: "#000000",
   lastUsedNodeColours: { bgColour: "#ffffff", borderColour: "#000000" },
   nodesInitialized: false,
+  edgesInitialized: false,
   onNodesChange: () => {},
   setNodes: () => {},
   onEdgesChange: () => {},
@@ -236,7 +238,13 @@ export default function StructureProvider({
 
   async function removeNodes(id: string[]) {
     setIsDeletingNodes(true)
-    const promises = id.map((nodeId) => removeNode({ nodeId }))
+    const promises = id.map((nodeId) =>
+      removeNode({
+        nodeId,
+        structureId: structure._id,
+        orgId: currentOrgStructureUser.orgId,
+      }),
+    )
     await Promise.all(promises).finally(() => setIsDeletingNodes(false))
     setIsDeletingNodes(false)
   }
@@ -299,6 +307,7 @@ export default function StructureProvider({
           showNodeInfo: false,
           files: [],
         },
+        width: 162,
         selected,
         type: "basic",
       })
@@ -396,6 +405,7 @@ export default function StructureProvider({
             lastUsedEdgeColour,
             lastUsedNodeColours,
             nodesInitialized,
+            edgesInitialized,
             setLastUsedEdgeColour,
             setLastUsedNodeColours,
             onNodesChange,

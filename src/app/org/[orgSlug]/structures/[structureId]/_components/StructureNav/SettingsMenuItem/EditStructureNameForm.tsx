@@ -1,5 +1,10 @@
 "use client"
 
+import { useMutation } from "convex/react"
+import { useRouter } from "next/navigation"
+import { type FormEvent, useEffect, useState, useTransition } from "react"
+import Spinner from "~/components/Spinner"
+import { Button } from "~/components/ui/button"
 import {
   Card,
   CardContent,
@@ -8,50 +13,34 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card"
-import { Label } from "~/components/ui/label"
 import { Input } from "~/components/ui/input"
-import { Button } from "~/components/ui/button"
-import Spinner from "~/components/Spinner"
-import {
-  type FormEvent,
-  useState,
-  useTransition,
-  useMemo,
-  useEffect,
-} from "react"
-import { api } from "~/trpc/react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { Label } from "~/components/ui/label"
+import { api } from "../../../../../../../../../convex/_generated/api"
+import { Doc } from "../../../../../../../../../convex/_generated/dataModel"
 
 interface Props {
-  structure: {
-    id: number
-    name: string
-  }
+  orgId: string | null
+  structure: Doc<"structures">
 }
 
 export default function EditStructureNameForm({ structure }: Props) {
-  const [structureName, setStructureName] = useState(structure.name)
   const router = useRouter()
-  const [isTransitionStarted, startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition()
+  const [structureName, setStructureName] = useState(structure.name)
 
-  const updateStructureName = api.structure.updateName.useMutation({
-    onSettled: () => startTransition(() => router.refresh()),
-    onError: (error) => toast.error(error.message),
-  })
-
-  const isUpdating = useMemo(
-    () => updateStructureName.isPending || isTransitionStarted,
-    [updateStructureName.isPending, isTransitionStarted],
-  )
+  const updateStructureName = useMutation(api.structures.updateName)
 
   useEffect(() => setStructureName(structure.name), [structure.name])
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    updateStructureName.mutate({
-      structureId: structure.id,
-      name: structureName,
+    startTransition(async () => {
+      await updateStructureName({
+        orgId: structure.orgId,
+        structureId: structure._id,
+        name: structureName,
+      })
+      router.refresh()
     })
   }
 
@@ -69,7 +58,7 @@ export default function EditStructureNameForm({ structure }: Props) {
               <Input
                 id="name"
                 placeholder="Name of your structure"
-                disabled={isUpdating}
+                disabled={isPending}
                 value={structureName}
                 onChange={(e) => setStructureName(e.target.value)}
               />
@@ -77,8 +66,8 @@ export default function EditStructureNameForm({ structure }: Props) {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button disabled={isUpdating || structure.name === structureName}>
-            {isUpdating && <Spinner className="mr-2" />}
+          <Button disabled={isPending || structure.name === structureName}>
+            {isPending && <Spinner className="mr-2" />}
             Save
           </Button>
         </CardFooter>

@@ -17,6 +17,7 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { LucideLock, LucideUnlock } from "lucide-react"
+import dynamic from "next/dynamic"
 import {
   MouseEvent,
   ReactNode,
@@ -55,7 +56,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   interactionWidth: 20,
 }
 
-export default function Structure({ children }: Props) {
+function Structure({ children }: Props) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance<TBasicNode, TFloatingEdge>>()
@@ -69,6 +70,8 @@ export default function Structure({ children }: Props) {
     resizable: { isDragging, x },
     currentUserCanEdit,
     lastUsedEdgeColour,
+    nodesInitialized,
+    edgesInitialized,
     setLastUsedNodeColours,
     setEditable,
     onNodesChange,
@@ -176,6 +179,7 @@ export default function Structure({ children }: Props) {
         <ContextMenu>
           <ContextMenuTrigger>
             <ReactFlow<TBasicNode, TFloatingEdge>
+              onlyRenderVisibleElements={false}
               nodes={nodes.map((node) => ({
                 ...node,
                 data: {
@@ -280,16 +284,6 @@ export default function Structure({ children }: Props) {
                   <ControlButton
                     onClick={() => {
                       if (!currentUserCanEdit) return
-                      // setNodes((nodes) =>
-                      //   nodes.map((node) => ({
-                      //     ...node,
-                      //     data: {
-                      //       ...node.data,
-                      //       editable: !editable,
-                      //       onNodeDataChange,
-                      //     },
-                      //   })),
-                      // )
                       setEditable(!editable)
                     }}
                   >
@@ -298,8 +292,8 @@ export default function Structure({ children }: Props) {
                 </Controls>
               )}
               {/* <MiniMap /> */}
-              {editable && reactFlowInstance && (
-                /*currentUserCanEdit &&*/ <Background
+              {editable && reactFlowInstance && currentUserCanEdit && (
+                <Background
                   variant={BackgroundVariant.Dots}
                   gap={12.5}
                   size={1}
@@ -325,3 +319,7 @@ export default function Structure({ children }: Props) {
     </div>
   )
 }
+
+export default dynamic(() => Promise.resolve(Structure), {
+  ssr: false,
+})

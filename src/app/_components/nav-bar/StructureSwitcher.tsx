@@ -2,7 +2,7 @@
 
 import { useAuth, useOrganization } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
-import { LucideChevronDown } from "lucide-react"
+import { LucideChevronDown, LucidePlus } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -58,6 +58,18 @@ export default function StructureSwitcher() {
                 {structure.name}
               </Link>
             ))}
+            <Link
+              href={`/org/${session.orgSlug ?? session.userId}/structures/new`}
+              className={buttonVariants({
+                variant: "ghost",
+                className:
+                  "flex w-full !justify-start gap-2 text-left text-[13px] text-muted-foreground",
+              })}
+              onClick={() => setPopoverOpen(false)}
+            >
+              <LucidePlus className="h-4 w-4" />
+              New Structure
+            </Link>
           </PopoverContent>
         </Popover>
       ) : (

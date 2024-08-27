@@ -54,7 +54,7 @@ export default function RootLayout({
                 {children}
               </main>
             </TRPCReactProvider>
-            <Toaster />
+            <Toaster theme="light" className="bg-card" />
           </PHProvider>
         </ConvexClientProvider>
       </body>
