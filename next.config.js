@@ -31,6 +31,7 @@ const coreConfig = {
     ],
   },
   async rewrites() {
+    if (process.env.NODE_ENV !== "production") return []
     return [
       {
         source: "/ingest/static/:path*",
