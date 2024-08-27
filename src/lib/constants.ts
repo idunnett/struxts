@@ -80,6 +80,10 @@ export const colours = [
     value: "#8b5cf6",
   },
   {
+    label: "Struxts Purple",
+    value: "#4d3c8b",
+  },
+  {
     label: "Fuchsia",
     value: "#d946ef",
   },

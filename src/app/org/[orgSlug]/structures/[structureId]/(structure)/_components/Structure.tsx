@@ -70,8 +70,6 @@ function Structure({ children }: Props) {
     resizable: { isDragging, x },
     currentUserCanEdit,
     lastUsedEdgeColour,
-    nodesInitialized,
-    edgesInitialized,
     setLastUsedNodeColours,
     setEditable,
     onNodesChange,
@@ -266,9 +264,11 @@ function Structure({ children }: Props) {
                 setReactFlowInstance(instance)
                 setEditable(false)
               }}
-              onNodesDelete={(nodes) => {
-                if (editable && reactFlowInstance && currentUserCanEdit)
-                  removeNodes(nodes.map((node) => node.id))
+              deleteKeyCode={null}
+              onNodesDelete={(_nodes) => {
+                // if (editable && reactFlowInstance && currentUserCanEdit)
+                //   removeNodes(nodes.map((node) => node.id))
+                return
               }}
               // onEdgesDelete={(edges) => {
               //   if (editable && reactFlowInstance && currentUserCanEdit)

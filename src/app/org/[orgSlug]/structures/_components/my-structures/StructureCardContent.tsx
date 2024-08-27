@@ -89,7 +89,7 @@ export default function StructureCardContent({ structure, orgMembers }: Props) {
           Created {formatDate(structure._creationTime, "MMM d, yyyy")}
         </span>
       </div>
-      <LucideArrowRight className="h-6 w-6 -translate-x-2 text-muted-foreground opacity-0 transition-all duration-300 ease-in-out group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100" />
+      <LucideArrowRight className="h-5 w-5 -translate-x-2 text-muted-foreground opacity-0 transition-all duration-300 ease-in-out group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100" />
     </div>
   )
 }

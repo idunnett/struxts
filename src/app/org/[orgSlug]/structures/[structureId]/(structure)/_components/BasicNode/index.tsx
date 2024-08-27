@@ -32,6 +32,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../../../../../../../../components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../../../../../../../components/ui/tooltip"
 
 export default function BasicNode({
   id,
@@ -54,8 +60,8 @@ export default function BasicNode({
       <PopoverTrigger
         id={id}
         className={cn(
-          "group relative w-[162px] cursor-pointer rounded-sm border p-2",
-          dragging && "cursor-grabbing",
+          "group relative w-[162px] cursor-pointer rounded-sm border p-2 shadow-sm",
+          dragging && "cursor-grabbing shadow-xl",
         )}
         style={{
           borderColor: data.borderColour,
@@ -74,7 +80,7 @@ export default function BasicNode({
           })
         }}
       >
-        {selected && (
+        {selected && !dragging && data.editable && (
           <div className="absolute left-1/2 top-1/2 h-[calc(100%+20px)] w-[calc(100%+20px)] -translate-x-1/2 -translate-y-1/2 border border-dashed border-ring/50 bg-transparent" />
         )}
         <Link
@@ -87,7 +93,8 @@ export default function BasicNode({
             variant: "ghost",
             size: "icon",
             className: cn(
-              "absolute -right-3 -top-3 !h-6 !w-6 rounded-full border bg-card p-1 shadow-md group-hover:opacity-100",
+              "absolute -right-3 -top-3 !h-6 !w-6 rounded-full border bg-card p-1 shadow-md",
+              !dragging && "group-hover:opacity-100",
               data.isActive ? "opacity-100" : "opacity-0",
             ),
           })}
@@ -136,28 +143,42 @@ export default function BasicNode({
           className={cn(!data.editable && "hidden")}
         />
       </PopoverTrigger>
-      <PopoverContent side="top" sideOffset={12} className="w-fit p-1">
+      <PopoverContent
+        side="top"
+        sideOffset={12}
+        className="w-fit p-1"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <div className="flex items-center gap-1">
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-xs"
-                style={{
-                  color: data.borderColour,
-                }}
-              >
-                {data.borderColour === "transparent" ? (
-                  <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
-                ) : (
-                  <Circle
-                    strokeWidth={5}
-                    className="h-4 w-4 rounded-full border fill-muted stroke-current"
-                  />
-                )}
-              </Button>
-            </PopoverTrigger>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-xs"
+                      style={{
+                        color: data.borderColour,
+                      }}
+                    >
+                      {data.borderColour === "transparent" ? (
+                        <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
+                      ) : (
+                        <Circle
+                          strokeWidth={5}
+                          className="h-4 w-4 rounded-full border fill-muted stroke-current"
+                        />
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Border Colour
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <PopoverContent
               side="top"
               sideOffset={12}
@@ -173,22 +194,31 @@ export default function BasicNode({
             </PopoverContent>
           </Popover>
           <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-xs"
-                style={{
-                  color: data.bgColour,
-                }}
-              >
-                {data.bgColour === "transparent" ? (
-                  <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
-                ) : (
-                  <Circle className="h-4 w-4 rounded-full border fill-current stroke-current" />
-                )}
-              </Button>
-            </PopoverTrigger>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-xs"
+                      style={{
+                        color: data.bgColour,
+                      }}
+                    >
+                      {data.bgColour === "transparent" ? (
+                        <CircleSlash className="h-4 w-4 stroke-muted-foreground" />
+                      ) : (
+                        <Circle className="h-4 w-4 rounded-full border fill-current stroke-current" />
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Background Colour
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <PopoverContent
               side="top"
               sideOffset={12}

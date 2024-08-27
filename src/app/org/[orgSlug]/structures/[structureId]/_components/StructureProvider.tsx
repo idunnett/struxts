@@ -138,11 +138,11 @@ export default function StructureProvider({
   const [isDeletingEdges, setIsDeletingEdges] = useState(false)
   const [isCreatingNode, setIsCreatingNode] = useState(false)
   const [isCreatingEdges, setIsCreatingEdges] = useState(false)
-  const [lastUsedEdgeColour, setLastUsedEdgeColour] = useState("#000000")
+  const [lastUsedEdgeColour, setLastUsedEdgeColour] = useState("#4d3c8b")
   const [lastUsedNodeColours, setLastUsedNodeColours] = useState<{
     bgColour: string
     borderColour: string
-  }>({ bgColour: "#ffffff", borderColour: "#000000" })
+  }>({ bgColour: "#ffffff", borderColour: "transparent" })
   const [selectedNodesAndEdges, setSelectedNodesAndEdges] =
     useState<OnSelectionChangeParams>({
       edges: [],
