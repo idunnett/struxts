@@ -6,7 +6,7 @@ import { PostHogProvider } from "posthog-js/react"
 import { useEffect } from "react"
 import { env } from "../../env"
 
-if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
+if (typeof window !== "undefined" && process.env.VERCEL_ENV === "production") {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: "/ingest",
     person_profiles: "identified_only",
@@ -16,7 +16,7 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
 }
 
 export function PHProvider({ children }: { children: React.ReactNode }) {
-  if (process.env.NODE_ENV !== "production") return children
+  if (process.env.VERCEL_ENV !== "production") return children
   return (
     <PostHogProvider client={posthog}>
       <PostHogAuthWrapper>{children}</PostHogAuthWrapper>

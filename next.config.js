@@ -8,6 +8,9 @@ await import("./src/env.js")
 
 /** @type {import("next").NextConfig} */
 const coreConfig = {
+  experimental: {
+    reactCompiler: true,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -22,9 +25,13 @@ const coreConfig = {
       {
         hostname: "www.gravatar.com",
       },
+      {
+        hostname: "deafening-pony-162.convex.site",
+      },
     ],
   },
   async rewrites() {
+    if (process.env.VERCEL_ENV !== "production") return []
     return [
       {
         source: "/ingest/static/:path*",

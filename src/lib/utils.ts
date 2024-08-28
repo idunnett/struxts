@@ -1,5 +1,7 @@
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
+import ky from "ky"
 import { twMerge } from "tailwind-merge"
+import { env } from "../env"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -11,4 +13,22 @@ export function isAdmin(role: string | undefined | null) {
 
 export function isOwner(role: string | undefined | null) {
   return role === "Owner"
+}
+
+export async function downloadFile(
+  storageId: string,
+  opts: { token: string | null },
+) {
+  const getFileUrl = new URL(`${env.NEXT_PUBLIC_CONVEX_SITE_URL}/getFile`)
+  getFileUrl.searchParams.set("storageId", storageId)
+  const blob = await ky(getFileUrl.toString(), {
+    headers: {
+      Authorization: `Bearer ${opts.token}`,
+    },
+  }).blob()
+  const bmp = await createImageBitmap(blob)
+  const { width, height } = bmp
+  bmp.close() // free memory
+  const src = URL.createObjectURL(blob)
+  return { src, width, height }
 }

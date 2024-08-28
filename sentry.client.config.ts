@@ -20,12 +20,18 @@ Sentry.init({
 
   // You can remove this option if you're not planning to use the Sentry Session Replay feature:
   integrations: [
-    Sentry.replayIntegration({
-      // Additional Replay configuration goes in here, for example:
-      maskAllText: true,
-      blockAllMedia: true,
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "light",
+      autoInject: false,
+      showBranding: false,
     }),
+    // Sentry.replayIntegration({
+    //   // Additional Replay configuration goes in here, for example:
+    //   maskAllText: true,
+    //   blockAllMedia: true,
+    // }),
   ],
 
-  enabled: process.env.NODE_ENV === "production",
+  enabled: process.env.VERCEL_ENV === "production",
 })

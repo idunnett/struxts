@@ -32,10 +32,11 @@
   "include": [
     ".eslintrc.cjs",
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.cjs",
-    "**/*.js",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.cjs",
+    "src/**/*.js",
+    "src/**/*.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
