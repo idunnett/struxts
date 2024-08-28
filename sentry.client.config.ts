@@ -22,9 +22,7 @@ Sentry.init({
   integrations: [
     Sentry.feedbackIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: "light",
       autoInject: false,
-      showBranding: false,
     }),
     // Sentry.replayIntegration({
     //   // Additional Replay configuration goes in here, for example:
@@ -33,5 +31,5 @@ Sentry.init({
     // }),
   ],
 
-  enabled: process.env.VERCEL_ENV === "production",
+  enabled: process.env.NEXT_PUBLIC_VERCEL_ENV === "production",
 })
