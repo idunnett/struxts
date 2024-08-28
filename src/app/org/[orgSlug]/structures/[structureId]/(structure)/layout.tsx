@@ -1,9 +1,13 @@
+import dynamic from "next/dynamic"
 import { ReactNode } from "react"
-import Structure from "./_components/Structure"
 
 interface Props {
   children: ReactNode
 }
+
+const Structure = dynamic(() => import("./_components/Structure"), {
+  ssr: false,
+})
 
 export default async function StructurePage({ children }: Props) {
   return <Structure>{children}</Structure>

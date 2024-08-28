@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs"
 import { UploadFileResponse, useUploadFiles } from "@xixixao/uploadstuff/react"
-import { useMutation } from "convex/react"
+import { Authenticated, useMutation } from "convex/react"
 import { LucideUpload } from "lucide-react"
 import { ErrorBoundary } from "next/dist/client/components/error-boundary"
 import { use } from "react"
@@ -82,38 +82,40 @@ export default function NodeFilesTabPage({
       value="files"
       className="flex min-h-0 flex-col gap-4 data-[state=active]:grow"
     >
-      {editable && (
-        <>
-          <input
-            id="file-upload-input"
-            type="file"
-            multiple
-            onChange={(event) => {
-              const files = Array.from(event.target.files ?? [])
-              if (files.length === 0) return
-              startUpload(files)
-            }}
-            hidden
-          />
-          <label
-            htmlFor="file-upload-input"
-            className={buttonVariants({
-              variant: "outline",
-              className: "flex w-min cursor-pointer items-center gap-2",
-            })}
-          >
-            <LucideUpload className="h-4 w-4" />
-            Upload
-          </label>
-        </>
-      )}
-      <ErrorBoundary
-        errorComponent={(error) => (
-          <ErrorDisplay error={error} type="component" />
+      <Authenticated>
+        {editable && (
+          <>
+            <input
+              id="file-upload-input"
+              type="file"
+              multiple
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? [])
+                if (files.length === 0) return
+                startUpload(files)
+              }}
+              hidden
+            />
+            <label
+              htmlFor="file-upload-input"
+              className={buttonVariants({
+                variant: "outline",
+                className: "flex w-min cursor-pointer items-center gap-2",
+              })}
+            >
+              <LucideUpload className="h-4 w-4" />
+              Upload
+            </label>
+          </>
         )}
-      >
-        <Files structureId={structureId} nodeId={nodeId} />
-      </ErrorBoundary>
+        <ErrorBoundary
+          errorComponent={(error) => (
+            <ErrorDisplay error={error} type="component" />
+          )}
+        >
+          <Files structureId={structureId} nodeId={nodeId} />
+        </ErrorBoundary>
+      </Authenticated>
     </TabsContent>
   )
 }

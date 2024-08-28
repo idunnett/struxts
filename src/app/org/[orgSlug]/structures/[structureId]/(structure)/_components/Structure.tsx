@@ -17,7 +17,6 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { LucideLock, LucideUnlock } from "lucide-react"
-import dynamic from "next/dynamic"
 import {
   MouseEvent,
   ReactNode,
@@ -56,7 +55,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   interactionWidth: 20,
 }
 
-function Structure({ children }: Props) {
+export default function Structure({ children }: Props) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance<TBasicNode, TFloatingEdge>>()
@@ -319,7 +318,3 @@ function Structure({ children }: Props) {
     </div>
   )
 }
-
-export default dynamic(() => Promise.resolve(Structure), {
-  ssr: false,
-})
