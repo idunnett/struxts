@@ -42,8 +42,8 @@ export default function RootLayout({
             </main>
             <Toaster theme="light" className="bg-card" />
           </PHProvider>
+          <SentryFeedbackWidget />
         </ConvexClientProvider>
-        <SentryFeedbackWidget />
       </body>
     </html>
   )
