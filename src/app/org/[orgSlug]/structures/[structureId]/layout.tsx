@@ -1,5 +1,4 @@
 import { auth, clerkClient } from "@clerk/nextjs/server"
-import {} from "@clerk/types/dist"
 import { fetchQuery } from "convex/nextjs"
 import { type ReactNode } from "react"
 import { api } from "../../../../../../convex/_generated/api"

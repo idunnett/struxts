@@ -55,7 +55,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   interactionWidth: 20,
 }
 
-export default function Structure({ children }: Props) {
+function Structure({ children }: Props) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance<TBasicNode, TFloatingEdge>>()
@@ -318,3 +318,17 @@ export default function Structure({ children }: Props) {
     </div>
   )
 }
+
+export default Structure
+
+// export default dynamic(() => Promise.resolve(Structure), {
+//   ssr: false,
+//   loading: (props) => {
+//     console.log({ ...props })
+//     return (
+//       <div className="flex h-full w-full items-center justify-center">
+//         <Spinner />
+//       </div>
+//     )
+//   },
+// })
