@@ -24,6 +24,7 @@ Sentry.init({
       // Additional SDK configuration goes in here, for example:
       colorScheme: "system",
       autoInject: false,
+      showBranding: false,
     }),
     // Sentry.replayIntegration({
     //   // Additional Replay configuration goes in here, for example:
