@@ -9,7 +9,7 @@ export default function PostHogPageView(): null {
   const searchParams = useSearchParams()
   const posthog = usePostHog()
   useEffect(() => {
-    if (process.env.VERCEL_ENV !== "production") return
+    if (process.env.NEXT_PUBLIC_VERCEL_ENV !== "production") return
     if (pathname && posthog) {
       // Track pageviews
       let url = window.origin + pathname

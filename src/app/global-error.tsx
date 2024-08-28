@@ -10,7 +10,7 @@ export default function GlobalError({
   error: Error & { digest?: string }
 }) {
   useEffect(() => {
-    if (process.env.VERCEL_ENV !== "production") return
+    if (process.env.NEXT_PUBLIC_VERCEL_ENV !== "production") return
     Sentry.captureException(error)
   }, [error])
 
