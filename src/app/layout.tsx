@@ -4,6 +4,7 @@ import { Toaster } from "~/components/ui/sonner"
 import { cn } from "~/lib/utils"
 
 import "~/styles/globals.css"
+import SentryFeedbackWidget from "../lib/sentry-feedback"
 import { ConvexClientProvider } from "./ConvexClientProvider"
 import PostHogPageView from "./_analytics/PostHogPageView"
 import { PHProvider } from "./_analytics/provider"
@@ -42,6 +43,7 @@ export default function RootLayout({
             <Toaster theme="light" className="bg-card" />
           </PHProvider>
         </ConvexClientProvider>
+        <SentryFeedbackWidget />
       </body>
     </html>
   )
