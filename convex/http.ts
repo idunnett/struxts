@@ -31,8 +31,8 @@ http.route({
       return new Response(null, {
         status: 401,
         headers: {
-          "Access-Control-Allow-Origin": "http://localhost:3000",
-          Vary: "Origin",
+          "Access-Control-Allow-Origin": "*",
+          Vary: "origin",
         },
       })
     const { searchParams } = new URL(request.url)
@@ -56,25 +56,37 @@ http.route({
         )
       return new Response(null, {
         status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          Vary: "origin",
+        },
       })
     }
 
     if (!file)
       return new Response("File not found", {
         status: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          Vary: "origin",
+        },
       })
 
     const blob = await ctx.storage.get(storageId)
     if (blob === null) {
       return new Response("File not found", {
         status: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          Vary: "origin",
+        },
       })
     }
     return new Response(blob, {
       headers: {
         "Content-Type": file.type,
         "Content-Disposition": `attachment; filename="${file.name}"`,
-        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Origin": "*",
         Vary: "origin",
       },
     })
