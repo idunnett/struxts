@@ -22,7 +22,7 @@ Sentry.init({
   integrations: [
     Sentry.feedbackIntegration({
       // Additional SDK configuration goes in here, for example:
-      colorScheme: "system",
+      colorScheme: "light",
       autoInject: false,
       showBranding: false,
     }),
