@@ -63,6 +63,7 @@ export default function MyStructures({
               <Link
                 href={`/org/${session.orgSlug ?? session.userId}/structures/${structure._id}`}
                 className="w-full"
+                prefetch={false}
               >
                 <Card className="group w-full border border-transparent transition-all ease-in-out hover:shadow-md">
                   <CardHeader>
