@@ -1,16 +1,12 @@
-import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin"
 import { Inter } from "next/font/google"
 import NavBar from "~/app/_components/nav-bar"
 import { Toaster } from "~/components/ui/sonner"
 import { cn } from "~/lib/utils"
-import { TRPCReactProvider } from "~/trpc/react"
 
-import { extractRouterConfig } from "uploadthing/server"
 import "~/styles/globals.css"
 import { ConvexClientProvider } from "./ConvexClientProvider"
 import PostHogPageView from "./_analytics/PostHogPageView"
 import { PHProvider } from "./_analytics/provider"
-import { ourFileRouter } from "./api/uploadthing/core"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,24 +32,13 @@ export default function RootLayout({
           inter.variable,
         )}
       >
-        <NextSSRPlugin
-          /**
-           * The `extractRouterConfig` will extract **only** the route configs
-           * from the router to prevent additional information from being
-           * leaked to the client. The data passed to the client is the same
-           * as if you were to fetch `/api/uploadthing` directly.
-           */
-          routerConfig={extractRouterConfig(ourFileRouter)}
-        />
         <ConvexClientProvider>
           <PHProvider>
-            <TRPCReactProvider>
-              <NavBar />
-              <main className="min-h-0 grow overflow-auto">
-                <PostHogPageView />
-                {children}
-              </main>
-            </TRPCReactProvider>
+            <NavBar />
+            <main className="min-h-0 grow overflow-auto">
+              <PostHogPageView />
+              {children}
+            </main>
             <Toaster theme="light" className="bg-card" />
           </PHProvider>
         </ConvexClientProvider>

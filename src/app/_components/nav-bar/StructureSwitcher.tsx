@@ -2,7 +2,12 @@
 
 import { useAuth, useOrganization } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
-import { LucideChevronDown, LucidePlus } from "lucide-react"
+import {
+  LucideArrowRight,
+  LucideChevronDown,
+  LucidePlus,
+  LucideWaypoints,
+} from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -40,6 +45,7 @@ export default function StructureSwitcher() {
       {myStructures ? (
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <PopoverTrigger className="flex h-7 max-w-96 items-center gap-2 rounded-sm border-none bg-transparent px-2 text-[13px] font-medium !text-muted-foreground !ring-0 hover:bg-[#00000008]">
+            <LucideWaypoints className="h-4 w-4 text-primary" />
             {selectedStructure?.name ?? "Select a structure"}
             <LucideChevronDown className="h-4 w-4" />
           </PopoverTrigger>
@@ -51,11 +57,15 @@ export default function StructureSwitcher() {
                 className={buttonVariants({
                   variant: "ghost",
                   className:
-                    "flex w-full !justify-start text-left text-[13px] text-muted-foreground",
+                    "group flex w-full !justify-between gap-2 rounded-none border-b text-left text-[13px] text-muted-foreground transition-all duration-300 ease-in-out hover:text-primary",
                 })}
                 onClick={() => setPopoverOpen(false)}
               >
-                {structure.name}
+                <div className="flex items-center gap-2">
+                  <LucideWaypoints className="h-4 w-4" />
+                  {structure.name}
+                </div>
+                <LucideArrowRight className="h-3 w-3 -translate-x-2 text-muted-foreground opacity-0 transition-all duration-300 ease-in-out group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100" />
               </Link>
             ))}
             <Link
@@ -63,7 +73,7 @@ export default function StructureSwitcher() {
               className={buttonVariants({
                 variant: "ghost",
                 className:
-                  "flex w-full !justify-start gap-2 text-left text-[13px] text-muted-foreground",
+                  "flex w-full !justify-start gap-2 text-left text-[13px] text-muted-foreground transition-colors duration-300 ease-in-out hover:text-primary",
               })}
               onClick={() => setPopoverOpen(false)}
             >

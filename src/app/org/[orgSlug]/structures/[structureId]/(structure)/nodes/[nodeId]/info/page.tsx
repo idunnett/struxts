@@ -7,7 +7,7 @@ import { api } from "../../../../../../../../../../convex/_generated/api"
 import { TabsContent } from "../../../../../../../../../components/ui/tabs"
 import { useDebounce } from "../../../../../../../../../hooks/useDebounce"
 import { StructureContext } from "../../../../_components/StructureProvider"
-import TipTapEditor from "../../../_components/BasicNode/TipTapEditor"
+import TipTapEditor from "./_components/TipTapEditor"
 
 export default function NodeInfoTabPage() {
   const { activeNode, editable } = use(StructureContext)

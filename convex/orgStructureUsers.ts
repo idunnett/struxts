@@ -35,7 +35,8 @@ export const updateRole = mutation({
   },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser) throw new CustomConvexError({ statusCode: 401 })
+    if (!currentUser)
+      throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
 
     const currentOrgStructureUser = await ctx.db
       .query("orgStructureUsers")
@@ -48,7 +49,7 @@ export const updateRole = mutation({
       )
       .first()
     if (currentOrgStructureUser?.role === "Guest")
-      throw new CustomConvexError({ statusCode: 403 })
+      throw new CustomConvexError({ statusCode: 403, message: "Forbidden" })
 
     const orgStructureUserToUpdate = await ctx.db
       .query("orgStructureUsers")
@@ -88,13 +89,18 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser) throw new CustomConvexError({ statusCode: 401 })
+    if (!currentUser)
+      throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
 
     const serializedStructureId = ctx.db.normalizeId(
       "structures",
       args.structureId,
     )
-    if (!serializedStructureId) throw new CustomConvexError({ statusCode: 404 })
+    if (!serializedStructureId)
+      throw new CustomConvexError({
+        statusCode: 404,
+        message: "Structure not found",
+      })
 
     const currentOrgStructureUser = await ctx.db
       .query("orgStructureUsers")
@@ -107,7 +113,7 @@ export const create = mutation({
       )
       .first()
     if (currentOrgStructureUser?.role === "Guest")
-      throw new CustomConvexError({ statusCode: 403 })
+      throw new CustomConvexError({ statusCode: 403, message: "Forbidden" })
 
     const orgStructureUser = await ctx.db
       .query("orgStructureUsers")
@@ -143,13 +149,18 @@ export const remove = mutation({
   },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser) throw new CustomConvexError({ statusCode: 401 })
+    if (!currentUser)
+      throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
 
     const serializedStructureId = ctx.db.normalizeId(
       "structures",
       args.structureId,
     )
-    if (!serializedStructureId) throw new CustomConvexError({ statusCode: 404 })
+    if (!serializedStructureId)
+      throw new CustomConvexError({
+        statusCode: 404,
+        message: "Structure not found",
+      })
 
     const currentOrgStructureUser = await ctx.db
       .query("orgStructureUsers")
@@ -162,7 +173,7 @@ export const remove = mutation({
       )
       .first()
     if (currentOrgStructureUser?.role === "Guest")
-      throw new CustomConvexError({ statusCode: 403 })
+      throw new CustomConvexError({ statusCode: 403, message: "Forbidden" })
 
     const orgStructureUser = await ctx.db
       .query("orgStructureUsers")

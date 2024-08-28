@@ -1,5 +1,5 @@
 import { PopoverAnchor } from "@radix-ui/react-popover"
-import axios from "axios"
+import ky from "ky"
 import { LucideSearch } from "lucide-react"
 import { useEffect, useState } from "react"
 import Spinner from "../../../../../../../components/Spinner"
@@ -37,14 +37,11 @@ export default function InviteMemberForm({
     if (debouncedSearchValue.length < 3) return setOrgMembers([])
     async function searchOrgMembers() {
       setIsFetching(true)
-      const { data } = await axios.get<ClerkUserData[]>(
-        `/api/org/${orgId}/users/search`,
-        {
-          params: {
-            query: debouncedSearchValue,
-          },
+      const data = await ky<ClerkUserData[]>(`/api/org/${orgId}/users/search`, {
+        searchParams: {
+          query: debouncedSearchValue,
         },
-      )
+      }).json()
       setIsFetching(false)
       setOrgMembers(data)
     }

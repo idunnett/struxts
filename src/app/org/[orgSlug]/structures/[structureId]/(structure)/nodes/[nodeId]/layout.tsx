@@ -42,12 +42,12 @@ export default function NodePage({
     <>
       <div
         {...separatorProps}
-        className="relative z-[60] w-[2px] cursor-ew-resize bg-secondary hover:bg-primary/50 active:bg-primary"
+        className="relative z-50 w-[2px] cursor-ew-resize bg-secondary hover:bg-primary/50 active:bg-primary"
       >
         <div className="absolute left-0 top-0 h-full w-[800%] -translate-x-1/2 bg-transparent"></div>
       </div>
       <div
-        className="relative z-[60] flex h-full flex-col gap-2 bg-card p-4 pb-0 shadow-lg"
+        className="relative z-50 flex h-full flex-col gap-2 bg-card p-4 pb-0 shadow-lg"
         style={{
           width: `${x}px`,
         }}

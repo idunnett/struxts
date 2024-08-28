@@ -1,6 +1,6 @@
 import Document from "@tiptap/extension-document"
+import Placeholder from "@tiptap/extension-placeholder"
 import UnderlineExtension from "@tiptap/extension-underline"
-// import Placeholder from "@tiptap/extension-placeholder"
 import { EditorContent, useEditor, type Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import {
@@ -40,6 +40,11 @@ export default function TipTapEditor({
       UnderlineExtension,
       StarterKit.configure({
         document: false,
+      }),
+      Placeholder.configure({
+        emptyEditorClass: "is-editor-empty",
+        placeholder: "Enter some information about this node...",
+        showOnlyWhenEditable: true,
       }),
     ],
     editable,

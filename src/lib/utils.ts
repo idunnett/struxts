@@ -1,5 +1,5 @@
-import axios from "axios"
 import { clsx, type ClassValue } from "clsx"
+import ky from "ky"
 import { twMerge } from "tailwind-merge"
 import { env } from "../env"
 
@@ -21,13 +21,11 @@ export async function downloadFile(
 ) {
   const getFileUrl = new URL(`${env.NEXT_PUBLIC_CONVEX_SITE_URL}/getFile`)
   getFileUrl.searchParams.set("storageId", storageId)
-  const res = await axios.get(getFileUrl.toString(), {
+  const blob = await ky(getFileUrl.toString(), {
     headers: {
       Authorization: `Bearer ${opts.token}`,
     },
-    responseType: "blob",
-  })
-  const blob = res.data
+  }).blob()
   const bmp = await createImageBitmap(blob)
   const { width, height } = bmp
   bmp.close() // free memory

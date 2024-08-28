@@ -66,7 +66,7 @@ export default async function StructuresPage({ params: { orgSlug } }: Props) {
           />
           <h1 className="text-4xl font-bold">{org?.name ?? "Personal"}</h1>
         </div>
-        {(session.orgRole === "Owner" ||
+        {(session.orgRole === "org:admin" ||
           (!session.orgId && !session.orgRole)) && (
           <Link
             href={`/org/${orgSlug}/structures/new`}

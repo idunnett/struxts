@@ -20,7 +20,7 @@ import {
 } from "~/components/ui/popover"
 import { cn } from "~/lib/utils"
 import { type TBasicNode } from "~/types"
-import ColourPicker from "../../../../../../../../components/ColourPicker"
+import ColourPicker from "../../../../../../../components/ColourPicker"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,13 +31,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../../../../../../../../components/ui/alert-dialog"
+} from "../../../../../../../components/ui/alert-dialog"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../../../../../../../../components/ui/tooltip"
+} from "../../../../../../../components/ui/tooltip"
 
 export default function BasicNode({
   id,
@@ -146,7 +146,7 @@ export default function BasicNode({
       <PopoverContent
         side="top"
         sideOffset={12}
-        className="w-fit p-1"
+        className="!z-40 w-fit p-1"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <div className="flex items-center gap-1">

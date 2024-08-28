@@ -5,6 +5,7 @@ import {
   LucideCircleCheck,
   LucideRefreshCcw,
   LucideSettings2,
+  LucideWaypoints,
 } from "lucide-react"
 import { useParams } from "next/navigation"
 import { use, useState } from "react"
@@ -55,7 +56,10 @@ export default function StructureNav({
       <div className="border-b bg-card px-8 py-1">
         <div className="flex flex-initial items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold">{structure.name}</h1>
+            <h1 className="flex items-center gap-2 text-xl font-semibold">
+              <LucideWaypoints className="h-5 w-5 text-primary" />
+              {structure.name}
+            </h1>
             <div className="flex items-center gap-1 pt-1 text-xs text-muted-foreground">
               {!isSaving ? (
                 <>

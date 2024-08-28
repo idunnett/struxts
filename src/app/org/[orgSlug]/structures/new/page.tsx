@@ -34,8 +34,13 @@ export default function NewStructurePage() {
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     startTransition(async () => {
-      await createStructure({ name, orgId: organization?.id ?? null })
-      router.replace(`/org/${organization?.slug ?? userId}/structures`)
+      const structureId = await createStructure({
+        name,
+        orgId: organization?.id ?? null,
+      })
+      router.replace(
+        `/org/${organization?.slug ?? userId}/structures/${structureId}`,
+      )
     })
   }
 
