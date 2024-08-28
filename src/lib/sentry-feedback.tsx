@@ -5,21 +5,19 @@ import * as Sentry from "@sentry/nextjs"
 import { useEffect, useState } from "react"
 
 function createWidget() {
-  return Sentry.getFeedback()?.createWidget({
+  return Sentry.feedbackIntegration()?.createWidget({
     colorScheme: "light",
     showBranding: false,
   })
 }
 
 function useFeedbackWidget(shouldMount: boolean) {
-  console.log("shouldMount", shouldMount)
   const [widget, setWidget] = useState<ReturnType<typeof createWidget> | null>(
     null,
   )
   useEffect(() => {
     // Mount if true and no widget exists
     if (shouldMount && !widget) {
-      console.log("Creating widget")
       const newWidget = createWidget()
       setWidget(newWidget)
     }
@@ -34,7 +32,9 @@ function useFeedbackWidget(shouldMount: boolean) {
 
 export default function SentryFeedbackWidget() {
   const auth = useAuth()
-  useFeedbackWidget(!!auth?.isSignedIn)
+  useFeedbackWidget(
+    !!auth?.isSignedIn && process.env.NEXT_PUBLIC_VERCEL_ENV === "production",
+  )
 
   return null
 }
