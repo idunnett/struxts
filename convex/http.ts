@@ -13,7 +13,7 @@ http.route({
     return new Response(null, {
       status: 204,
       headers: {
-        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "Authorization, Content-Type",
         "Access-Control-Max-Age": "86400", // Cache preflight response for 24 hours
