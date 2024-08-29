@@ -33,9 +33,9 @@ function DownloadButton({ structureName }: Props) {
       nodesBounds,
       imageWidth,
       imageHeight,
-      0.5,
-      2,
       0,
+      2,
+      0.1,
     )
 
     const reactFlowViewport: HTMLElement = document.querySelector(
@@ -43,7 +43,7 @@ function DownloadButton({ structureName }: Props) {
     )!
 
     const dataUrl = await toJpeg(reactFlowViewport, {
-      backgroundColor: "#fff",
+      backgroundColor: "#EEF0F2",
       width: imageWidth,
       height: imageHeight,
       style: {
