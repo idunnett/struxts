@@ -79,7 +79,7 @@ export const getByNode = query({
     nodeId: v.string(),
     structureId: v.string(),
   },
-  handler: async (ctx, args) => await getNodeFiles(ctx, args),
+  handler: getNodeFiles,
 })
 
 export const getNodeFileByStorageId = query({
@@ -161,6 +161,7 @@ export const saveFiles = mutation({
         name: v.string(),
         size: v.number(),
         type: v.string(),
+        folderId: v.string(),
       }),
     ),
   },
@@ -181,6 +182,7 @@ export const saveFiles = mutation({
       name,
       size,
       type,
+      folderId,
     } of args.files) {
       const serializedNodeId = ctx.db.normalizeId("nodes", nodeId)
       if (!serializedNodeId)
@@ -197,6 +199,12 @@ export const saveFiles = mutation({
           statusCode: 404,
           message: "Structure not found",
         })
+      const serializedFolderId = ctx.db.normalizeId("folders", folderId)
+      if (!serializedFolderId)
+        throw new CustomConvexError({
+          statusCode: 404,
+          message: "Folder not found",
+        })
       promises.push(
         ctx.db.insert("files", {
           storageId,
@@ -206,6 +214,7 @@ export const saveFiles = mutation({
           name,
           size,
           type,
+          folderId: serializedFolderId,
         }),
       )
     }

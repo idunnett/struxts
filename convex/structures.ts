@@ -1,5 +1,6 @@
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
+import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 
 export const getById = query({
@@ -164,7 +165,17 @@ export const remove = mutation({
       .query("files")
       .filter((q) => q.eq(q.field("structureId"), serializedId))
       .collect()
-    await Promise.all(files.map(async (f) => await ctx.db.delete(f._id)))
+    await Promise.all(
+      files.map(async (f) => {
+        await ctx.storage.delete(f.storageId as Id<"_storage">)
+        await ctx.db.delete(f._id)
+      }),
+    )
+    const folders = await ctx.db
+      .query("folders")
+      .filter((q) => q.eq(q.field("structureId"), serializedId))
+      .collect()
+    await Promise.all(folders.map(async (f) => await ctx.db.delete(f._id)))
     await ctx.db.delete(serializedId)
   },
 })
