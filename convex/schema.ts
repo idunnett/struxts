@@ -43,6 +43,14 @@ export const files = defineTable({
   name: v.string(),
   size: v.number(),
   type: v.string(),
+  folderId: v.id("folders"),
+})
+
+export const folders = defineTable({
+  nodeId: v.id("nodes"),
+  structureId: v.id("structures"),
+  orgId: v.union(v.string(), v.null()),
+  name: v.string(),
 })
 
 export default defineSchema({
@@ -51,4 +59,5 @@ export default defineSchema({
   nodes,
   edges,
   files,
+  folders,
 })

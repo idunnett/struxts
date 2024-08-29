@@ -3,6 +3,7 @@ import { CustomConvexError } from "../src/lib/errors"
 import { Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 import { getNodeFiles } from "./files"
+import { getNodeFolders } from "./folders"
 
 export const getByStructureId = query({
   args: {
@@ -110,11 +111,17 @@ export const remove = mutation({
       .collect()
 
     const files = await getNodeFiles(ctx, args)
-
     await Promise.all(
       files.map(async (file) => {
         await ctx.storage.delete(file.storageId as Id<"_storage">)
         await ctx.db.delete(file._id)
+      }),
+    )
+
+    const folders = await getNodeFolders(ctx, args)
+    await Promise.all(
+      folders.map(async (folder) => {
+        await ctx.db.delete(folder._id)
       }),
     )
 

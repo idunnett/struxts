@@ -320,15 +320,3 @@ function Structure({ children }: Props) {
 }
 
 export default Structure
-
-// export default dynamic(() => Promise.resolve(Structure), {
-//   ssr: false,
-//   loading: (props) => {
-//     console.log({ ...props })
-//     return (
-//       <div className="flex h-full w-full items-center justify-center">
-//         <Spinner />
-//       </div>
-//     )
-//   },
-// })
