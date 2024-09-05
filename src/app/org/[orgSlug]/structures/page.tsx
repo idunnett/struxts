@@ -1,7 +1,6 @@
 import {
   auth,
   clerkClient,
-  currentUser,
   Organization,
   OrganizationMembershipPublicUserData,
 } from "@clerk/nextjs/server"
@@ -23,7 +22,6 @@ interface Props {
 
 export default async function StructuresPage({ params: { orgSlug } }: Props) {
   const session = auth()
-  const user = await currentUser()
   const token = await getAuthToken()
   let myStructures: Doc<"structures">[]
   let org: Organization
@@ -57,13 +55,13 @@ export default async function StructuresPage({ params: { orgSlug } }: Props) {
       <div className="flex justify-between px-2">
         <div className="flex items-center gap-4">
           <Image
-            src={org?.imageUrl ?? user!.imageUrl}
-            alt={org?.name ?? user!.fullName ?? "Personal"}
+            src={org.imageUrl}
+            alt={org.name}
             width={40}
             height={40}
             className="rounded-md"
           />
-          <h1 className="text-4xl font-bold">{org?.name ?? "Personal"}</h1>
+          <h1 className="text-4xl font-bold">{org.name}</h1>
         </div>
         {(session.orgRole === "org:admin" ||
           (!session.orgId && !session.orgRole)) && (
@@ -79,7 +77,7 @@ export default async function StructuresPage({ params: { orgSlug } }: Props) {
         )}
       </div>
       <MyStructures
-        orgId={org?.id ?? null}
+        orgId={org.id}
         myPrefetchedStructures={myStructures}
         orgMembers={orgMembers}
       />

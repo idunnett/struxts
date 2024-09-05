@@ -49,9 +49,7 @@ export default function NewStructurePage() {
               <CardTitle>Create Structure</CardTitle>
               <CardDescription>
                 Create a new structure in{" "}
-                <b className="text-primary">
-                  {organization?.name ?? "Personal"}
-                </b>
+                <b className="text-primary">{organization?.name}</b>
               </CardDescription>
             </CardHeader>
             <CardContent>
