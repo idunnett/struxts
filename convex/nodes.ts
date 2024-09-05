@@ -88,7 +88,7 @@ export const update = mutation({
 
 export const remove = mutation({
   args: {
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
     nodeId: v.string(),
     structureId: v.string(),
   },

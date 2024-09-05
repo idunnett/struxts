@@ -25,11 +25,12 @@ export default function AddFolderForm({
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     startTransition(async () => {
+      if (!session.orgId) return
       await createFolder({
         name: folderName,
         nodeId,
         structureId,
-        orgId: session.orgId ?? null,
+        orgId: session.orgId,
       })
       toast.success("Folder created successfully")
       onAddFolder()

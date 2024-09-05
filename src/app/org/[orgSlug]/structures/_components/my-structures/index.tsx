@@ -15,7 +15,7 @@ import { usePrefetchedAuthQuery } from "../../../../../../hooks/usePrefetchedQue
 import StructureCardContent from "./StructureCardContent"
 
 interface Props {
-  orgId: string | null
+  orgId: string
   myPrefetchedStructures: typeof api.structures.getAllOfMyInOrgId._returnType
   orgMembers: OrganizationMembershipPublicUserData[]
 }
@@ -61,7 +61,7 @@ export default function MyStructures({
           structure && (
             <div key={structure._id} className="w-full p-3 sm:w-1/2 lg:w-1/3">
               <Link
-                href={`/org/${session.orgSlug ?? session.userId}/structures/${structure._id}`}
+                href={`/org/${session.orgSlug}/structures/${structure._id}`}
                 className="w-full"
                 prefetch={false}
               >

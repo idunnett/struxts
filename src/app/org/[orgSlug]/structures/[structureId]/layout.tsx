@@ -36,7 +36,7 @@ export default async function StructureLayout({
       },
       { token },
     )
-    if (!structure)
+    if (!structure || !session.orgId || structure.orgId !== session.orgId)
       return <ErrorDisplay statusCode={404} message="Structure not found" />
     ;[nodes, edges, currentOrgStructureUser, orgStructureUsers] =
       await Promise.all([
@@ -53,7 +53,7 @@ export default async function StructureLayout({
         fetchQuery(
           api.orgStructureUsers.getCurrent,
           {
-            orgId: session.orgId ?? null,
+            orgId: session.orgId,
             structureId: structure._id,
           },
           { token },

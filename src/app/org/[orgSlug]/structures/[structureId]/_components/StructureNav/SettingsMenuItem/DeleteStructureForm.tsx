@@ -83,10 +83,9 @@ export default function DeleteStructureForm({ orgId, structureId }: Props) {
                 disabled={verifyText !== "delete this structure"}
                 onClick={() => {
                   startTransition(async () => {
+                    if (!orgId) return
                     await deleteStructure({ orgId, structureId })
-                    router.replace(
-                      `/org/${session.orgSlug ?? session.userId}/structures`,
-                    )
+                    router.replace(`/org/${session.orgSlug}/structures`)
                     router.refresh()
                   })
                 }}

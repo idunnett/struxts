@@ -26,26 +26,25 @@ export default async function StructuresPage({ params: { orgSlug } }: Props) {
   const user = await currentUser()
   const token = await getAuthToken()
   let myStructures: Doc<"structures">[]
-  let org: Organization | null = null
+  let org: Organization
   let orgMembers: OrganizationMembershipPublicUserData[] = []
   try {
-    if (!orgSlug.startsWith("user_")) {
-      org = await clerkClient().organizations.getOrganization({
-        slug: orgSlug,
+    org = await clerkClient().organizations.getOrganization({
+      slug: orgSlug,
+    })
+    const members = (
+      await clerkClient().organizations.getOrganizationMembershipList({
+        organizationId: org.id,
       })
-      const members = (
-        await clerkClient().organizations.getOrganizationMembershipList({
-          organizationId: org.id,
-        })
-      ).data.map((member) => member.publicUserData)
-      orgMembers = members
-        .filter((member) => member !== null && member !== undefined)
-        .map((member) => ({ ...member }))
-    }
+    ).data.map((member) => member.publicUserData)
+    orgMembers = members
+      .filter((member) => member !== null && member !== undefined)
+      .map((member) => ({ ...member }))
+
     myStructures = await fetchQuery(
       api.structures.getAllOfMyInOrgId,
       {
-        orgId: org?.id ?? null,
+        orgId: org?.id,
       },
       { token },
     )

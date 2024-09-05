@@ -3,7 +3,7 @@ import { v } from "convex/values"
 
 const structures = defineTable({
   name: v.string(),
-  orgId: v.union(v.string(), v.null()),
+  orgId: v.string(),
   createdById: v.string(),
   updatedAt: v.number(),
 })
@@ -30,7 +30,7 @@ export const edges = defineTable({
 
 export const orgStructureUsers = defineTable({
   userId: v.string(),
-  orgId: v.union(v.string(), v.null()),
+  orgId: v.string(),
   structureId: v.id("structures"),
   role: v.union(v.literal("Guest"), v.literal("Admin"), v.literal("Owner")),
 })
@@ -39,7 +39,7 @@ export const files = defineTable({
   storageId: v.string(),
   nodeId: v.id("nodes"),
   structureId: v.id("structures"),
-  orgId: v.union(v.string(), v.null()),
+  orgId: v.string(),
   name: v.string(),
   size: v.number(),
   type: v.string(),
@@ -49,7 +49,7 @@ export const files = defineTable({
 export const folders = defineTable({
   nodeId: v.id("nodes"),
   structureId: v.id("structures"),
-  orgId: v.union(v.string(), v.null()),
+  orgId: v.string(),
   name: v.string(),
 })
 

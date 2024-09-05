@@ -26,11 +26,11 @@ export default function StructureSwitcher() {
   const { organization, isLoaded } = useOrganization()
   const [popoverOpen, setPopoverOpen] = useState(false)
 
-  const orgId = organization?.id ?? null
+  const orgId = organization?.id
 
   const myStructures = useQuery(
     api.structures.getAllOfMyInOrgId,
-    isLoaded ? { orgId } : "skip",
+    isLoaded && orgId ? { orgId } : "skip",
   )
 
   const selectedStructure = useMemo(() => {
@@ -38,6 +38,8 @@ export default function StructureSwitcher() {
     if (typeof params.structureId !== "string") return undefined
     return myStructures?.find((s) => s._id === params.structureId)
   }, [params.structureId, myStructures])
+
+  if (!isLoaded || !organization) return null
 
   return (
     <>
@@ -53,7 +55,7 @@ export default function StructureSwitcher() {
             {myStructures.map((structure) => (
               <Link
                 key={structure._id}
-                href={`/org/${session.orgSlug ?? session.userId}/structures/${structure._id}`}
+                href={`/org/${session.orgSlug}/structures/${structure._id}`}
                 className={buttonVariants({
                   variant: "ghost",
                   className:
@@ -69,7 +71,7 @@ export default function StructureSwitcher() {
               </Link>
             ))}
             <Link
-              href={`/org/${session.orgSlug ?? session.userId}/structures/new`}
+              href={`/org/${session.orgSlug}/structures/new`}
               className={buttonVariants({
                 variant: "ghost",
                 className:

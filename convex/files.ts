@@ -6,7 +6,7 @@ import { mutation, query, QueryCtx } from "./_generated/server"
 export async function getNodeFiles(
   ctx: QueryCtx,
   args: {
-    orgId: string | null
+    orgId: string
     structureId: string
     nodeId: string
   },
@@ -75,7 +75,7 @@ export async function getNodeFiles(
 
 export const getByNode = query({
   args: {
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
     nodeId: v.string(),
     structureId: v.string(),
   },
@@ -134,10 +134,7 @@ export const getNodeFileByStorageId = query({
 })
 
 export const generateUploadUrl = mutation({
-  args: {
-    // ...
-  },
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
     const currentUser = await ctx.auth.getUserIdentity()
     if (!currentUser)
       throw new CustomConvexError({
@@ -157,7 +154,7 @@ export const saveFiles = mutation({
         storageId: v.string(),
         nodeId: v.string(),
         structureId: v.string(),
-        orgId: v.union(v.string(), v.null()),
+        orgId: v.string(),
         name: v.string(),
         size: v.number(),
         type: v.string(),

@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  ClerkLoaded,
-  ClerkLoading,
-  useAuth,
-  useOrganization,
-} from "@clerk/nextjs"
+import { ClerkLoaded, ClerkLoading, useOrganization } from "@clerk/nextjs"
 import { useMutation } from "convex/react"
 import { useRouter } from "next/navigation"
 import { FormEvent, useState, useTransition } from "react"
@@ -29,18 +24,16 @@ export default function NewStructurePage() {
   const { organization } = useOrganization()
   const [isPending, startTransition] = useTransition()
   const createStructure = useMutation(api.structures.create)
-  const { userId } = useAuth()
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     startTransition(async () => {
+      if (!organization) return
       const structureId = await createStructure({
         name,
-        orgId: organization?.id ?? null,
+        orgId: organization.id,
       })
-      router.replace(
-        `/org/${organization?.slug ?? userId}/structures/${structureId}`,
-      )
+      router.replace(`/org/${organization?.slug}/structures/${structureId}`)
     })
   }
 
