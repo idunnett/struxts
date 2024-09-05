@@ -15,7 +15,7 @@ export default async function Home() {
           texts={["Businesses", "Org Charts", "Flow Charts"]}
         />
       </h1>
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-400 shadow-[0_0_100px_100px_rgba(77,60,139,0.2)]" />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_100px_100px_rgba(77,60,139,0.2)]" />
       <SignedOut>
         <Link href="/sign-in" className={buttonVariants()}>
           Get Started
@@ -23,7 +23,7 @@ export default async function Home() {
       </SignedOut>
       <SignedIn>
         <Link
-          href={`/org/${session.orgSlug ?? session.userId}/structures`}
+          href={session.orgSlug ? `/org/${session.orgSlug}/structures` : "/org"}
           className={buttonVariants()}
         >
           My Dashboard

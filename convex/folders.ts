@@ -6,7 +6,7 @@ import { mutation, query, QueryCtx } from "./_generated/server"
 export async function getNodeFolders(
   ctx: QueryCtx,
   args: {
-    orgId: string | null
+    orgId: string
     structureId: string
     nodeId: string
   },
@@ -65,7 +65,7 @@ export async function getNodeFolders(
 
 export const getByNode = query({
   args: {
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
     structureId: v.string(),
     nodeId: v.string(),
   },
@@ -77,7 +77,7 @@ export const create = mutation({
     name: v.string(),
     nodeId: v.string(),
     structureId: v.string(),
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
   },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()

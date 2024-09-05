@@ -70,7 +70,7 @@ export default function ErrorDisplay({
       </div>
     )
 
-  const hasActiveOrg = !!(session.orgSlug ?? session.userId)
+  const hasActiveOrg = !!session.orgSlug
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-8">
@@ -79,7 +79,7 @@ export default function ErrorDisplay({
         <p className="text-lg">{errorDetails.message}</p>
       </div>
       <Link
-        href={hasActiveOrg ? `/orgs/${session.orgSlug ?? session.userId}` : "/"}
+        href={hasActiveOrg ? `/orgs/${session.orgSlug}` : "/"}
         className={buttonVariants({
           variant: "secondary",
         })}

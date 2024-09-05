@@ -8,6 +8,7 @@ export default function MyOrgsPage() {
       <div className="flex flex-col items-start justify-start gap-4">
         <h1 className="text-xl font-bold">My Organizations</h1>
         <OrganizationList
+          hidePersonal
           afterSelectOrganizationUrl={(org) => `/org/${org.slug}/structures`}
           afterSelectPersonalUrl={(user) => `/org/${user.id}/structures`}
         />

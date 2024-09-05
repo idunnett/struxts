@@ -3,6 +3,7 @@ import NavBar from "~/app/_components/nav-bar"
 import { Toaster } from "~/components/ui/sonner"
 import { cn } from "~/lib/utils"
 
+import { Suspense } from "react"
 import "~/styles/globals.css"
 import SentryFeedbackWidget from "../lib/sentry-feedback"
 import { ConvexClientProvider } from "./ConvexClientProvider"
@@ -37,7 +38,9 @@ export default function RootLayout({
           <PHProvider>
             <NavBar />
             <main className="min-h-0 grow overflow-auto">
-              <PostHogPageView />
+              <Suspense>
+                <PostHogPageView />
+              </Suspense>
               {children}
             </main>
             <Toaster theme="light" className="bg-card" />

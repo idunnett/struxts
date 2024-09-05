@@ -22,7 +22,7 @@ export const getById = query({
 })
 
 export const getAllOfMyInOrgId = query({
-  args: { orgId: v.union(v.string(), v.null()) },
+  args: { orgId: v.string() },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()
     if (!currentUser)
@@ -67,7 +67,7 @@ export const getMembers = query({
 export const create = mutation({
   args: {
     name: v.string(),
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
   },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()
@@ -98,7 +98,7 @@ export const create = mutation({
 export const remove = mutation({
   args: {
     structureId: v.string(),
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
   },
   handler: async (ctx, args) => {
     const currentUser = await ctx.auth.getUserIdentity()
@@ -182,7 +182,7 @@ export const remove = mutation({
 
 export const updateName = mutation({
   args: {
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
     structureId: v.string(),
     name: v.string(),
   },

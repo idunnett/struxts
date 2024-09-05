@@ -30,6 +30,9 @@ const coreConfig = {
       },
     ],
   },
+  devIndicators: {
+    appIsrStatus: false,
+  },
   async rewrites() {
     if (process.env.NEXT_PUBLIC_VERCEL_ENV !== "production") return []
     return [

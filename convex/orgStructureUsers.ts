@@ -4,7 +4,7 @@ import { mutation, query } from "./_generated/server"
 
 export const getCurrent = query({
   args: {
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
     structureId: v.string(),
   },
   handler: async (ctx, args) => {
@@ -28,7 +28,7 @@ export const getCurrent = query({
 
 export const updateRole = mutation({
   args: {
-    orgId: v.union(v.string(), v.null()),
+    orgId: v.string(),
     structureId: v.string(),
     userId: v.string(),
     role: v.union(v.literal("Owner"), v.literal("Admin"), v.literal("Guest")),

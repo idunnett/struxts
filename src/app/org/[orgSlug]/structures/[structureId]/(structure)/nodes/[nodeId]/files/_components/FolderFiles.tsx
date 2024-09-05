@@ -63,6 +63,7 @@ import StorageImage from "./StorageImage"
 
 interface Props {
   structureId: string
+  orgId: string
   nodeId: string
   folder: Doc<"folders">
   files: Doc<"files">[]
@@ -70,6 +71,7 @@ interface Props {
 
 export default function FolderFiles({
   nodeId,
+  orgId,
   structureId,
   files,
   folder,
@@ -89,7 +91,7 @@ export default function FolderFiles({
       files: files.map(({ response, name, type, size }) => ({
         storageId: (response as { storageId: string }).storageId,
         nodeId,
-        orgId: session.orgId ?? null,
+        orgId,
         structureId,
         name,
         size,

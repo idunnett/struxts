@@ -1,8 +1,10 @@
 "use client"
 
+import { useAuth } from "@clerk/nextjs"
 import { Authenticated } from "convex/react"
 import { ErrorBoundary } from "next/dist/client/components/error-boundary"
 import ErrorDisplay from "../../../../../../../../../components/ErrorDisplay"
+import Spinner from "../../../../../../../../../components/Spinner"
 import { TabsContent } from "../../../../../../../../../components/ui/tabs"
 import Folders from "./_components/Folders"
 
@@ -17,6 +19,10 @@ interface Props {
 export default function NodeFilesTabPage({
   params: { nodeId, structureId },
 }: Props) {
+  const session = useAuth()
+
+  if (!session?.orgId) return <Spinner />
+
   return (
     <TabsContent
       value="files"
@@ -28,7 +34,11 @@ export default function NodeFilesTabPage({
             <ErrorDisplay error={error} type="component" />
           )}
         >
-          <Folders structureId={structureId} nodeId={nodeId} />
+          <Folders
+            structureId={structureId}
+            nodeId={nodeId}
+            orgId={session.orgId}
+          />
         </ErrorBoundary>
       </Authenticated>
     </TabsContent>

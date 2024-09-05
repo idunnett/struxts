@@ -57,9 +57,7 @@ export default function NodePage({
           {/* <h2 className="text-lg font-semibold">{activeNode.data.label}</h2> */}
           <h2 className="text-lg font-semibold">{activeNode.data.label}</h2>
           <Button variant="ghost" size="icon" className="h-8" asChild>
-            <Link
-              href={`/org/${orgSlug ?? session.userId}/structures/${structureId}`}
-            >
+            <Link href={`/org/${orgSlug}/structures/${structureId}`}>
               <LucideX className="h-4 w-4" />
             </Link>
           </Button>
@@ -71,14 +69,14 @@ export default function NodePage({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="info" asChild>
               <Link
-                href={`/org/${orgSlug ?? session.userId}/structures/${structureId}/nodes/${nodeId}/info`}
+                href={`/org/${orgSlug}/structures/${structureId}/nodes/${nodeId}/info`}
               >
                 Info
               </Link>
             </TabsTrigger>
             <TabsTrigger value="files" asChild>
               <Link
-                href={`/org/${orgSlug ?? session.userId}/structures/${structureId}/nodes/${nodeId}/files`}
+                href={`/org/${orgSlug}/structures/${structureId}/nodes/${nodeId}/files`}
               >
                 Files
               </Link>

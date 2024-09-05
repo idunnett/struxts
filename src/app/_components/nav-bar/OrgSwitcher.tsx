@@ -11,8 +11,8 @@ export default function OrgSwitcher() {
       </ClerkLoading>
       <ClerkLoaded>
         <OrganizationSwitcher
+          hidePersonal
           afterSelectOrganizationUrl={(org) => `/org/${org.slug}/structures`}
-          afterSelectPersonalUrl={(user) => `/org/${user.id}/structures`}
         />
       </ClerkLoaded>
     </>

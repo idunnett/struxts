@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import { LucideFolderPlus } from "lucide-react"
 import { use, useState } from "react"
@@ -16,20 +15,20 @@ import FolderFiles from "./FolderFiles"
 
 interface Props {
   nodeId: string
+  orgId: string
   structureId: string
 }
 
-export default function Folders({ nodeId, structureId }: Props) {
-  const session = useAuth()
+export default function Folders({ nodeId, orgId, structureId }: Props) {
   const folders = useQuery(api.folders.getByNode, {
     nodeId,
     structureId,
-    orgId: session.orgId ?? null,
+    orgId,
   })
   const files = useQuery(api.files.getByNode, {
     nodeId,
     structureId,
-    orgId: session.orgId ?? null,
+    orgId,
   })
   const { editable } = use(StructureContext)
   const [addFolderPopoverOpen, setAddFolderPopoverOpen] = useState(false)
@@ -78,6 +77,7 @@ export default function Folders({ nodeId, structureId }: Props) {
             files={files.filter((file) => file.folderId === folder._id)}
             folder={folder}
             nodeId={nodeId}
+            orgId={orgId}
             structureId={structureId}
           />
         ))}
