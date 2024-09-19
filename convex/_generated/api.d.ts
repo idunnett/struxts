@@ -20,6 +20,7 @@ import type * as folders from "../folders.js";
 import type * as http from "../http.js";
 import type * as nodes from "../nodes.js";
 import type * as orgStructureUsers from "../orgStructureUsers.js";
+import type * as stripe from "../stripe.js";
 import type * as structures from "../structures.js";
 
 /**
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   nodes: typeof nodes;
   orgStructureUsers: typeof orgStructureUsers;
+  stripe: typeof stripe;
   structures: typeof structures;
 }>;
 export declare const api: FilterApi<

@@ -28,6 +28,18 @@ export const edges = defineTable({
   labels: v.array(v.object({ label: v.string(), offset: v.number() })),
 }).index("by_structureId", ["structureId"])
 
+export const orgBillingAccounts = defineTable({
+  orgId: v.string(),
+  owner: v.string(),
+  stripeCustomerId: v.union(v.string(), v.null()),
+  package: v.union(
+    v.literal("free"),
+    v.literal("pro"),
+    v.literal("enterprise"),
+  ),
+  status: v.union(v.literal("active"), v.literal("inactive")),
+})
+
 export const orgStructureUsers = defineTable({
   userId: v.string(),
   orgId: v.string(),
@@ -54,6 +66,7 @@ export const folders = defineTable({
 })
 
 export default defineSchema({
+  orgBillingAccounts,
   orgStructureUsers,
   structures,
   nodes,

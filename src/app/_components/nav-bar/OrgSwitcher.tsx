@@ -1,9 +1,11 @@
 "use client"
 
 import { ClerkLoaded, ClerkLoading, OrganizationSwitcher } from "@clerk/nextjs"
+import { usePathname } from "next/navigation"
 import { Skeleton } from "../../../components/ui/skeleton"
 
 export default function OrgSwitcher() {
+  const pathname = usePathname()
   return (
     <>
       <ClerkLoading>
@@ -12,7 +14,10 @@ export default function OrgSwitcher() {
       <ClerkLoaded>
         <OrganizationSwitcher
           hidePersonal
-          afterSelectOrganizationUrl={(org) => `/org/${org.slug}/structures`}
+          afterSelectOrganizationUrl={(org) => {
+            if (pathname === "/pricing") return `/pricing`
+            return `/org/${org.slug}/structures`
+          }}
         />
       </ClerkLoaded>
     </>

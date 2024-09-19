@@ -79,7 +79,7 @@ export default function ErrorDisplay({
         <p className="text-lg">{errorDetails.message}</p>
       </div>
       <Link
-        href={hasActiveOrg ? `/orgs/${session.orgSlug}` : "/"}
+        href={hasActiveOrg ? `/org/${session.orgSlug}/structures` : "/"}
         className={buttonVariants({
           variant: "secondary",
         })}

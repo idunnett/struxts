@@ -11,6 +11,7 @@ export default function MyOrgsPage() {
           hidePersonal
           afterSelectOrganizationUrl={(org) => `/org/${org.slug}/structures`}
           afterSelectPersonalUrl={(user) => `/org/${user.id}/structures`}
+          afterCreateOrganizationUrl={(org) => `/org/${org.slug}/structures`}
         />
       </div>
     </div>
