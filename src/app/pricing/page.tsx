@@ -1,77 +1,89 @@
-import { Button } from "../../components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card"
+import { auth, clerkClient } from "@clerk/nextjs/server"
+import Image from "next/image"
+import Stripe from "stripe"
+import { env } from "../../env"
+import { PricingTable } from "./_components/PricingTable"
 
-export default function PricingPage() {
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
+
+export default async function PricingPage() {
+  const session = auth()
+
+  const org = session.orgId
+    ? await clerkClient().organizations.getOrganization({
+        organizationId: session.orgId,
+      })
+    : undefined
+  const products = (
+    await stripe.products.list({
+      expand: ["data.default_price"],
+      active: true,
+    })
+  ).data as (Stripe.Product & {
+    default_price: Stripe.Price
+  })[]
+
+  products.sort((a, b) => {
+    if (a.default_price?.billing_scheme !== b.default_price?.billing_scheme)
+      return a.default_price?.billing_scheme === "per_unit" ? -1 : 1
+
+    return (
+      (a.default_price?.unit_amount ?? 0) - (b.default_price?.unit_amount ?? 0)
+    )
+  })
+
+  let prices: (Stripe.Price & { tiers?: Stripe.Price.Tier[] })[] = []
+  for (const product of products) {
+    const price = (await stripe.prices.retrieve(product.default_price.id, {
+      expand: ["tiers"], // To get tiered pricing details, if applicable
+    })) as Stripe.Price & { tiers?: Stripe.Price.Tier[] }
+    prices.push({ ...price })
+  }
+
+  let subscription: Stripe.Subscription | undefined
+  const customerId = org?.publicMetadata?.customer as string | undefined
+  if (org && customerId) {
+    try {
+      subscription = (
+        await stripe.subscriptions.search({
+          query: `metadata["orgId"]:"${org.id}" AND status:"active"`,
+        })
+      ).data?.[0]
+    } catch (error) {
+      console.error("Error fetching customer:", error)
+    }
+  }
+
+  let currentPlanProducId: string | undefined
+  if (subscription)
+    currentPlanProducId = products.find(
+      (product) => product.id === (org?.publicMetadata?.plan as any)?.product,
+    )?.id
+
   return (
     <div className="container mx-auto flex h-full w-full flex-col items-center lg:px-28">
-      <div className="relative flex h-1/6 items-center justify-center">
+      <div className="relative flex h-1/6 items-center justify-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800 sm:text-4xl">
-          Pricing
+          Pricing{org && " -"}
         </h1>
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_40px_40px_rgba(77,60,139,0.2)]" />
+        {org && (
+          <div className="flex items-center gap-4">
+            <Image
+              src={org.imageUrl}
+              alt={org.name}
+              width={40}
+              height={40}
+              className="rounded-md"
+            />
+            <h1 className="text-2xl font-bold sm:text-4xl">{org.name}</h1>
+          </div>
+        )}
       </div>
-      <div className="flex w-full gap-2">
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle>Free Plan</CardTitle>
-            <CardDescription>Card Description</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="pl-4">
-              <li className="list-item list-disc">3 members</li>
-              <li className="list-item list-disc">1 structure</li>
-              <li className="list-item list-disc">50 nodes</li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button size="sm">Get started for free</Button>
-          </CardFooter>
-        </Card>
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle>Pro Plan</CardTitle>
-            <CardDescription>Card Description</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="pl-4">
-              <li className="list-item list-disc">100 members</li>
-              <li className="list-item list-disc">10 structures</li>
-              <li className="list-item list-disc">500 nodes per structure</li>
-              <li className="list-item list-disc">Node Files</li>
-              <li className="list-item list-disc">1GB of node file storage</li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button size="sm">Upgrade</Button>
-          </CardFooter>
-        </Card>
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle>Enterprise</CardTitle>
-            <CardDescription>Card Description</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="pl-4">
-              <li className="list-item list-disc">Unlimited members</li>
-              <li className="list-item list-disc">Unlimited structures</li>
-              <li className="list-item list-disc">Unlimited nodes</li>
-              <li className="list-item list-disc">
-                Unlimited node file storage
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button size="sm">Contact Us for Pricing</Button>
-          </CardFooter>
-        </Card>
-      </div>
+      <PricingTable
+        products={products}
+        prices={prices}
+        currentPlanProductId={currentPlanProducId}
+      />
     </div>
   )
 }

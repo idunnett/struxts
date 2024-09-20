@@ -12,6 +12,7 @@ export const env = createEnv({
       .default("development"),
     CLERK_SECRET_KEY: z.string(),
     SENTRY_AUTH_TOKEN: z.string(),
+    STRIPE_SECRET_KEY: z.string(),
   },
 
   /**
@@ -27,6 +28,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_HOST: z.string(),
     NEXT_PUBLIC_CONVEX_URL: z.string(),
     NEXT_PUBLIC_CONVEX_SITE_URL: z.string(),
+    NEXT_PUBLIC_STRIPE_PUBLIC_KEY: z.string(),
   },
 
   /**
@@ -35,15 +37,17 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    NEXT_PUBLIC_STRIPE_PUBLIC_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -2,13 +2,11 @@
 
 import { SignedIn, SignedOut, useOrganization, UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { buttonVariants } from "~/components/ui/button"
 import OrgSwitcher from "./OrgSwitcher"
 import StructureSwitcher from "./StructureSwitcher"
 
 export default function NavBar() {
-  const pathname = usePathname()
   const org = useOrganization()
 
   return (
@@ -18,26 +16,35 @@ export default function NavBar() {
           <Link href="/">
             <h1 className="text-xl font-bold text-primary">Struxts</h1>
           </Link>
-          {pathname.startsWith("/org") ? (
-            <SignedIn>
-              <div className="h-1/2 w-[1px] rotate-12 bg-muted-foreground" />
-              <OrgSwitcher />
-              {org.organization && <StructureSwitcher />}
-            </SignedIn>
-          ) : (
-            <Link
-              href="/pricing"
-              className={buttonVariants({
-                variant: "ghost",
-                size: "sm",
-              })}
-            >
-              Pricing
-            </Link>
-          )}
-        </div>
-        <div>
           <SignedIn>
+            <div className="h-1/2 w-[1px] rotate-12 bg-muted-foreground" />
+            <OrgSwitcher />
+            {org.organization && <StructureSwitcher />}
+          </SignedIn>
+        </div>
+        <div className="flex items-center gap-4">
+          <SignedIn>
+            {org.organization ? (
+              <Link
+                href={`/org/${org.organization.slug}/billing`}
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "sm",
+                })}
+              >
+                Billing
+              </Link>
+            ) : (
+              <Link
+                href="/pricing"
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "sm",
+                })}
+              >
+                Pricing
+              </Link>
+            )}
             <UserButton />
           </SignedIn>
           <SignedOut>
