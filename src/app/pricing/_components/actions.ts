@@ -3,6 +3,7 @@
 import { auth, clerkClient, currentUser } from "@clerk/nextjs/server"
 import Stripe from "stripe"
 import { env } from "../../../env"
+import { getOrigin } from "../../../lib/utils"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
@@ -53,10 +54,7 @@ export async function createStripeCheckoutSession(
         "You must have an email address to create a checkout session.",
     }
 
-  const origin = process.env.NEXT_PUBLIC_VERCEL_URL
-    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-    : "http://localhost:3000"
-
+  const origin = getOrigin()
   const stripeSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [

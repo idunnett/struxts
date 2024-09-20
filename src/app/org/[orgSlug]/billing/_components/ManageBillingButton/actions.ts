@@ -2,6 +2,7 @@
 
 import Stripe from "stripe"
 import { env } from "../../../../../../env"
+import { getOrigin } from "../../../../../../lib/utils"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
@@ -12,9 +13,7 @@ export async function createCustomerPortalSession({
   orgId: string
   customerId: string
 }) {
-  const origin = process.env.NEXT_PUBLIC_VERCEL_URL
-    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-    : "http://localhost:3000"
+  const origin = getOrigin()
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
