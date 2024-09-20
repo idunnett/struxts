@@ -33,9 +33,7 @@ export function PricingTable({
   const session = useAuth()
   const organization = useOrganization()
 
-  const isFreePlan =
-    organization.isLoaded &&
-    organization.organization?.publicMetadata?.plan === undefined
+  const isFreePlan = currentPlanProductId === undefined
 
   return (
     <div className="flex h-96 w-full gap-2">

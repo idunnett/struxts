@@ -53,14 +53,18 @@ export async function createStripeCheckoutSession(
         "You must have an email address to create a checkout session.",
     }
 
-  const origin = process.env.VERCEL_URL ?? "http://localhost:3000"
+  const origin = process.env.NEXT_PUBLIC_VERCEL_URL ?? "http://localhost:3000"
 
   const stripeSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     line_items: [
       { ...lineItem, quantity: type === "tiered" ? orgMembersCount : 1 },
     ],
-    success_url: `${origin}/checkout?session_id={CHECKOUT_SESSION_ID}`,
+    billing_address_collection: "required",
+    tax_id_collection: {
+      enabled: true, // Enable collection of tax IDs for businesses
+    },
+    success_url: `${origin}/org/${orgId}/billing`,
     cancel_url: `${origin}/pricing`,
     customer_email: emailAddress,
     subscription_data: {

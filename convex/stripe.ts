@@ -58,13 +58,12 @@ export const fulfill = internalAction({
         )
         let maxAllowedMemberships = product.metadata.members
           ? Number(product.metadata.members)
-          : 3
-        if (isNaN(maxAllowedMemberships)) maxAllowedMemberships = 3
+          : 1
+        if (isNaN(maxAllowedMemberships)) maxAllowedMemberships = 1
 
         await clerkClient.organizations.updateOrganization(organization.id, {
           maxAllowedMemberships,
           publicMetadata: {
-            ...organization.publicMetadata,
             customer: subscription.customer,
             plan: subscription.plan,
             nodesPerStructure: product.metadata.nodesPerStructure,

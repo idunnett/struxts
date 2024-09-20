@@ -1,6 +1,4 @@
-import { LucidePencil } from "lucide-react"
 import Stripe from "stripe"
-import { Button } from "../../../../../../components/ui/button"
 
 interface Props {
   customer: Stripe.Customer
@@ -32,14 +30,14 @@ export default function BillingInformation({ customer }: Props) {
           )}
         </div>
       </div>
-      <Button
+      {/* <Button
         variant="ghost"
         size="sm"
         className="w-min gap-2 text-muted-foreground hover:text-foreground"
       >
         <LucidePencil size={14} />
         Update Information
-      </Button>
+      </Button> */}
     </div>
   )
 }

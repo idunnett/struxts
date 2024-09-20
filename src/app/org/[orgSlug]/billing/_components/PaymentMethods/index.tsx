@@ -1,28 +1,8 @@
 "use client"
 
-import { LucideEllipsisVertical, LucidePlus, LucideX } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useTransition } from "react"
 import Stripe from "stripe"
-import Spinner from "../../../../../../components/Spinner"
 import { Badge } from "../../../../../../components/ui/badge"
-import { Button } from "../../../../../../components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "../../../../../../components/ui/dialog"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../../../../../components/ui/popover"
 import { cn } from "../../../../../../lib/utils"
-import {
-  deletePaymentMethodAction,
-  setDefaultPaymentMethodAction,
-} from "./actions"
-import AddPaymentMethod from "./AddPaymentMethod"
 
 interface Props {
   customer: Stripe.Customer
@@ -30,25 +10,25 @@ interface Props {
 }
 
 export default function PaymentMethods({ customer, paymentMethods }: Props) {
-  const [isPending, startTransition] = useTransition()
-  const router = useRouter()
+  // const [isPending, startTransition] = useTransition()
+  // const router = useRouter()
 
-  function handleMakePaymentMethodDefault(paymentMethodId: string) {
-    startTransition(async () => {
-      await setDefaultPaymentMethodAction({
-        customerId: customer.id,
-        paymentMethodId,
-      })
-      router.refresh()
-    })
-  }
+  // function handleMakePaymentMethodDefault(paymentMethodId: string) {
+  //   startTransition(async () => {
+  //     await setDefaultPaymentMethodAction({
+  //       customerId: customer.id,
+  //       paymentMethodId,
+  //     })
+  //     router.refresh()
+  //   })
+  // }
 
-  function handleDeletePaymentMethod(paymentMethodId: string) {
-    startTransition(async () => {
-      await deletePaymentMethodAction({ paymentMethodId })
-      router.refresh()
-    })
-  }
+  // function handleDeletePaymentMethod(paymentMethodId: string) {
+  //   startTransition(async () => {
+  //     await deletePaymentMethodAction({ paymentMethodId })
+  //     router.refresh()
+  //   })
+  // }
 
   return (
     <div className="flex flex-col gap-2">
@@ -56,17 +36,17 @@ export default function PaymentMethods({ customer, paymentMethods }: Props) {
         PAYMENT METHODS
       </span>
       <div className="relative flex flex-col gap-2">
-        {isPending && (
+        {/* {isPending && (
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Spinner />
           </div>
-        )}
+        )} */}
         {paymentMethods.map((method) => (
           <div
             key={method.id}
             className={cn(
               "flex items-center justify-between gap-8",
-              isPending && "opacity-10",
+              // isPending && "opacity-10",
             )}
           >
             <div className="flex items-center gap-2">
@@ -84,7 +64,7 @@ export default function PaymentMethods({ customer, paymentMethods }: Props) {
                   {method.card.exp_year}
                 </span>
               )}
-              {method.id ===
+              {/* {method.id ===
               customer.invoice_settings.default_payment_method ? (
                 <button disabled className="text-muted-foreground">
                   <LucideX size={16} />
@@ -123,11 +103,11 @@ export default function PaymentMethods({ customer, paymentMethods }: Props) {
                     </Button>
                   </PopoverContent>
                 </Popover>
-              )}
+              )} */}
             </div>
           </div>
         ))}
-        <Dialog>
+        {/* <Dialog>
           <DialogTrigger asChild>
             <Button
               variant="ghost"
@@ -145,7 +125,7 @@ export default function PaymentMethods({ customer, paymentMethods }: Props) {
           <DialogContent forceMount>
             <AddPaymentMethod customerId={customer.id} />
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
     </div>
   )

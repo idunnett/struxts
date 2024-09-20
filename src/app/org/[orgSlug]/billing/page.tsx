@@ -24,6 +24,7 @@ import { env } from "../../../../env"
 import { convertFromSubcurrency } from "../../../../lib/currencyUtils"
 import { cn } from "../../../../lib/utils"
 import BillingInformation from "./_components/BillingInformation"
+import ManageBillingButton from "./_components/ManageBillingButton"
 import PaymentMethods from "./_components/PaymentMethods"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
@@ -40,42 +41,16 @@ export default async function BillingPage() {
   if (!org)
     return <ErrorDisplay message="Organization not found" statusCode={404} />
 
-  const currentPlanProductId = (org?.publicMetadata?.plan as any)?.product as
-    | string
-    | undefined
-  let product:
-    | (Stripe.Product & {
-        default_price: Stripe.Price
-      })
-    | undefined
-  let price: (Stripe.Price & { tiers?: Stripe.Price.Tier[] }) | undefined
-  if (currentPlanProductId)
-    product = (await stripe.products.retrieve(currentPlanProductId, {
-      expand: ["default_price"],
-    })) as Stripe.Product & {
-      default_price: Stripe.Price
-    }
-
-  if (product)
-    price = (await stripe.prices.retrieve(product.default_price.id, {
-      expand: ["tiers"], // To get tiered pricing details, if applicable
-    })) as Stripe.Price & { tiers?: Stripe.Price.Tier[] }
-
-  const tier = price?.tiers?.[0]
-  let productName = product?.name ?? "Free Plan"
-  if (productName.startsWith("Struxts - ")) productName = productName.slice(9)
-  let tierPriceString = ""
-  if (tier) {
-    if (tier.flat_amount && tier.unit_amount)
-      tierPriceString = `$${convertFromSubcurrency(tier.flat_amount)} + $${convertFromSubcurrency(tier.unit_amount)} per member`
-  }
-
   const customerId = org.publicMetadata?.customer as string | undefined
   let customer: Stripe.Customer | Stripe.DeletedCustomer | null = null
   let paymentMethods: Stripe.ApiList<Stripe.PaymentMethod> | undefined
   if (customerId) {
-    const stripeCustomer = await stripe.customers.retrieve(customerId)
-    if (!stripeCustomer.deleted) customer = stripeCustomer
+    try {
+      const stripeCustomer = await stripe.customers.retrieve(customerId)
+      if (!stripeCustomer.deleted) customer = stripeCustomer
+    } catch (error) {
+      console.error("Error fetching customer:", error)
+    }
   }
   let subscription: Stripe.Subscription | undefined
   if (customer) {
@@ -89,11 +64,46 @@ export default async function BillingPage() {
     ).data?.[0]
   }
 
+  const currentPlanProductId = (org?.publicMetadata?.plan as any)?.product as
+    | string
+    | undefined
+  let product:
+    | (Stripe.Product & {
+        default_price: Stripe.Price
+      })
+    | undefined
+  let price: (Stripe.Price & { tiers?: Stripe.Price.Tier[] }) | undefined
+  if (currentPlanProductId && subscription) {
+    try {
+      product = (await stripe.products.retrieve(currentPlanProductId, {
+        expand: ["default_price"],
+      })) as Stripe.Product & {
+        default_price: Stripe.Price
+      }
+    } catch (error) {
+      console.error("Error fetching product:", error)
+    }
+
+    if (product)
+      price = (await stripe.prices.retrieve(product.default_price.id, {
+        expand: ["tiers"], // To get tiered pricing details, if applicable
+      })) as Stripe.Price & { tiers?: Stripe.Price.Tier[] }
+  }
+
+  const tier = price?.tiers?.[0]
+  let productName = product?.name ?? "Free Plan"
+  if (productName.startsWith("Struxts - ")) productName = productName.slice(9)
+  let tierPriceString = ""
+  if (tier) {
+    if (tier.flat_amount && tier.unit_amount)
+      tierPriceString = `$${convertFromSubcurrency(tier.flat_amount)} + $${convertFromSubcurrency(tier.unit_amount)} per member`
+  }
+
   return (
     <div className="container mx-auto flex h-full w-full flex-col items-center gap-4 overflow-auto py-8 lg:px-28">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex flex-col gap-3 text-base">
+          <CardTitle className="flex justify-between gap-3 text-base">
             <div className="relative flex h-1/6 items-center gap-4">
               <h1 className="text-2xl font-bold text-gray-800 sm:text-4xl">
                 Billing -
@@ -109,6 +119,9 @@ export default async function BillingPage() {
                 <h1 className="text-2xl font-bold sm:text-4xl">{org.name}</h1>
               </div>
             </div>
+            {customer && (
+              <ManageBillingButton orgId={org.id} customerId={customer.id} />
+            )}
           </CardTitle>
           <CardDescription>{product?.description}</CardDescription>
         </CardHeader>
@@ -177,11 +190,11 @@ export default async function BillingPage() {
               <Button asChild>
                 <Link href="/pricing">Change Plan</Link>
               </Button>
-              {subscription && (
+              {/* {subscription && (
                 <Button variant="outline">
                   {subscription.cancel_at_period_end ? "Renew" : "Cancel"} Plan
                 </Button>
-              )}
+              )} */}
             </div>
             {subscription && (
               <div className="flex items-center gap-2 pt-4">

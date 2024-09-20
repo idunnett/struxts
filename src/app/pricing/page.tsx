@@ -40,9 +40,25 @@ export default async function PricingPage() {
     prices.push({ ...price })
   }
 
-  const currentPlanProducId = products.find(
-    (product) => product.id === (org?.publicMetadata?.plan as any)?.product,
-  )?.id
+  let subscription: Stripe.Subscription | undefined
+  const customerId = org?.publicMetadata?.customer as string | undefined
+  if (org && customerId) {
+    try {
+      subscription = (
+        await stripe.subscriptions.search({
+          query: `metadata["orgId"]:"${org.id}" AND status:"active"`,
+        })
+      ).data?.[0]
+    } catch (error) {
+      console.error("Error fetching customer:", error)
+    }
+  }
+
+  let currentPlanProducId: string | undefined
+  if (subscription)
+    currentPlanProducId = products.find(
+      (product) => product.id === (org?.publicMetadata?.plan as any)?.product,
+    )?.id
 
   return (
     <div className="container mx-auto flex h-full w-full flex-col items-center lg:px-28">
