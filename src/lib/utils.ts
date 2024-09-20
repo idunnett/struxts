@@ -32,3 +32,16 @@ export async function downloadFile(
   const src = URL.createObjectURL(blob)
   return { src, width, height }
 }
+
+export function getOrigin() {
+  if (
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "production" &&
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+  )
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+
+  if (process.env.NEXT_PUBLIC_VERCEL_URL)
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+
+  return "http://localhost:3000"
+}

@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react"
 import { toast } from "sonner"
 import Spinner from "../../../../../../components/Spinner"
 import { Button } from "../../../../../../components/ui/button"
+import { getOrigin } from "../../../../../../lib/utils"
 
 export default function PaymentMethodForm() {
   const stripe = useStripe()
@@ -16,9 +17,7 @@ export default function PaymentMethodForm() {
 
     if (!stripe || !elements || !org.organization) return
 
-    const origin = process.env.NEXT_PUBLIC_VERCEL_URL
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-      : "http://localhost:3000"
+    const origin = getOrigin()
     setLoading(true)
     // Confirm the SetupIntent to attach the payment method to the customer
     const { error } = await stripe.confirmSetup({
