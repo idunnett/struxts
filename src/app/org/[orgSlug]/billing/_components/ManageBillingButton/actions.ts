@@ -12,10 +12,13 @@ export async function createCustomerPortalSession({
   orgId: string
   customerId: string
 }) {
+  const origin = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : "http://localhost:3000"
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${process.env.NEXT_PUBLIC_VERCEL_URL ?? "http://localhost:3000"}/org/${orgId}/billing`, // Change to your desired return URL
+      return_url: `${origin}/org/${orgId}/billing`, // Change to your desired return URL
     })
 
     return { success: true, url: session.url }

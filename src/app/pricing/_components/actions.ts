@@ -53,7 +53,9 @@ export async function createStripeCheckoutSession(
         "You must have an email address to create a checkout session.",
     }
 
-  const origin = process.env.NEXT_PUBLIC_VERCEL_URL ?? "http://localhost:3000"
+  const origin = process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : "http://localhost:3000"
 
   const stripeSession = await stripe.checkout.sessions.create({
     mode: "subscription",

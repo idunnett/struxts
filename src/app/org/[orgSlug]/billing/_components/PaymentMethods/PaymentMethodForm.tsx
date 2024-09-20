@@ -16,7 +16,9 @@ export default function PaymentMethodForm() {
 
     if (!stripe || !elements || !org.organization) return
 
-    const origin = process.env.NEXT_PUBLIC_VERCEL_URL ?? "http://localhost:3000"
+    const origin = process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : "http://localhost:3000"
     setLoading(true)
     // Confirm the SetupIntent to attach the payment method to the customer
     const { error } = await stripe.confirmSetup({
