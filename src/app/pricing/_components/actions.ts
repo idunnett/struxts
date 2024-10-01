@@ -45,8 +45,6 @@ export async function createStripeCheckoutSession(
     user.primaryEmailAddress?.emailAddress ??
     user.emailAddresses[0]?.emailAddress
 
-  console.log("emailAddress::", emailAddress)
-
   if (!emailAddress)
     return {
       sessionId: null,

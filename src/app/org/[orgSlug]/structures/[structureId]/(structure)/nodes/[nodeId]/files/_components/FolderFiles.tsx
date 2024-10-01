@@ -134,7 +134,18 @@ export default function FolderFiles({
   async function downloadFileToDisk(storageId: string, name: string) {
     const toastId = toast.loading("Downloading file...")
     const token = await session.getToken({ template: "convex" })
-    const file = await downloadFile(storageId, { token })
+    let file: {
+      src: string
+      width: number
+      height: number
+    } | null = null
+    try {
+      file = await downloadFile(storageId, { token })
+    } catch (error) {
+      toast.error("Failed to download file", { id: toastId })
+      throw error
+    }
+    if (!file) return
     const a = document.createElement("a")
     a.href = file.src
     a.download = name
