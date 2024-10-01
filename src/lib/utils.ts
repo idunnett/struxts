@@ -26,11 +26,16 @@ export async function downloadFile(
       Authorization: `Bearer ${opts.token}`,
     },
   }).blob()
-  const bmp = await createImageBitmap(blob)
-  const { width, height } = bmp
-  bmp.close() // free memory
-  const src = URL.createObjectURL(blob)
-  return { src, width, height }
+
+  if (blob.type.startsWith("image/")) {
+    const bmp = await createImageBitmap(blob)
+    const { width, height } = bmp
+    bmp.close() // free memory
+    const src = URL.createObjectURL(blob)
+    return { src, width, height }
+  }
+
+  return { src: URL.createObjectURL(blob), width: 0, height: 0 }
 }
 
 export function getOrigin() {

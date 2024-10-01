@@ -21,7 +21,6 @@ export const fulfill = internalAction({
         webhookSecret,
       )
 
-      console.log("WEBHOOK EVENT::", event)
       if (event.type === "customer.subscription.updated") {
         const orgId = event.data.object.metadata.orgId
         const userId = event.data.object.metadata.userId
@@ -41,9 +40,6 @@ export const fulfill = internalAction({
         const currentStripeSubscriptions = await stripe.subscriptions.search({
           query: `metadata["orgId"]:"${orgId}" AND status:"active"`,
         })
-
-        console.log("currentOrgPlan::", currentOrgPlan)
-        console.log("currentStripeSubscriptions::", currentStripeSubscriptions)
 
         for (const subscription of currentStripeSubscriptions.data) {
           if (subscription.id === event.data.object.id) continue
