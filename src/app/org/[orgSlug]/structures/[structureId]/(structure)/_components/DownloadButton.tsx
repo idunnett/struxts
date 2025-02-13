@@ -19,8 +19,8 @@ function downloadImage(dataUrl: string, structureName: string) {
   a.click()
 }
 
-const imageWidth = 1024
-const imageHeight = 768
+const imageWidth = 4200
+const imageHeight = 2550
 
 function DownloadButton({ structureName }: Props) {
   const { getNodes } = useReactFlow()
