@@ -1,9 +1,11 @@
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server"
 import { Inter } from "next/font/google"
+import { Suspense } from "react"
+
 import NavBar from "~/app/_components/nav-bar"
 import { Toaster } from "~/components/ui/sonner"
 import { cn } from "~/lib/utils"
 
-import { Suspense } from "react"
 import "~/styles/globals.css"
 import SentryFeedbackWidget from "../lib/sentry-feedback"
 import { ConvexClientProvider } from "./ConvexClientProvider"
@@ -27,27 +29,29 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body
-        className={cn(
-          "relative flex h-screen flex-col bg-background font-sans antialiased",
-          inter.variable,
-        )}
-      >
-        <ConvexClientProvider>
-          <PHProvider>
-            <NavBar />
-            <main className="min-h-0 grow overflow-auto">
-              <Suspense>
-                <PostHogPageView />
-              </Suspense>
-              {children}
-            </main>
-            <Toaster theme="light" className="bg-card" />
-          </PHProvider>
-          <SentryFeedbackWidget />
-        </ConvexClientProvider>
-      </body>
-    </html>
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en">
+        <body
+          className={cn(
+            "relative flex h-screen flex-col bg-background font-sans antialiased",
+            inter.variable,
+          )}
+        >
+          <ConvexClientProvider>
+            <PHProvider>
+              <NavBar />
+              <main className="min-h-0 grow overflow-auto">
+                <Suspense>
+                  <PostHogPageView />
+                </Suspense>
+                {children}
+              </main>
+              <Toaster theme="light" className="bg-card" />
+            </PHProvider>
+            <SentryFeedbackWidget />
+          </ConvexClientProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   )
 }

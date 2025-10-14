@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import ky from "ky"
 import { twMerge } from "tailwind-merge"
+import { Doc } from "../../convex/_generated/dataModel"
 import { env } from "../env"
 
 export function cn(...inputs: ClassValue[]) {
@@ -49,4 +50,15 @@ export function getOrigin() {
     return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
 
   return "http://localhost:3000"
+}
+
+export function getInitials(user: Doc<"users"> | null | undefined) {
+  return (
+    user?.name
+      ?.split(" ")
+      .map((name) => name[0])
+      .join("") ||
+    user?.email?.split("@")[0]?.slice(0, 2) ||
+    "..."
+  ).toUpperCase()
 }

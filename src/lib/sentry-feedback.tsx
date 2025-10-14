@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
+import { useAuthToken } from "@convex-dev/auth/react"
 import * as Sentry from "@sentry/nextjs"
 import { useEffect, useState } from "react"
 
@@ -31,9 +31,9 @@ function useFeedbackWidget(shouldMount: boolean) {
 }
 
 export default function SentryFeedbackWidget() {
-  const auth = useAuth()
+  const token = useAuthToken()
   useFeedbackWidget(
-    !!auth?.isSignedIn && process.env.NEXT_PUBLIC_VERCEL_ENV === "production",
+    !!token && process.env.NEXT_PUBLIC_VERCEL_ENV === "production",
   )
 
   return null

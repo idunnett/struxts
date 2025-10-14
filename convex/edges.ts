@@ -1,3 +1,4 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { mutation, query } from "./_generated/server"
@@ -7,8 +8,8 @@ export const getByStructureId = query({
     structureId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to view edges",

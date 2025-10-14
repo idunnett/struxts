@@ -1,22 +1,21 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { mutation, query } from "./_generated/server"
 
 export const getCurrent = query({
   args: {
-    orgId: v.string(),
     structureId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser) return null
+    const userId = await getAuthUserId(ctx)
+    if (!userId) return null
 
     const orgStructureUser = await ctx.db
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), args.structureId),
         ),
       )
@@ -28,22 +27,20 @@ export const getCurrent = query({
 
 export const updateRole = mutation({
   args: {
-    orgId: v.string(),
     structureId: v.string(),
     userId: v.string(),
     role: v.union(v.literal("Owner"), v.literal("Admin"), v.literal("Guest")),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
 
     const currentOrgStructureUser = await ctx.db
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.userId),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), args.structureId),
         ),
       )
@@ -56,7 +53,6 @@ export const updateRole = mutation({
       .filter((q) =>
         q.and(
           q.eq(q.field("userId"), args.userId),
-          q.eq(q.field("orgId"), args.orgId),
           q.eq(q.field("structureId"), args.structureId),
         ),
       )
@@ -70,7 +66,7 @@ export const updateRole = mutation({
 
     if (
       orgStructureUserToUpdate.role === "Owner" &&
-      orgStructureUserToUpdate.userId !== currentUser.userId
+      orgStructureUserToUpdate.userId !== userId
     )
       throw new CustomConvexError({
         statusCode: 403,
@@ -83,13 +79,12 @@ export const updateRole = mutation({
 
 export const create = mutation({
   args: {
-    orgId: v.string(),
     structureId: v.string(),
-    userId: v.string(),
+    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const currentUserId = await getAuthUserId(ctx)
+    if (!(await getAuthUserId(ctx)))
       throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
 
     const serializedStructureId = ctx.db.normalizeId(
@@ -106,8 +101,7 @@ export const create = mutation({
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.userId),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), currentUserId),
           q.eq(q.field("structureId"), serializedStructureId),
         ),
       )
@@ -120,7 +114,6 @@ export const create = mutation({
       .filter((q) =>
         q.and(
           q.eq(q.field("userId"), args.userId),
-          q.eq(q.field("orgId"), args.orgId),
           q.eq(q.field("structureId"), serializedStructureId),
         ),
       )
@@ -133,7 +126,6 @@ export const create = mutation({
       })
 
     await ctx.db.insert("orgStructureUsers", {
-      orgId: args.orgId,
       structureId: serializedStructureId,
       userId: args.userId,
       role: "Guest",
@@ -143,13 +135,12 @@ export const create = mutation({
 
 export const remove = mutation({
   args: {
-    orgId: v.string(),
     structureId: v.string(),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
 
     const serializedStructureId = ctx.db.normalizeId(
@@ -166,8 +157,7 @@ export const remove = mutation({
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.userId),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), serializedStructureId),
         ),
       )
@@ -180,7 +170,6 @@ export const remove = mutation({
       .filter((q) =>
         q.and(
           q.eq(q.field("userId"), args.userId),
-          q.eq(q.field("orgId"), args.orgId),
           q.eq(q.field("structureId"), serializedStructureId),
         ),
       )

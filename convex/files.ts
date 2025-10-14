@@ -1,3 +1,4 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { Id } from "./_generated/dataModel"
@@ -6,13 +7,12 @@ import { mutation, query, QueryCtx } from "./_generated/server"
 export async function getNodeFiles(
   ctx: QueryCtx,
   args: {
-    orgId: string
     structureId: string
     nodeId: string
   },
 ) {
-  const currentUser = await ctx.auth.getUserIdentity()
-  if (!currentUser)
+  const userId = await getAuthUserId(ctx)
+  if (!userId)
     throw new CustomConvexError({
       statusCode: 401,
       message: "You must be logged in to view files",
@@ -39,18 +39,12 @@ export async function getNodeFiles(
       statusCode: 404,
       message: "Structure not found",
     })
-  if (structure.orgId !== args.orgId)
-    throw new CustomConvexError({
-      statusCode: 403,
-      message: "You do not have permission to view files in this structure",
-    })
 
   const orgStructureUser = await ctx.db
     .query("orgStructureUsers")
     .filter((q) =>
       q.and(
-        q.eq(q.field("orgId"), args.orgId),
-        q.eq(q.field("userId"), currentUser.subject),
+        q.eq(q.field("userId"), userId),
         q.eq(q.field("structureId"), serializedStructureId),
       ),
     )
@@ -65,7 +59,6 @@ export async function getNodeFiles(
     .query("files")
     .filter((q) =>
       q.and(
-        q.eq(q.field("orgId"), args.orgId),
         q.eq(q.field("nodeId"), serializedNodeId),
         q.eq(q.field("structureId"), serializedStructureId),
       ),
@@ -75,7 +68,6 @@ export async function getNodeFiles(
 
 export const getByNode = query({
   args: {
-    orgId: v.string(),
     nodeId: v.string(),
     structureId: v.string(),
   },
@@ -87,8 +79,8 @@ export const getNodeFileByStorageId = query({
     storageId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to view files",
@@ -110,14 +102,12 @@ export const getNodeFileByStorageId = query({
         statusCode: 404,
         message: "Structure not found",
       })
-    const orgId = file.orgId
 
     const orgStructureUser = await ctx.db
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("orgId"), orgId),
-          q.eq(q.field("userId"), currentUser.subject),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), structureId),
         ),
       )
@@ -135,8 +125,8 @@ export const getNodeFileByStorageId = query({
 
 export const generateUploadUrl = mutation({
   handler: async (ctx) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to upload files",
@@ -154,7 +144,6 @@ export const saveFiles = mutation({
         storageId: v.string(),
         nodeId: v.string(),
         structureId: v.string(),
-        orgId: v.string(),
         name: v.string(),
         size: v.number(),
         type: v.string(),
@@ -163,8 +152,8 @@ export const saveFiles = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to upload files",
@@ -174,7 +163,6 @@ export const saveFiles = mutation({
     for (const {
       storageId,
       nodeId,
-      orgId,
       structureId,
       name,
       size,
@@ -205,7 +193,6 @@ export const saveFiles = mutation({
       promises.push(
         ctx.db.insert("files", {
           storageId,
-          orgId,
           nodeId: serializedNodeId,
           structureId: serializedStructureId,
           name,
@@ -224,8 +211,8 @@ export const deleteFile = mutation({
     storageId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to delete files",
@@ -247,14 +234,12 @@ export const deleteFile = mutation({
         statusCode: 404,
         message: "Structure not found",
       })
-    const orgId = file.orgId
 
     const orgStructureUser = await ctx.db
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("orgId"), orgId),
-          q.eq(q.field("userId"), currentUser.subject),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), structureId),
         ),
       )

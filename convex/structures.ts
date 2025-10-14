@@ -1,6 +1,7 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
-import { Id } from "./_generated/dataModel"
+import { Doc, Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 
 export const getById = query({
@@ -8,8 +9,8 @@ export const getById = query({
     id: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to view structures",
@@ -21,11 +22,10 @@ export const getById = query({
   },
 })
 
-export const getAllOfMyInOrgId = query({
-  args: { orgId: v.string() },
-  handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+export const getAllOfMy = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to view structures",
@@ -33,12 +33,7 @@ export const getAllOfMyInOrgId = query({
 
     const orgStructureUsers = await ctx.db
       .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
-        ),
-      )
+      .filter((q) => q.eq(q.field("userId"), userId))
       .collect()
 
     const myStructures = await Promise.all(
@@ -55,23 +50,31 @@ export const getMembers = query({
     const serializedId = ctx.db.normalizeId("structures", args.structureId)
     if (!serializedId) return []
 
-    const members = await ctx.db
+    const orgStructureUsers = await ctx.db
       .query("orgStructureUsers")
       .filter((q) => q.eq(q.field("structureId"), serializedId))
       .collect()
 
-    return members
+    const users = await Promise.all(
+      orgStructureUsers.map(async (s) => ({
+        ...s,
+        user: await ctx.db.get(s.userId),
+      })),
+    )
+
+    return users.filter((u) => u.user !== null) as (Doc<"orgStructureUsers"> & {
+      user: Doc<"users">
+    })[]
   },
 })
 
 export const create = mutation({
   args: {
     name: v.string(),
-    orgId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to create a structure",
@@ -79,15 +82,13 @@ export const create = mutation({
 
     const newStructureId = await ctx.db.insert("structures", {
       name: args.name,
-      orgId: args.orgId,
-      createdById: currentUser.subject,
+      ownerId: userId,
       updatedAt: Date.now(),
     })
 
     await ctx.db.insert("orgStructureUsers", {
-      orgId: args.orgId,
       structureId: newStructureId,
-      userId: currentUser.subject,
+      userId: userId,
       role: "Owner",
     })
 
@@ -98,11 +99,10 @@ export const create = mutation({
 export const remove = mutation({
   args: {
     structureId: v.string(),
-    orgId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to delete a structure",
@@ -122,18 +122,11 @@ export const remove = mutation({
         message: "Structure not found",
       })
 
-    if (structure.orgId !== args.orgId)
-      throw new CustomConvexError({
-        statusCode: 404,
-        message: "Structure not found",
-      })
-
     const currentOrgStructureUser = await ctx.db
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), serializedId),
         ),
       )
@@ -182,13 +175,12 @@ export const remove = mutation({
 
 export const updateName = mutation({
   args: {
-    orgId: v.string(),
     structureId: v.string(),
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to update a structure",
@@ -205,8 +197,7 @@ export const updateName = mutation({
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), serializedId),
         ),
       )

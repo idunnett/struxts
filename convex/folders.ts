@@ -1,3 +1,4 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { Id } from "./_generated/dataModel"
@@ -6,13 +7,12 @@ import { mutation, query, QueryCtx } from "./_generated/server"
 export async function getNodeFolders(
   ctx: QueryCtx,
   args: {
-    orgId: string
     structureId: string
     nodeId: string
   },
 ) {
-  const currentUser = await ctx.auth.getUserIdentity()
-  if (!currentUser)
+  const userId = await getAuthUserId(ctx)
+  if (!userId)
     throw new CustomConvexError({
       statusCode: 401,
       message: "You must be logged in to view folders",
@@ -39,8 +39,7 @@ export async function getNodeFolders(
     .query("orgStructureUsers")
     .filter((q) =>
       q.and(
-        q.eq(q.field("userId"), currentUser.subject),
-        q.eq(q.field("orgId"), args.orgId),
+        q.eq(q.field("userId"), userId),
         q.eq(q.field("structureId"), args.structureId),
       ),
     )
@@ -57,7 +56,6 @@ export async function getNodeFolders(
       q.and(
         q.eq(q.field("nodeId"), serializedNodeId),
         q.eq(q.field("structureId"), serializedStructureId),
-        q.eq(q.field("orgId"), args.orgId),
       ),
     )
     .collect()
@@ -65,7 +63,6 @@ export async function getNodeFolders(
 
 export const getByNode = query({
   args: {
-    orgId: v.string(),
     structureId: v.string(),
     nodeId: v.string(),
   },
@@ -77,11 +74,10 @@ export const create = mutation({
     name: v.string(),
     nodeId: v.string(),
     structureId: v.string(),
-    orgId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to create a folder",
@@ -101,8 +97,7 @@ export const create = mutation({
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), args.structureId),
         ),
       )
@@ -135,7 +130,6 @@ export const create = mutation({
     return await ctx.db.insert("folders", {
       nodeId: serializedNodeId,
       structureId: serializedStructureId,
-      orgId: args.orgId,
       name: args.name,
     })
   },
@@ -146,8 +140,8 @@ export const deleteFolder = mutation({
     folderId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to remove a folder",
@@ -171,8 +165,7 @@ export const deleteFolder = mutation({
       .query("orgStructureUsers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), folder.orgId),
+          q.eq(q.field("userId"), userId),
           q.eq(q.field("structureId"), folder.structureId),
         ),
       )

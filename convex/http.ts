@@ -1,8 +1,10 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { httpRouter } from "convex/server"
 import { isCustomConvexError } from "../src/lib/custom-convex-error"
 import { api, internal } from "./_generated/api"
 import { Doc, Id } from "./_generated/dataModel"
 import { httpAction } from "./_generated/server"
+import { auth } from "./auth"
 
 const http = httpRouter()
 
@@ -26,8 +28,8 @@ http.route({
   path: "/getFile",
   method: "GET",
   handler: httpAction(async (ctx, request) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       return new Response(null, {
         status: 401,
         headers: {
@@ -122,5 +124,7 @@ http.route({
     }
   }),
 })
+
+auth.addHttpRoutes(http)
 
 export default http

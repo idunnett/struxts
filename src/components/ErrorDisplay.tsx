@@ -1,6 +1,7 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
+import { useAuthToken } from "@convex-dev/auth/react"
+import { Authenticated, Unauthenticated } from "convex/react"
 import { LucideTriangleAlert } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
@@ -26,9 +27,16 @@ export default function ErrorDisplay({
   error,
   type = "page",
 }: Props) {
-  const session = useAuth()
+  const token = useAuthToken()
   const errorDetails = useMemo(() => {
     let errorDetails = { statusCode: 500, message: "An error occurred" }
+    if (typeof error === "string") {
+      try {
+        error = JSON.parse(error)
+      } catch (e) {
+        console.error(e)
+      }
+    }
     if (error && isCustomConvexError(error))
       errorDetails = {
         statusCode: error.data.statusCode,
@@ -70,22 +78,32 @@ export default function ErrorDisplay({
       </div>
     )
 
-  const hasActiveOrg = !!session.orgSlug
-
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-8">
       <div className="flex flex-col items-center justify-center gap-2">
         <h2 className="text-3xl font-bold">{errorDetails.statusCode}</h2>
         <p className="text-lg">{errorDetails.message}</p>
       </div>
-      <Link
-        href={hasActiveOrg ? `/org/${session.orgSlug}/structures` : "/"}
-        className={buttonVariants({
-          variant: "secondary",
-        })}
-      >
-        Return to {hasActiveOrg ? "dashboard" : "home page"}
-      </Link>
+      <Authenticated>
+        <Link
+          href="/structures"
+          className={buttonVariants({
+            variant: "secondary",
+          })}
+        >
+          Return to dashboard
+        </Link>
+      </Authenticated>
+      <Unauthenticated>
+        <Link
+          href="/"
+          className={buttonVariants({
+            variant: "secondary",
+          })}
+        >
+          Return to home page
+        </Link>
+      </Unauthenticated>
     </div>
   )
 }

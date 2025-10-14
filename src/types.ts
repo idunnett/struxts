@@ -9,6 +9,11 @@ export interface NodeData extends Record<string, unknown> {
   bgColour: string
   files: FileState[]
   isActive: boolean
+  company:
+    | (Doc<"companies"> & {
+        owners: (Doc<"companyOwners"> & { user: Doc<"users"> })[]
+      })
+    | null
   onDelete?: (nodeId: string) => void
   onNodeDataChange?: (nodeId: string, data: Partial<NodeData>) => void
 }

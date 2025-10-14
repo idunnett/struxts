@@ -1,10 +1,10 @@
+import { authTables } from "@convex-dev/auth/server"
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
 
 const structures = defineTable({
   name: v.string(),
-  orgId: v.string(),
-  createdById: v.string(),
+  ownerId: v.id("users"),
   updatedAt: v.number(),
 })
 
@@ -18,6 +18,7 @@ const nodes = defineTable({
   structureId: v.id("structures"),
   borderColour: v.string(),
   bgColour: v.string(),
+  companyId: v.optional(v.id("companies")),
 }).index("by_structureId", ["structureId"])
 
 export const edges = defineTable({
@@ -28,21 +29,8 @@ export const edges = defineTable({
   labels: v.array(v.object({ label: v.string(), offset: v.number() })),
 }).index("by_structureId", ["structureId"])
 
-export const orgBillingAccounts = defineTable({
-  orgId: v.string(),
-  owner: v.string(),
-  stripeCustomerId: v.union(v.string(), v.null()),
-  package: v.union(
-    v.literal("free"),
-    v.literal("pro"),
-    v.literal("enterprise"),
-  ),
-  status: v.union(v.literal("active"), v.literal("inactive")),
-})
-
 export const orgStructureUsers = defineTable({
-  userId: v.string(),
-  orgId: v.string(),
+  userId: v.id("users"),
   structureId: v.id("structures"),
   role: v.union(v.literal("Guest"), v.literal("Admin"), v.literal("Owner")),
 })
@@ -51,7 +39,6 @@ export const files = defineTable({
   storageId: v.string(),
   nodeId: v.id("nodes"),
   structureId: v.id("structures"),
-  orgId: v.string(),
   name: v.string(),
   size: v.number(),
   type: v.string(),
@@ -61,16 +48,45 @@ export const files = defineTable({
 export const folders = defineTable({
   nodeId: v.id("nodes"),
   structureId: v.id("structures"),
-  orgId: v.string(),
   name: v.string(),
 })
 
+export const companies = defineTable({
+  name: v.string(),
+  yearFounded: v.optional(v.number()),
+  employees: v.optional(v.string()),
+  description: v.optional(v.string()),
+  city: v.optional(v.string()),
+  stateProvince: v.optional(v.string()),
+  country: v.optional(v.string()),
+  website: v.optional(v.string()),
+  logo: v.optional(v.string()),
+}).searchIndex("search_name", {
+  searchField: "name",
+})
+
+export const companyOwners = defineTable({
+  companyId: v.id("companies"),
+  userId: v.optional(v.id("users")),
+  name: v.optional(v.string()),
+  title: v.optional(v.string()),
+  email: v.optional(v.string()),
+  phone: v.optional(v.string()),
+})
+
+export const companyMembers = defineTable({
+  companyId: v.id("companies"),
+  userId: v.id("users"),
+})
+
 export default defineSchema({
-  orgBillingAccounts,
+  ...authTables,
   orgStructureUsers,
   structures,
   nodes,
   edges,
   files,
   folders,
+  companies,
+  companyOwners,
 })

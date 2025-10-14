@@ -1,7 +1,8 @@
+import { getAuthUserId } from "@convex-dev/auth/server"
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { Id } from "./_generated/dataModel"
-import { mutation, query } from "./_generated/server"
+import { mutation, MutationCtx, query } from "./_generated/server"
 import { getNodeFiles } from "./files"
 import { getNodeFolders } from "./folders"
 
@@ -10,20 +11,92 @@ export const getByStructureId = query({
     structureId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+    const userId = await getAuthUserId(ctx)
+    if (!userId)
       throw new CustomConvexError({
         statusCode: 401,
         message: "You must be logged in to view nodes",
       })
 
     const serializedId = ctx.db.normalizeId("structures", args.structureId)
-    return await ctx.db
+    if (!serializedId) return []
+
+    const nodes = await ctx.db
       .query("nodes")
-      .filter((q) => q.eq(q.field("structureId"), serializedId))
+      .withIndex("by_structureId", (q) => q.eq("structureId", serializedId))
       .collect()
+
+    const nodesWithCompanies = await Promise.all(
+      nodes.map(async (node) => {
+        if (!node.companyId) return { ...node, company: null }
+        const company = await ctx.db.get(node.companyId)
+        if (!company) return { ...node, company: null }
+
+        const companyOwners = await ctx.db
+          .query("companyOwners")
+          .filter((q) => q.eq(q.field("companyId"), node.companyId))
+          .collect()
+
+        const owners = await Promise.all(
+          companyOwners.map(async (companyOwner) => {
+            if (!companyOwner.userId) return { ...companyOwner, user: null }
+
+            const serializedId = ctx.db.normalizeId(
+              "users",
+              companyOwner.userId,
+            )
+            if (!serializedId) return { ...companyOwner, user: null }
+            const user = await ctx.db.get(serializedId)
+            if (!user) return { ...companyOwner, user: null }
+            return { ...companyOwner, user }
+          }),
+        )
+
+        return { ...node, company: { ...company, owners } }
+      }),
+    )
+
+    return nodesWithCompanies
   },
 })
+
+export async function createNode(
+  ctx: MutationCtx,
+  args: {
+    x: number
+    y: number
+    w: number
+    h: number
+    label: string
+    info: string
+    structureId: string
+    borderColour: string
+    bgColour: string
+    companyId?: Id<"companies">
+  },
+) {
+  const serializedStructureId = ctx.db.normalizeId(
+    "structures",
+    args.structureId,
+  )
+  if (!serializedStructureId)
+    throw new CustomConvexError({
+      statusCode: 404,
+      message: "Structure not found",
+    })
+  return await ctx.db.insert("nodes", {
+    x: args.x,
+    y: args.y,
+    w: args.w,
+    h: args.h,
+    label: args.label,
+    info: args.info,
+    structureId: serializedStructureId,
+    borderColour: args.borderColour,
+    bgColour: args.bgColour,
+    companyId: args.companyId,
+  })
+}
 
 export const create = mutation({
   args: {
@@ -38,26 +111,7 @@ export const create = mutation({
     bgColour: v.string(),
   },
   handler: async (ctx, args) => {
-    const serializedStructureId = ctx.db.normalizeId(
-      "structures",
-      args.structureId,
-    )
-    if (!serializedStructureId)
-      throw new CustomConvexError({
-        statusCode: 404,
-        message: "Structure not found",
-      })
-    return await ctx.db.insert("nodes", {
-      x: args.x,
-      y: args.y,
-      w: args.w,
-      h: args.h,
-      label: args.label,
-      info: args.info,
-      structureId: serializedStructureId,
-      borderColour: args.borderColour,
-      bgColour: args.bgColour,
-    })
+    return await createNode(ctx, args)
   },
 })
 
@@ -88,7 +142,6 @@ export const update = mutation({
 
 export const remove = mutation({
   args: {
-    orgId: v.string(),
     nodeId: v.string(),
     structureId: v.string(),
   },

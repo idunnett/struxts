@@ -1,6 +1,5 @@
 "use client"
 
-import { useAuth, useOrganization } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import {
   LucideArrowRight,
@@ -22,24 +21,15 @@ import { Skeleton } from "../../../components/ui/skeleton"
 
 export default function StructureSwitcher() {
   const params = useParams()
-  const session = useAuth()
-  const { organization, isLoaded } = useOrganization()
   const [popoverOpen, setPopoverOpen] = useState(false)
 
-  const orgId = organization?.id
-
-  const myStructures = useQuery(
-    api.structures.getAllOfMyInOrgId,
-    isLoaded && orgId ? { orgId } : "skip",
-  )
+  const myStructures = useQuery(api.structures.getAllOfMy)
 
   const selectedStructure = useMemo(() => {
     if (!params.structureId) return undefined
     if (typeof params.structureId !== "string") return undefined
     return myStructures?.find((s) => s._id === params.structureId)
   }, [params.structureId, myStructures])
-
-  if (!isLoaded || !organization) return null
 
   return (
     <>
@@ -55,7 +45,7 @@ export default function StructureSwitcher() {
             {myStructures.map((structure) => (
               <Link
                 key={structure._id}
-                href={`/org/${session.orgSlug}/structures/${structure._id}`}
+                href={`/structures/${structure._id}`}
                 className={buttonVariants({
                   variant: "ghost",
                   className:
@@ -71,7 +61,7 @@ export default function StructureSwitcher() {
               </Link>
             ))}
             <Link
-              href={`/org/${session.orgSlug}/structures/new`}
+              href={`/structures/new`}
               className={buttonVariants({
                 variant: "ghost",
                 className:
