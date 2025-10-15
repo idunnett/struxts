@@ -9,8 +9,9 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog"
 import { cn } from "~/lib/utils"
+import { Separator } from "../../../../../../components/ui/separator"
 import UserAvatar from "../../../../../../components/UserAvatar"
-import InviteMemberForm from "../InviteMemberForm"
+import InviteMemberForm from "./InviteMemberForm"
 import MembersMenu from "./MembersMenu"
 
 interface Props {
@@ -47,19 +48,19 @@ export default function MembersMenuItem({
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Structure Members</DialogTitle>
-          <DialogDescription hidden>
-            Manage members of this structure
+          <DialogDescription>
+            Manage members of this structure and invite new users to join
           </DialogDescription>
         </DialogHeader>
-        <InviteMemberForm
-          structureId={structureId}
-          structureMembers={structureMembers}
-        />
-        <MembersMenu
-          structureId={structureId}
-          structureMembers={structureMembers}
-          currentOrgStructureUser={currentOrgStructureUser}
-        />
+        <div className="flex flex-col gap-4 px-6 py-2">
+          <InviteMemberForm structureId={structureId} />
+          <Separator />
+          <MembersMenu
+            structureId={structureId}
+            structureMembers={structureMembers}
+            currentOrgStructureUser={currentOrgStructureUser}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )

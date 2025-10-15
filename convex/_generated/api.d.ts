@@ -20,6 +20,7 @@ import type * as edges from "../edges.js";
 import type * as files from "../files.js";
 import type * as folders from "../folders.js";
 import type * as http from "../http.js";
+import type * as invites from "../invites.js";
 import type * as nodes from "../nodes.js";
 import type * as orgStructureUsers from "../orgStructureUsers.js";
 import type * as stripe from "../stripe.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   folders: typeof folders;
   http: typeof http;
+  invites: typeof invites;
   nodes: typeof nodes;
   orgStructureUsers: typeof orgStructureUsers;
   stripe: typeof stripe;

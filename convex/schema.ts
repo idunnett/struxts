@@ -79,6 +79,15 @@ export const companyMembers = defineTable({
   userId: v.id("users"),
 })
 
+export const invites = defineTable({
+  email: v.string(),
+  structureId: v.id("structures"),
+  inviterId: v.id("users"),
+  token: v.string(),
+  accepted: v.boolean(),
+  createdAt: v.number(),
+})
+
 export default defineSchema({
   ...authTables,
   orgStructureUsers,
@@ -89,4 +98,5 @@ export default defineSchema({
   folders,
   companies,
   companyOwners,
+  invites,
 })

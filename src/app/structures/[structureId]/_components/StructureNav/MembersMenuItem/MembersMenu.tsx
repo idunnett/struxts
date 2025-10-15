@@ -15,7 +15,7 @@ export default function MembersMenu({
   currentOrgStructureUser,
 }: Props) {
   return (
-    <div className="flex w-full flex-col gap-6 p-4">
+    <div className="flex w-full flex-col gap-6">
       <div className="flex w-full flex-col gap-2">
         {structureMembers.map((member) => (
           <div

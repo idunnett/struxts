@@ -5,17 +5,22 @@ import { SignInMethodDivider } from "./SignInMethodDivider"
 import { SignInWithOAuth } from "./SignInWithOAuth"
 import { SignInWithPassword } from "./SignInWithPassword"
 
+interface Props {
+  refreshOnly?: boolean
+}
+
 /**
  * Users choose between OAuth providers or email and password combo
  * with required email verification and optional password reset via OTP.
  */
-export function SignInFormPasswordAndVerifyViaCode() {
+export function SignInFormPasswordAndVerifyViaCode({ refreshOnly }: Props) {
   const router = useRouter()
   // const { signIn } = useAuthActions()
   // const [step, setStep] = useState<"signIn" | { email: string } | "forgot">(
   //   "signIn",
   // )
   // const [submitting, setSubmitting] = useState(false)
+
   return (
     <div className="mx-auto flex max-w-[384px] flex-col gap-4">
       {/* {step === "signIn" ? ( */}
@@ -26,7 +31,9 @@ export function SignInFormPasswordAndVerifyViaCode() {
         <SignInWithOAuth />
         <SignInMethodDivider />
         <SignInWithPassword
-          handleSent={() => router.replace("/structures")}
+          handleSent={() =>
+            refreshOnly ? router.refresh() : router.replace("/structures")
+          }
           // handleSent={(email) => setStep({ email })}
           // handlePasswordReset={() => setStep("forgot")}
           // provider="password-code"
