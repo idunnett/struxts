@@ -28,12 +28,13 @@ export function SignInWithPassword({
         event.preventDefault()
         setSubmitting(true)
         const formData = new FormData(event.currentTarget)
+        console.log({ formData: Object.fromEntries(formData) })
         signIn(provider ?? "password", formData)
           .then(() => {
             handleSent?.(formData.get("email") as string)
           })
           .catch((error) => {
-            console.error(error)
+            console.error(error, JSON.stringify(error))
             let toastTitle: string
             if (
               error instanceof ConvexError &&
@@ -41,6 +42,9 @@ export function SignInWithPassword({
             ) {
               toastTitle =
                 "Invalid password - check the requirements and try again."
+            } else if (error instanceof ConvexError) {
+              console.log({ error: error.data, message: error.message })
+              toastTitle = error.data
             } else {
               toastTitle =
                 flow === "signIn"
@@ -52,6 +56,12 @@ export function SignInWithPassword({
           })
       }}
     >
+      {flow === "signUp" && (
+        <>
+          <label htmlFor="name">Full Name</label>
+          <Input name="name" id="name" className="mb-4" autoComplete="name" />
+        </>
+      )}
       <label htmlFor="email">Email</label>
       <Input name="email" id="email" className="mb-4" autoComplete="email" />
       <div className="flex items-center justify-between">

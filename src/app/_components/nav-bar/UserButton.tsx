@@ -13,7 +13,12 @@ import {
 import { getInitials } from "~/lib/utils"
 import { api } from "../../../../convex/_generated/api"
 
-export default function UserButton() {
+interface Props {
+  onProfileClick?: () => void
+  onSettingsClick?: () => void
+}
+
+export default function UserButton({ onProfileClick, onSettingsClick }: Props) {
   const { signOut } = useAuthActions()
   const user = useQuery(api.auth.currentUser)
 
@@ -29,10 +34,16 @@ export default function UserButton() {
       <DropdownMenuContent>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="flex items-center gap-2">
+        <DropdownMenuItem
+          className="flex items-center gap-2"
+          onClick={onProfileClick}
+        >
           <User className="h-4 w-4" /> Profile
         </DropdownMenuItem>
-        <DropdownMenuItem className="flex items-center gap-2">
+        <DropdownMenuItem
+          className="flex items-center gap-2"
+          onClick={onSettingsClick}
+        >
           <Settings className="h-4 w-4" /> Settings
         </DropdownMenuItem>
         <DropdownMenuItem

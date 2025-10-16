@@ -135,11 +135,13 @@ export const sendInviteEmail = action({
       to,
       subject: `[struxts.com] ${user.name || user.email || "Someone"} has invited you to join a structure`,
       html: `
-      <h2>${user.name || user.email || "Someone"} has invited you to join a structure on struxts.com</h2>
-      <br />
-      <a href="${inviteLink}" target="_blank">Accept invite</a>
-      <br />
-      <p>Your login email is: ${user.email}</p>
+      <div style="background-color: #f0f0f0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+        <h2>${user.name || user.email || "Someone"} has invited you to join a structure on struxts.com</h2>
+        <br />
+        <a href="${inviteLink}" target="_blank" style="color: #000; text-decoration: none; background-color: #000; color: #fff; padding: 10px 20px; border-radius: 5px; display: inline-block; margin-top: 10px; text-align: center; font-size: 16px;">Accept invite</a>
+        <br />
+        <p>Your login email is: ${user.email}</p>
+      </div>
     `,
     })
 

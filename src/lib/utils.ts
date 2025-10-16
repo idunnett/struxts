@@ -57,7 +57,8 @@ export function getInitials(user: Doc<"users"> | null | undefined) {
     user?.name
       ?.split(" ")
       .map((name) => name[0])
-      .join("") ||
+      .join("")
+      .slice(0, 2) ||
     user?.email?.split("@")[0]?.slice(0, 2) ||
     "..."
   ).toUpperCase()

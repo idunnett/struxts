@@ -30,7 +30,7 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   const isAuthed = await convexAuth.isAuthenticated()
 
   if (isSignInPage(request) && isAuthed) {
-    return nextjsMiddlewareRedirect(request, "/structure")
+    return nextjsMiddlewareRedirect(request, "/structures")
   }
   if (isProtectedRoute(request) && !isAuthed) {
     return nextjsMiddlewareRedirect(request, "/sign-in")
