@@ -36,7 +36,7 @@ export interface FileState {
 
 export type ValuesOf<T extends unknown[]> = T[number]
 
-export interface ClerkUserData {
+export interface OrgMemberUserData {
   imageUrl: string
   primaryEmailAddress: string | null
   fullName: string | null
@@ -45,4 +45,9 @@ export interface ClerkUserData {
   userId: string
 }
 
-export type ClerkOrgStructureUser = Doc<"orgStructureUsers"> & ClerkUserData
+export type StructureMemberUser = Doc<"orgStructureUsers"> & OrgMemberUserData
+
+/** @deprecated Use OrgMemberUserData */
+export type ClerkUserData = OrgMemberUserData
+/** @deprecated Use StructureMemberUser */
+export type ClerkOrgStructureUser = StructureMemberUser

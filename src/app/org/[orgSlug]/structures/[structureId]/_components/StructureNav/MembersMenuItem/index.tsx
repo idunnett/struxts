@@ -1,5 +1,5 @@
-import Image from "next/image"
 import { Button } from "~/components/ui/button"
+import { UserAvatar } from "~/components/UserAvatar"
 import { cn } from "~/lib/utils"
 import { Doc } from "../../../../../../../../../convex/_generated/dataModel"
 import {
@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../../../../../../../components/ui/dialog"
-import { ClerkOrgStructureUser } from "../../../../../../../../types"
+import { StructureMemberUser } from "../../../../../../../../types"
 import InviteMemberForm from "../InviteMemberForm"
 import MembersMenu from "./MembersMenu"
 
@@ -18,7 +18,7 @@ interface Props {
   orgId: string
   structureId: string
   currentOrgStructureUser: Doc<"orgStructureUsers">
-  orgStructureMembers: ClerkOrgStructureUser[]
+  orgStructureMembers: StructureMemberUser[]
 }
 
 export default function MembersMenuItem({
@@ -37,13 +37,11 @@ export default function MembersMenuItem({
         >
           <div className="flex items-center">
             {orgStructureMembers.slice(0, 3).map((member, i) => (
-              <Image
+              <UserAvatar
                 key={member._id}
                 src={member.imageUrl}
-                alt={member.fullName ?? "Member picture"}
-                width={24}
-                height={24}
-                className={cn("h-6 w-6 rounded-full", i !== 0 && "-ml-2")}
+                name={member.fullName ?? member.primaryEmailAddress}
+                className={cn(i !== 0 && "-ml-2")}
               />
             ))}
           </div>

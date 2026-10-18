@@ -1,44 +1,43 @@
-import { auth, clerkClient } from "@clerk/nextjs/server"
 import { fetchQuery } from "convex/nextjs"
 import { type ReactNode } from "react"
 import { api } from "../../../../../../convex/_generated/api"
 import ErrorDisplay from "../../../../../components/ErrorDisplay"
-import { ClerkOrgStructureUser } from "../../../../../types"
+import type { StructureMemberUser } from "../../../../../types"
 import { getAuthToken } from "../../../../auth"
 import StructureNav from "./_components/StructureNav"
 import StructureProvider from "./_components/StructureProvider"
 
 interface Props {
   children: ReactNode
-  params: {
+  params: Promise<{
     orgSlug: string
     structureId: string
-  }
+  }>
 }
 
-export default async function StructureLayout({
-  children,
-  params: { orgSlug, structureId },
-}: Props) {
-  const session = auth()
+export default async function StructureLayout({ children, params }: Props) {
+  const { orgSlug, structureId } = await params
   const token = await getAuthToken()
-  let structure: typeof api.structures.getById._returnType
-  let nodes: typeof api.nodes.getByStructureId._returnType
-  let edges: typeof api.edges.getByStructureId._returnType
-  let currentOrgStructureUser: typeof api.orgStructureUsers.getCurrent._returnType
-  let orgStructureUsers: typeof api.structures.getMembers._returnType
-  let orgStructureMembers: ClerkOrgStructureUser[] = []
   try {
-    structure = await fetchQuery(
-      api.structures.getById,
-      {
-        id: structureId,
-      },
+    const org = await fetchQuery(
+      api.organizations.getBySlug,
+      { slug: orgSlug },
       { token },
     )
-    if (!structure || !session.orgId || structure.orgId !== session.orgId)
+    if (!org)
+      return (
+        <ErrorDisplay statusCode={404} message="Organization not found" />
+      )
+
+    const structure = await fetchQuery(
+      api.structures.getById,
+      { id: structureId },
+      { token },
+    )
+    if (!structure || structure.orgId !== org._id)
       return <ErrorDisplay statusCode={404} message="Structure not found" />
-    ;[nodes, edges, currentOrgStructureUser, orgStructureUsers] =
+
+    const [nodes, edges, currentOrgStructureUser, orgStructureMembers] =
       await Promise.all([
         fetchQuery(
           api.nodes.getByStructureId,
@@ -53,16 +52,14 @@ export default async function StructureLayout({
         fetchQuery(
           api.orgStructureUsers.getCurrent,
           {
-            orgId: session.orgId,
+            orgId: org._id,
             structureId: structure._id,
           },
           { token },
         ),
         fetchQuery(
           api.structures.getMembers,
-          {
-            structureId: structure._id,
-          },
+          { structureId: structure._id },
           { token },
         ),
       ])
@@ -75,45 +72,24 @@ export default async function StructureLayout({
         />
       )
 
-    orgStructureMembers = (
-      await Promise.all(
-        orgStructureUsers.map(async (orgStructureUser) => {
-          if (!orgStructureUser) return null
-          const clerkUser = await clerkClient().users.getUser(
-            orgStructureUser.userId,
-          )
-          if (!clerkUser) return null
-          return {
-            ...orgStructureUser,
-            imageUrl: clerkUser.imageUrl,
-            primaryEmailAddress:
-              clerkUser.primaryEmailAddress?.emailAddress ?? null,
-            fullName: clerkUser.fullName,
-            firstName: clerkUser.firstName,
-            lastName: clerkUser.lastName,
-          } satisfies ClerkOrgStructureUser
-        }),
-      )
-    ).filter((user) => user !== null)
+    return (
+      <StructureProvider
+        prefetchedNodes={nodes}
+        prefetchedEdges={edges}
+        structure={structure}
+        currentOrgStructureUser={currentOrgStructureUser}
+      >
+        <div className="flex h-full flex-col">
+          <StructureNav
+            currentOrgStructureUser={currentOrgStructureUser}
+            prefetchedStructure={structure}
+            orgStructureMembers={orgStructureMembers as StructureMemberUser[]}
+          />
+          <div className="min-h-0 w-full grow">{children}</div>
+        </div>
+      </StructureProvider>
+    )
   } catch (error) {
     return <ErrorDisplay error={error} />
   }
-
-  return (
-    <StructureProvider
-      prefetchedNodes={nodes}
-      prefetchedEdges={edges}
-      structure={structure}
-      currentOrgStructureUser={currentOrgStructureUser}
-    >
-      <div className="flex h-full flex-col">
-        <StructureNav
-          currentOrgStructureUser={currentOrgStructureUser}
-          prefetchedStructure={structure}
-          orgStructureMembers={orgStructureMembers}
-        />
-        <div className="min-h-0 w-full grow">{children}</div>
-      </div>
-    </StructureProvider>
-  )
 }

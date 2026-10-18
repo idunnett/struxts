@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { Id } from "./_generated/dataModel"
 import { mutation, query, QueryCtx } from "./_generated/server"
+import { requireStructureMember, requireUserId } from "./lib/auth"
 
 export async function getNodeFiles(
   ctx: QueryCtx,
@@ -11,12 +12,7 @@ export async function getNodeFiles(
     nodeId: string
   },
 ) {
-  const currentUser = await ctx.auth.getUserIdentity()
-  if (!currentUser)
-    throw new CustomConvexError({
-      statusCode: 401,
-      message: "You must be logged in to view files",
-    })
+  await requireUserId(ctx)
   const serializedNodeId = ctx.db.normalizeId("nodes", args.nodeId)
   if (!serializedNodeId)
     throw new CustomConvexError({
@@ -45,21 +41,10 @@ export async function getNodeFiles(
       message: "You do not have permission to view files in this structure",
     })
 
-  const orgStructureUser = await ctx.db
-    .query("orgStructureUsers")
-    .filter((q) =>
-      q.and(
-        q.eq(q.field("orgId"), args.orgId),
-        q.eq(q.field("userId"), currentUser.subject),
-        q.eq(q.field("structureId"), serializedStructureId),
-      ),
-    )
-    .first()
-  if (!orgStructureUser)
-    throw new CustomConvexError({
-      statusCode: 403,
-      message: "You do not have permission to view files in this structure",
-    })
+  await requireStructureMember(ctx, {
+    orgId: args.orgId,
+    structureId: serializedStructureId,
+  })
 
   return await ctx.db
     .query("files")
@@ -87,12 +72,7 @@ export const getNodeFileByStorageId = query({
     storageId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({
-        statusCode: 401,
-        message: "You must be logged in to view files",
-      })
+    await requireUserId(ctx)
 
     const file = await ctx.db
       .query("files")
@@ -104,45 +84,49 @@ export const getNodeFileByStorageId = query({
         message: "File not found",
       })
 
-    const structureId = ctx.db.normalizeId("structures", file.structureId)
-    if (!structureId)
-      throw new CustomConvexError({
-        statusCode: 404,
-        message: "Structure not found",
-      })
-    const orgId = file.orgId
-
-    const orgStructureUser = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("orgId"), orgId),
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("structureId"), structureId),
-        ),
-      )
-      .first()
-
-    if (!orgStructureUser)
-      throw new CustomConvexError({
-        statusCode: 403,
-        message: "You do not have permission to view files in this structure",
-      })
+    await requireStructureMember(ctx, {
+      orgId: file.orgId,
+      structureId: file.structureId,
+    })
 
     return file
   },
 })
 
-export const generateUploadUrl = mutation({
-  handler: async (ctx) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
+/** Authenticated short-lived URL for downloading a file (replaces Clerk JWT → HTTP). */
+export const getDownloadUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    await requireUserId(ctx)
+
+    const file = await ctx.db
+      .query("files")
+      .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
+      .first()
+    if (!file)
       throw new CustomConvexError({
-        statusCode: 401,
-        message: "You must be logged in to upload files",
+        statusCode: 404,
+        message: "File not found",
       })
 
-    // Return an upload URL
+    await requireStructureMember(ctx, {
+      orgId: file.orgId,
+      structureId: file.structureId,
+    })
+
+    const url = await ctx.storage.getUrl(file.storageId as Id<"_storage">)
+    if (!url)
+      throw new CustomConvexError({
+        statusCode: 404,
+        message: "File not found in storage",
+      })
+    return { url, name: file.name, type: file.type }
+  },
+})
+
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    await requireUserId(ctx)
     return await ctx.storage.generateUploadUrl()
   },
 })
@@ -163,12 +147,7 @@ export const saveFiles = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({
-        statusCode: 401,
-        message: "You must be logged in to upload files",
-      })
+    await requireUserId(ctx)
 
     const promises: Promise<Id<"files">>[] = []
     for (const {
@@ -202,6 +181,10 @@ export const saveFiles = mutation({
           statusCode: 404,
           message: "Folder not found",
         })
+      await requireStructureMember(ctx, {
+        orgId,
+        structureId: serializedStructureId,
+      })
       promises.push(
         ctx.db.insert("files", {
           storageId,
@@ -224,12 +207,7 @@ export const deleteFile = mutation({
     storageId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({
-        statusCode: 401,
-        message: "You must be logged in to delete files",
-      })
+    await requireUserId(ctx)
 
     const file = await ctx.db
       .query("files")
@@ -241,30 +219,10 @@ export const deleteFile = mutation({
         message: "File not found",
       })
 
-    const structureId = ctx.db.normalizeId("structures", file.structureId)
-    if (!structureId)
-      throw new CustomConvexError({
-        statusCode: 404,
-        message: "Structure not found",
-      })
-    const orgId = file.orgId
-
-    const orgStructureUser = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("orgId"), orgId),
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("structureId"), structureId),
-        ),
-      )
-      .first()
-
-    if (!orgStructureUser)
-      throw new CustomConvexError({
-        statusCode: 403,
-        message: "You do not have permission to delete files in this structure",
-      })
+    await requireStructureMember(ctx, {
+      orgId: file.orgId,
+      structureId: file.structureId,
+    })
 
     await ctx.storage.delete(file.storageId as Id<"_storage">)
     await ctx.db.delete(file._id)

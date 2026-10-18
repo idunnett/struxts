@@ -1,9 +1,10 @@
-// app/providers.js
 "use client"
-import { useUser } from "@clerk/nextjs"
+
+import { useQuery } from "convex/react"
 import posthog from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { useEffect } from "react"
+import { api } from "../../../convex/_generated/api"
 import { env } from "../../env"
 
 if (
@@ -13,7 +14,7 @@ if (
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: "/ingest",
     person_profiles: "identified_only",
-    capture_pageview: false, // Disable automatic pageview capture, as we capture manually
+    capture_pageview: false,
     ui_host: "https://us.posthog.com",
   })
 }
@@ -28,17 +29,16 @@ export function PHProvider({ children }: { children: React.ReactNode }) {
 }
 
 function PostHogAuthWrapper({ children }: { children: React.ReactNode }) {
-  const user = useUser()
+  const viewer = useQuery(api.users.viewer)
 
   useEffect(() => {
-    if (user.isLoaded && user.isSignedIn && user.user)
-      posthog.identify(user.user.id, {
-        clerk_id: user.user.id,
-        email: user.user.primaryEmailAddress?.emailAddress,
-        name: user.user.fullName,
+    if (viewer)
+      posthog.identify(viewer._id, {
+        email: viewer.email,
+        name: viewer.name,
       })
-    else posthog.reset()
-  }, [user])
+    else if (viewer === null) posthog.reset()
+  }, [viewer])
 
   return children
 }

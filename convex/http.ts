@@ -3,8 +3,11 @@ import { isCustomConvexError } from "../src/lib/custom-convex-error"
 import { api, internal } from "./_generated/api"
 import { Doc, Id } from "./_generated/dataModel"
 import { httpAction } from "./_generated/server"
+import { auth } from "./auth"
 
 const http = httpRouter()
+
+auth.addHttpRoutes(http)
 
 http.route({
   path: "/getFile",

@@ -20,7 +20,7 @@ import {
 } from "~/components/ui/popover"
 import { cn } from "~/lib/utils"
 import { type TBasicNode } from "~/types"
-import ColourPicker from "../../../../../../../components/ColourPicker"
+import { ColourPicker } from "../../../../../../../components/ColourPicker"
 import {
   AlertDialog,
   AlertDialogAction,

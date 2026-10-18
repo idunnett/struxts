@@ -1,6 +1,8 @@
 import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { mutation, query } from "./_generated/server"
+import { getOptionalUserId, requireUserId, sameUserId } from "./lib/auth"
+import { unwrapAuthSubject } from "./lib/users"
 
 export const getCurrent = query({
   args: {
@@ -8,21 +10,27 @@ export const getCurrent = query({
     structureId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser) return null
+    const userId = await getOptionalUserId(ctx)
+    if (!userId) return null
 
-    const orgStructureUser = await ctx.db
+    const serializedStructureId = ctx.db.normalizeId(
+      "structures",
+      args.structureId,
+    )
+    if (!serializedStructureId) return null
+
+    const memberships = await ctx.db
       .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), args.structureId),
-        ),
+      .withIndex("by_structure", (q) =>
+        q.eq("structureId", serializedStructureId),
       )
-      .first()
+      .collect()
 
-    return orgStructureUser
+    return (
+      memberships.find(
+        (m) => sameUserId(m.userId, userId) && m.orgId === args.orgId,
+      ) ?? null
+    )
   },
 })
 
@@ -34,33 +42,35 @@ export const updateRole = mutation({
     role: v.union(v.literal("Owner"), v.literal("Admin"), v.literal("Guest")),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
+    const actorId = await requireUserId(ctx)
+    const targetUserId = unwrapAuthSubject(args.userId)
 
-    const currentOrgStructureUser = await ctx.db
+    const serializedStructureId = ctx.db.normalizeId(
+      "structures",
+      args.structureId,
+    )
+    if (!serializedStructureId)
+      throw new CustomConvexError({
+        statusCode: 404,
+        message: "Structure not found",
+      })
+
+    const memberships = await ctx.db
       .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.userId),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), args.structureId),
-        ),
+      .withIndex("by_structure", (q) =>
+        q.eq("structureId", serializedStructureId),
       )
-      .first()
-    if (currentOrgStructureUser?.role === "Guest")
+      .collect()
+
+    const currentOrgStructureUser = memberships.find(
+      (m) => sameUserId(m.userId, actorId) && m.orgId === args.orgId,
+    )
+    if (!currentOrgStructureUser || currentOrgStructureUser.role === "Guest")
       throw new CustomConvexError({ statusCode: 403, message: "Forbidden" })
 
-    const orgStructureUserToUpdate = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), args.userId),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), args.structureId),
-        ),
-      )
-      .first()
+    const orgStructureUserToUpdate = memberships.find(
+      (m) => sameUserId(m.userId, targetUserId) && m.orgId === args.orgId,
+    )
 
     if (!orgStructureUserToUpdate)
       throw new CustomConvexError({
@@ -70,7 +80,7 @@ export const updateRole = mutation({
 
     if (
       orgStructureUserToUpdate.role === "Owner" &&
-      orgStructureUserToUpdate.userId !== currentUser.userId
+      !sameUserId(orgStructureUserToUpdate.userId, actorId)
     )
       throw new CustomConvexError({
         statusCode: 403,
@@ -88,9 +98,8 @@ export const create = mutation({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
+    const actorId = await requireUserId(ctx)
+    const targetUserId = unwrapAuthSubject(args.userId)
 
     const serializedStructureId = ctx.db.normalizeId(
       "structures",
@@ -102,29 +111,22 @@ export const create = mutation({
         message: "Structure not found",
       })
 
-    const currentOrgStructureUser = await ctx.db
+    const memberships = await ctx.db
       .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.userId),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), serializedStructureId),
-        ),
+      .withIndex("by_structure", (q) =>
+        q.eq("structureId", serializedStructureId),
       )
-      .first()
-    if (currentOrgStructureUser?.role === "Guest")
+      .collect()
+
+    const currentOrgStructureUser = memberships.find(
+      (m) => sameUserId(m.userId, actorId) && m.orgId === args.orgId,
+    )
+    if (!currentOrgStructureUser || currentOrgStructureUser.role === "Guest")
       throw new CustomConvexError({ statusCode: 403, message: "Forbidden" })
 
-    const orgStructureUser = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), args.userId),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), serializedStructureId),
-        ),
-      )
-      .first()
+    const orgStructureUser = memberships.find(
+      (m) => sameUserId(m.userId, targetUserId) && m.orgId === args.orgId,
+    )
 
     if (orgStructureUser)
       throw new CustomConvexError({
@@ -135,7 +137,7 @@ export const create = mutation({
     await ctx.db.insert("orgStructureUsers", {
       orgId: args.orgId,
       structureId: serializedStructureId,
-      userId: args.userId,
+      userId: targetUserId,
       role: "Guest",
     })
   },
@@ -148,9 +150,8 @@ export const remove = mutation({
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({ statusCode: 401, message: "Unauthorized" })
+    const actorId = await requireUserId(ctx)
+    const targetUserId = unwrapAuthSubject(args.userId)
 
     const serializedStructureId = ctx.db.normalizeId(
       "structures",
@@ -162,29 +163,22 @@ export const remove = mutation({
         message: "Structure not found",
       })
 
-    const currentOrgStructureUser = await ctx.db
+    const memberships = await ctx.db
       .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.userId),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), serializedStructureId),
-        ),
+      .withIndex("by_structure", (q) =>
+        q.eq("structureId", serializedStructureId),
       )
-      .first()
-    if (currentOrgStructureUser?.role === "Guest")
+      .collect()
+
+    const currentOrgStructureUser = memberships.find(
+      (m) => sameUserId(m.userId, actorId) && m.orgId === args.orgId,
+    )
+    if (!currentOrgStructureUser || currentOrgStructureUser.role === "Guest")
       throw new CustomConvexError({ statusCode: 403, message: "Forbidden" })
 
-    const orgStructureUser = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), args.userId),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), serializedStructureId),
-        ),
-      )
-      .first()
+    const orgStructureUser = memberships.find(
+      (m) => sameUserId(m.userId, targetUserId) && m.orgId === args.orgId,
+    )
 
     if (!orgStructureUser)
       throw new CustomConvexError({

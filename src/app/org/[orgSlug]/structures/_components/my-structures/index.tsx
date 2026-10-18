@@ -1,7 +1,5 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
-import { OrganizationMembershipPublicUserData } from "@clerk/nextjs/server"
 import { LucideWaypoints } from "lucide-react"
 import Link from "next/link"
 import { api } from "../../../../../../../convex/_generated/api"
@@ -16,16 +14,17 @@ import StructureCardContent from "./StructureCardContent"
 
 interface Props {
   orgId: string
+  orgSlug: string
+  orgRole: "owner" | "admin" | "member"
   myPrefetchedStructures: typeof api.structures.getAllOfMyInOrgId._returnType
-  orgMembers: OrganizationMembershipPublicUserData[]
 }
 
 export default function MyStructures({
   myPrefetchedStructures,
   orgId,
-  orgMembers,
+  orgSlug,
+  orgRole,
 }: Props) {
-  const session = useAuth()
   const myStructures = usePrefetchedAuthQuery(
     api.structures.getAllOfMyInOrgId,
     myPrefetchedStructures,
@@ -40,12 +39,12 @@ export default function MyStructures({
           You are not currently associated with any structures within this
           organization.
         </p>
-        {session.orgRole === "org:admin" && (
+        {(orgRole === "owner" || orgRole === "admin") && (
           <p className="text-sm text-muted-foreground">
             Try creating a new structure.
           </p>
         )}
-        {session.orgRole === "org:member" && (
+        {orgRole === "member" && (
           <p className="text-sm text-muted-foreground">
             Ask an admin to add you to a structure.
           </p>
@@ -61,7 +60,7 @@ export default function MyStructures({
           structure && (
             <div key={structure._id} className="w-full p-3 sm:w-1/2 lg:w-1/3">
               <Link
-                href={`/org/${session.orgSlug}/structures/${structure._id}`}
+                href={`/org/${orgSlug}/structures/${structure._id}`}
                 className="w-full"
                 prefetch={false}
               >
@@ -73,10 +72,7 @@ export default function MyStructures({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-1">
-                    <StructureCardContent
-                      structure={structure}
-                      orgMembers={orgMembers}
-                    />
+                    <StructureCardContent structure={structure} />
                   </CardContent>
                 </Card>
               </Link>

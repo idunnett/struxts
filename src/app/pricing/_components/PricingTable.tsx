@@ -1,6 +1,5 @@
 "use client"
 
-import { useAuth, useOrganization } from "@clerk/nextjs"
 import Link from "next/link"
 import Stripe from "stripe"
 import FreePlanFeatureList from "../../../components/FreePlanFeatureList"
@@ -23,16 +22,17 @@ interface Props {
   })[]
   prices: (Stripe.Price & { tiers?: Stripe.Price.Tier[] })[]
   currentPlanProductId: string | undefined
+  orgSlug?: string
+  isSignedIn: boolean
 }
 
 export function PricingTable({
   products,
   prices,
   currentPlanProductId,
+  orgSlug,
+  isSignedIn,
 }: Props) {
-  const session = useAuth()
-  const organization = useOrganization()
-
   const isFreePlan = currentPlanProductId === undefined
 
   return (
@@ -42,7 +42,7 @@ export function PricingTable({
           <CardTitle className="text-base">Free Plan</CardTitle>
           <CardDescription className="h-8">
             Start building for free
-            {session.isSignedIn && organization.organization && isFreePlan && (
+            {isSignedIn && orgSlug && isFreePlan && (
               <span className="font-normal text-muted-foreground">
                 {" "}
                 (Current)
@@ -54,15 +54,13 @@ export function PricingTable({
           <div className="flex items-center gap-1">
             <h5 className="text-3xl font-extrabold">CA $0</h5>
           </div>
-          {session.isSignedIn && organization.organization && !isFreePlan ? (
+          {isSignedIn && orgSlug && !isFreePlan ? (
             <Button className="w-full" asChild>
-              <Link href={`/org/${organization.organization.slug}/billing`}>
-                Cancel my plan
-              </Link>
+              <Link href={`/org/${orgSlug}/billing`}>Cancel my plan</Link>
             </Button>
           ) : (
             <Button className="w-full" asChild>
-              <Link href={session.userId ? "/org" : "/sign-in"}>
+              <Link href={isSignedIn ? "/org" : "/sign-in"}>
                 Get started for free
               </Link>
             </Button>
@@ -142,17 +140,6 @@ export function PricingTable({
           </Card>
         )
       })}
-      {/* <Card className="h-96 flex-1">
-        <CardHeader>
-          <CardTitle className="text-base">Enterprise</CardTitle>
-          <CardDescription className="h-8">
-            A custom plan for large organizations
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex h-28 flex-col justify-end gap-2">
-          <Button className="w-full">Contact us for pricing</Button>
-        </CardContent>
-      </Card> */}
     </div>
   )
 }

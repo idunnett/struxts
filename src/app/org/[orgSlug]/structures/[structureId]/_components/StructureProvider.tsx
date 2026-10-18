@@ -9,7 +9,6 @@ import {
   useNodesState,
 } from "@xyflow/react"
 import { useMutation } from "convex/react"
-import _ from "lodash"
 import { useParams } from "next/navigation"
 import {
   createContext,
@@ -221,7 +220,10 @@ export default function StructureProvider({
         const changedEdge: Partial<EdgeData> = {}
         if (edge.data.colour !== existingEdge.colour)
           changedEdge.colour = edge.data.colour
-        if (!_.isEqual(edge.data.labels, existingEdge.labels ?? []))
+        if (
+          JSON.stringify(edge.data.labels) !==
+          JSON.stringify(existingEdge.labels ?? [])
+        )
           changedEdge.labels = edge.data.labels
 
         if (Object.keys(changedEdge).length > 0)
@@ -237,12 +239,14 @@ export default function StructureProvider({
   )
 
   async function removeNodes(id: string[]) {
+    if (!currentOrgStructureUser.orgId) return
     setIsDeletingNodes(true)
+    const orgId = currentOrgStructureUser.orgId
     const promises = id.map((nodeId) =>
       removeNode({
         nodeId,
         structureId: structure._id,
-        orgId: currentOrgStructureUser.orgId,
+        orgId,
       }),
     )
     await Promise.all(promises).finally(() => setIsDeletingNodes(false))
@@ -331,7 +335,7 @@ export default function StructureProvider({
         target: dbEdge.target,
         data: {
           colour: changedData?.colour ?? dbEdge.colour,
-          labels: changedData?.labels ?? _.cloneDeep(dbEdge.labels),
+          labels: changedData?.labels ?? structuredClone(dbEdge.labels),
           editable,
           isActive: false,
           showNodeInfo: false,
@@ -369,6 +373,7 @@ export default function StructureProvider({
   useEffect(() => {
     if (isCreatingEdges) return
     const { edgeCreates } = getEdgeChanges(edges)
+    if (edgeCreates.length === 0) return
     setIsCreatingEdges(true)
     const promises = edgeCreates.map((edge) =>
       createEdge({
@@ -384,6 +389,7 @@ export default function StructureProvider({
   useEffect(() => {
     if (isDeletingEdges) return
     const { edgeRemoves } = getEdgeChanges(edges)
+    if (edgeRemoves.length === 0) return
     setIsDeletingEdges(true)
     const promises = edgeRemoves.map((edgeId) => removeEdge({ edgeId }))
     Promise.all(promises).finally(() => setIsDeletingEdges(false))

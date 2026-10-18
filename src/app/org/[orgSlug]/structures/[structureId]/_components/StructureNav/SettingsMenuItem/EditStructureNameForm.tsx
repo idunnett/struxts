@@ -35,6 +35,7 @@ export default function EditStructureNameForm({ structure }: Props) {
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     startTransition(async () => {
+      if (!structure.orgId) return
       await updateStructureName({
         orgId: structure.orgId,
         structureId: structure._id,

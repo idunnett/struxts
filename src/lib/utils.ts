@@ -1,7 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
-import ky from "ky"
 import { twMerge } from "tailwind-merge"
-import { env } from "../env"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -15,27 +13,28 @@ export function isOwner(role: string | undefined | null) {
   return role === "Owner"
 }
 
-export async function downloadFile(
-  storageId: string,
-  opts: { token: string | null },
-) {
-  const getFileUrl = new URL(`${env.NEXT_PUBLIC_CONVEX_SITE_URL}/getFile`)
-  getFileUrl.searchParams.set("storageId", storageId)
-  const blob = await ky(getFileUrl.toString(), {
-    headers: {
-      Authorization: `Bearer ${opts.token}`,
-    },
-  }).blob()
+export async function loadBlobFromUrl(url: string) {
+  const blob = await fetch(url).then((r) => r.blob())
 
   if (blob.type.startsWith("image/")) {
     const bmp = await createImageBitmap(blob)
     const { width, height } = bmp
-    bmp.close() // free memory
+    bmp.close()
     const src = URL.createObjectURL(blob)
-    return { src, width, height }
+    return { src, width, height, blob }
   }
 
-  return { src: URL.createObjectURL(blob), width: 0, height: 0 }
+  return { src: URL.createObjectURL(blob), width: 0, height: 0, blob }
+}
+
+/** @deprecated Prefer Convex `files.getDownloadUrl` + `loadBlobFromUrl` */
+export async function downloadFile(
+  _storageId: string,
+  opts: { url?: string; token?: string | null },
+) {
+  if (!opts.url) throw new Error("downloadFile requires a url from getDownloadUrl")
+  const { src, width, height } = await loadBlobFromUrl(opts.url)
+  return { src, width, height }
 }
 
 export function getOrigin() {

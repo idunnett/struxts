@@ -1,19 +1,25 @@
-import { auth, clerkClient } from "@clerk/nextjs/server"
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server"
+import { fetchQuery } from "convex/nextjs"
 import Image from "next/image"
 import Stripe from "stripe"
+import { api } from "../../../convex/_generated/api"
 import { env } from "../../env"
 import { PricingTable } from "./_components/PricingTable"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 export default async function PricingPage() {
-  const session = auth()
+  const token = await convexAuthNextjsToken()
+  const viewer = token
+    ? await fetchQuery(api.users.viewer, {}, { token })
+    : null
+  const org = viewer?.activeOrganization ?? null
 
-  const org = session.orgId
-    ? await clerkClient().organizations.getOrganization({
-        organizationId: session.orgId,
-      })
-    : undefined
+  const billing =
+    org && token
+      ? await fetchQuery(api.billing.getForOrg, { orgId: org._id }, { token })
+      : null
+
   const products = (
     await stripe.products.list({
       expand: ["data.default_price"],
@@ -32,32 +38,35 @@ export default async function PricingPage() {
     )
   })
 
-  let prices: (Stripe.Price & { tiers?: Stripe.Price.Tier[] })[] = []
-  for (const product of products) {
-    const price = (await stripe.prices.retrieve(product.default_price.id, {
-      expand: ["tiers"], // To get tiered pricing details, if applicable
-    })) as Stripe.Price & { tiers?: Stripe.Price.Tier[] }
-    prices.push({ ...price })
-  }
+  const prices = await Promise.all(
+    products.map(
+      (product) =>
+        stripe.prices.retrieve(product.default_price.id, {
+          expand: ["tiers"],
+        }) as Promise<Stripe.Price & { tiers?: Stripe.Price.Tier[] }>,
+    ),
+  )
 
   let subscription: Stripe.Subscription | undefined
-  const customerId = org?.publicMetadata?.customer as string | undefined
-  if (org && customerId) {
+  if (org && billing?.stripeCustomerId) {
     try {
       subscription = (
         await stripe.subscriptions.search({
-          query: `metadata["orgId"]:"${org.id}" AND status:"active"`,
+          query: `metadata["orgId"]:"${org._id}" AND status:"active"`,
         })
       ).data?.[0]
     } catch (error) {
-      console.error("Error fetching customer:", error)
+      console.error("Error fetching subscription:", error)
     }
   }
 
-  let currentPlanProducId: string | undefined
-  if (subscription)
-    currentPlanProducId = products.find(
-      (product) => product.id === (org?.publicMetadata?.plan as any)?.product,
+  let currentPlanProductId: string | undefined
+  if (subscription || billing?.stripeProductId)
+    currentPlanProductId = products.find(
+      (product) =>
+        product.id ===
+        (billing?.stripeProductId ??
+          subscription?.items.data[0]?.price.product),
     )?.id
 
   return (
@@ -68,13 +77,19 @@ export default async function PricingPage() {
         </h1>
         {org && (
           <div className="flex items-center gap-4">
-            <Image
-              src={org.imageUrl}
-              alt={org.name}
-              width={40}
-              height={40}
-              className="rounded-md"
-            />
+            {org.imageUrl ? (
+              <Image
+                src={org.imageUrl}
+                alt={org.name}
+                width={40}
+                height={40}
+                className="rounded-md"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-sm font-bold text-primary">
+                {org.name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
             <h1 className="text-2xl font-bold sm:text-4xl">{org.name}</h1>
           </div>
         )}
@@ -82,7 +97,9 @@ export default async function PricingPage() {
       <PricingTable
         products={products}
         prices={prices}
-        currentPlanProductId={currentPlanProducId}
+        currentPlanProductId={currentPlanProductId}
+        orgSlug={org?.slug}
+        isSignedIn={!!viewer}
       />
     </div>
   )

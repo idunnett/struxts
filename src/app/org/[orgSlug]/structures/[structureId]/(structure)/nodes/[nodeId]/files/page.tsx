@@ -1,27 +1,27 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
 import { Authenticated } from "convex/react"
 import { ErrorBoundary } from "next/dist/client/components/error-boundary"
+import { use } from "react"
 import ErrorDisplay from "../../../../../../../../../components/ErrorDisplay"
 import Spinner from "../../../../../../../../../components/Spinner"
 import { TabsContent } from "../../../../../../../../../components/ui/tabs"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 import Folders from "./_components/Folders"
 
 interface Props {
-  params: {
+  params: Promise<{
     nodeId: string
     structureId: string
     orgSlug: string
-  }
+  }>
 }
 
-export default function NodeFilesTabPage({
-  params: { nodeId, structureId },
-}: Props) {
-  const session = useAuth()
+export default function NodeFilesTabPage({ params }: Props) {
+  const { nodeId, structureId } = use(params)
+  const { orgId, isLoaded } = useCurrentOrg()
 
-  if (!session?.orgId) return <Spinner />
+  if (!isLoaded || !orgId) return <Spinner />
 
   return (
     <TabsContent
@@ -34,11 +34,7 @@ export default function NodeFilesTabPage({
             <ErrorDisplay error={error} type="component" />
           )}
         >
-          <Folders
-            structureId={structureId}
-            nodeId={nodeId}
-            orgId={session.orgId}
-          />
+          <Folders structureId={structureId} nodeId={nodeId} orgId={orgId} />
         </ErrorBoundary>
       </Authenticated>
     </TabsContent>

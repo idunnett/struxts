@@ -1,21 +1,19 @@
 "use client"
 
-import { OrganizationMembershipPublicUserData } from "@clerk/nextjs/server"
 import { useQuery } from "convex/react"
 import { formatDate } from "date-fns"
 import { LucideArrowRight } from "lucide-react"
-import Image from "next/image"
 import { api } from "../../../../../../../convex/_generated/api"
 import { Doc } from "../../../../../../../convex/_generated/dataModel"
+import { UserAvatar } from "~/components/UserAvatar"
 import { Skeleton } from "../../../../../../components/ui/skeleton"
 import { cn } from "../../../../../../lib/utils"
 
 interface Props {
   structure: Doc<"structures">
-  orgMembers: OrganizationMembershipPublicUserData[]
 }
 
-export default function StructureCardContent({ structure, orgMembers }: Props) {
+export default function StructureCardContent({ structure }: Props) {
   const structureMembers = useQuery(api.structures.getMembers, {
     structureId: structure._id,
   })
@@ -36,25 +34,14 @@ export default function StructureCardContent({ structure, orgMembers }: Props) {
                   Owner{owners.length > 1 ? "s" : ""}:{" "}
                 </span>
                 <div className="flex items-center">
-                  {owners.map((member, i) => {
-                    const clerkMember = orgMembers.find(
-                      (m) => m.userId === member.userId,
-                    )
-                    if (!clerkMember) return null
-                    return (
-                      <Image
-                        key={clerkMember.userId}
-                        src={clerkMember.imageUrl}
-                        alt={clerkMember.identifier ?? "Owner picture"}
-                        width={24}
-                        height={24}
-                        className={cn(
-                          "h-6 w-6 rounded-full",
-                          i !== 0 && "-ml-2",
-                        )}
-                      />
-                    )
-                  })}
+                  {owners.map((member, i) => (
+                    <UserAvatar
+                      key={member.userId}
+                      src={member.imageUrl}
+                      name={member.fullName}
+                      className={cn(i !== 0 && "-ml-2")}
+                    />
+                  ))}
                 </div>
               </>
             ) : (
@@ -66,22 +53,14 @@ export default function StructureCardContent({ structure, orgMembers }: Props) {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Members: </span>
             <div className="flex items-center">
-              {membersWithoutOwners.map((member, i) => {
-                const clerkMember = orgMembers.find(
-                  (m) => m.userId === member.userId,
-                )
-                if (!clerkMember) return null
-                return (
-                  <Image
-                    key={clerkMember.userId}
-                    src={clerkMember.imageUrl}
-                    alt={clerkMember.identifier ?? "Member picture"}
-                    width={24}
-                    height={24}
-                    className={cn("h-6 w-6 rounded-full", i !== 0 && "-ml-2")}
-                  />
-                )
-              })}
+              {membersWithoutOwners.map((member, i) => (
+                <UserAvatar
+                  key={member.userId}
+                  src={member.imageUrl}
+                  name={member.fullName}
+                  className={cn(i !== 0 && "-ml-2")}
+                />
+              ))}
             </div>
           </div>
         )}

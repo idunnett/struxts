@@ -1,7 +1,6 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import Spinner from "~/components/Spinner"
@@ -14,14 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select"
-import { ClerkOrgStructureUser } from "~/types"
+import { StructureMemberUser } from "~/types"
 import { api } from "../../../../../../../../../convex/_generated/api"
 import { Button } from "../../../../../../../../components/ui/button"
 
 interface Props {
   orgId: string
   structureId: string
-  member: ClerkOrgStructureUser
+  member: StructureMemberUser
   isCurrentUserOwner: boolean
 }
 
@@ -31,8 +30,9 @@ export default function ManageMemberActions({
   structureId,
   isCurrentUserOwner,
 }: Props) {
-  const session = useAuth()
+  const viewer = useQuery(api.users.viewer)
   const router = useRouter()
+  const currentUserId = viewer?._id
   const [isPendingUpdateRole, startUpdateRoleTransition] = useTransition()
   const [isPendingRemoveMember, startRemoveMemberTransition] = useTransition()
   const updateOrgStructureUserRole = useMutation(
@@ -51,16 +51,17 @@ export default function ManageMemberActions({
       ) : (
         <>
           {(isCurrentUserOwner || member.role === "Guest") &&
-          member.userId !== session.userId ? (
+          member.userId !== currentUserId ? (
             <Select
               value={member.role}
               onValueChange={(value) => {
                 startUpdateRoleTransition(async () => {
+                  if (!member.orgId) return
                   await updateOrgStructureUserRole({
                     structureId,
                     userId: member.userId,
                     orgId: member.orgId,
-                    role: value as ClerkOrgStructureUser["role"],
+                    role: value as StructureMemberUser["role"],
                   })
                   router.refresh()
                 })
@@ -100,7 +101,7 @@ export default function ManageMemberActions({
           )}
         </>
       )}
-      {member.role !== "Owner" && member.userId !== session.userId && (
+      {member.role !== "Owner" && member.userId !== currentUserId && (
         <Button
           variant="destructive"
           size="sm"

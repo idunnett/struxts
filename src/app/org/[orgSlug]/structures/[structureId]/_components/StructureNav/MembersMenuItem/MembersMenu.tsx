@@ -1,13 +1,13 @@
-import Image from "next/image"
+import { UserAvatar } from "~/components/UserAvatar"
 import { Doc } from "../../../../../../../../../convex/_generated/dataModel"
-import { cn, isOwner } from "../../../../../../../../lib/utils"
-import { ClerkOrgStructureUser } from "../../../../../../../../types"
+import { isOwner } from "../../../../../../../../lib/utils"
+import { StructureMemberUser } from "../../../../../../../../types"
 import ManageMemberActions from "./ManageMemberActions"
 
 interface Props {
   orgId: string
   structureId: string
-  orgStructureMembers: ClerkOrgStructureUser[]
+  orgStructureMembers: StructureMemberUser[]
   currentOrgStructureUser: Doc<"orgStructureUsers">
 }
 
@@ -26,19 +26,18 @@ export default function MembersMenu({
             className="flex w-full items-center justify-between gap-4 whitespace-nowrap rounded-sm border p-3"
           >
             <div className="flex items-center gap-2">
-              <Image
+              <UserAvatar
                 src={member.imageUrl}
-                alt={member.fullName ?? "Structure Member Picture"}
-                className="h-6 w-6 rounded-full"
-                width={24}
-                height={24}
+                name={member.fullName ?? member.primaryEmailAddress}
               />
-              <div className="flex flex-col">
-                {member.fullName && (
-                  <span className="text-sm">{member.fullName}</span>
-                )}
-                {member.primaryEmailAddress && (
-                  <span className={cn(member.fullName ? "text-xs" : "text-sm")}>
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-sm">
+                  {member.fullName ??
+                    member.primaryEmailAddress ??
+                    "Unknown member"}
+                </span>
+                {member.fullName && member.primaryEmailAddress && (
+                  <span className="truncate text-xs text-muted-foreground">
                     {member.primaryEmailAddress}
                   </span>
                 )}

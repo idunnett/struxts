@@ -1,9 +1,9 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
 import { LucideTriangleAlert } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 import { isCustomConvexError } from "../lib/custom-convex-error"
 import { buttonVariants } from "./ui/button"
 import {
@@ -26,7 +26,7 @@ export default function ErrorDisplay({
   error,
   type = "page",
 }: Props) {
-  const session = useAuth()
+  const { orgSlug } = useCurrentOrg()
   const errorDetails = useMemo(() => {
     let errorDetails = { statusCode: 500, message: "An error occurred" }
     if (error && isCustomConvexError(error))
@@ -38,7 +38,7 @@ export default function ErrorDisplay({
     if (message) errorDetails.message = message
 
     return errorDetails
-  }, [error])
+  }, [error, statusCode, message])
 
   if (type === "icon")
     return (
@@ -70,7 +70,7 @@ export default function ErrorDisplay({
       </div>
     )
 
-  const hasActiveOrg = !!session.orgSlug
+  const hasActiveOrg = !!orgSlug
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-8">
@@ -79,7 +79,7 @@ export default function ErrorDisplay({
         <p className="text-lg">{errorDetails.message}</p>
       </div>
       <Link
-        href={hasActiveOrg ? `/org/${session.orgSlug}/structures` : "/"}
+        href={hasActiveOrg ? `/org/${orgSlug}/structures` : "/"}
         className={buttonVariants({
           variant: "secondary",
         })}

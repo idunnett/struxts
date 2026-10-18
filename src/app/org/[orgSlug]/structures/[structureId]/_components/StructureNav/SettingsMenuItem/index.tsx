@@ -1,5 +1,7 @@
-import { useOrganization } from "@clerk/nextjs"
+"use client"
+
 import { Doc } from "../../../../../../../../../convex/_generated/dataModel"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 import DeleteStructureForm from "./DeleteStructureForm"
 import EditStructureNameForm from "./EditStructureNameForm"
 
@@ -8,17 +10,11 @@ interface Props {
 }
 
 export default function SettingsMenuItem({ structure }: Props) {
-  const org = useOrganization()
+  const { orgId } = useCurrentOrg()
   return (
     <div className="flex h-full w-full flex-col items-center gap-4 overflow-auto px-6">
-      <EditStructureNameForm
-        orgId={org.organization?.id ?? null}
-        structure={structure}
-      />
-      <DeleteStructureForm
-        orgId={org.organization?.id ?? null}
-        structureId={structure._id}
-      />
+      <EditStructureNameForm orgId={orgId} structure={structure} />
+      <DeleteStructureForm orgId={orgId} structureId={structure._id} />
     </div>
   )
 }

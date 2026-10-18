@@ -20,18 +20,26 @@ const coreConfig = {
   images: {
     remotePatterns: [
       {
-        hostname: "img.clerk.com",
+        hostname: "www.gravatar.com",
       },
       {
-        hostname: "www.gravatar.com",
+        hostname: "lh3.googleusercontent.com",
       },
       {
         hostname: "deafening-pony-162.convex.site",
       },
+      {
+        protocol: "https",
+        hostname: "*.convex.cloud",
+      },
+      {
+        protocol: "https",
+        hostname: "*.convex.site",
+      },
     ],
   },
   devIndicators: {
-    appIsrStatus: false,
+    position: "bottom-right",
   },
   async rewrites() {
     if (process.env.NEXT_PUBLIC_VERCEL_ENV !== "production") return []

@@ -1,10 +1,10 @@
-import { useAuth } from "@clerk/nextjs"
 import { useMutation } from "convex/react"
 import { FormEvent, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { api } from "../../../../../../../../../../../convex/_generated/api"
 import { Button } from "../../../../../../../../../../components/ui/button"
 import { Input } from "../../../../../../../../../../components/ui/input"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 
 interface Props {
   nodeId: string
@@ -17,7 +17,7 @@ export default function AddFolderForm({
   structureId,
   onAddFolder,
 }: Props) {
-  const session = useAuth()
+  const { orgId } = useCurrentOrg()
   const [folderName, setFolderName] = useState("")
   const createFolder = useMutation(api.folders.create)
   const [isPending, startTransition] = useTransition()
@@ -25,12 +25,12 @@ export default function AddFolderForm({
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     startTransition(async () => {
-      if (!session.orgId) return
+      if (!orgId) return
       await createFolder({
         name: folderName,
         nodeId,
         structureId,
-        orgId: session.orgId,
+        orgId,
       })
       toast.success("Folder created successfully")
       onAddFolder()
