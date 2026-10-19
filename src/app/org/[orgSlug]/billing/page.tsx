@@ -1,4 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server"
+import { fetchQuery } from "convex/nextjs"
 import { formatDate } from "date-fns"
 import { LucideCalendarDays, LucideChevronDown } from "lucide-react"
 import Image from "next/image"
@@ -20,28 +20,43 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../../../../components/ui/collapsible"
+import { api } from "../../../../../convex/_generated/api"
 import { env } from "../../../../env"
-import { convertFromSubcurrency } from "../../../../lib/currencyUtils"
+import {
+  convertFromSubcurrency,
+  getSubscriptionPeriodEnd,
+} from "../../../../lib/currencyUtils"
 import { cn } from "../../../../lib/utils"
+import { getAuthToken } from "../../../auth"
 import BillingInformation from "./_components/BillingInformation"
 import ManageBillingButton from "./_components/ManageBillingButton"
 import PaymentMethods from "./_components/PaymentMethods"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
-export default async function BillingPage() {
-  const session = auth()
+interface Props {
+  params: Promise<{ orgSlug: string }>
+}
 
-  const org = session.orgId
-    ? await clerkClient().organizations.getOrganization({
-        organizationId: session.orgId,
-      })
-    : undefined
+export default async function BillingPage({ params }: Props) {
+  const { orgSlug } = await params
+  const token = await getAuthToken()
+  const org = await fetchQuery(
+    api.organizations.getBySlug,
+    { slug: orgSlug },
+    { token },
+  )
 
   if (!org)
     return <ErrorDisplay message="Organization not found" statusCode={404} />
 
-  const customerId = org.publicMetadata?.customer as string | undefined
+  const billing = await fetchQuery(
+    api.billing.getForOrg,
+    { orgId: org._id },
+    { token },
+  )
+
+  const customerId = billing?.stripeCustomerId ?? undefined
   let customer: Stripe.Customer | Stripe.DeletedCustomer | null = null
   let paymentMethods: Stripe.ApiList<Stripe.PaymentMethod> | undefined
   if (customerId) {
@@ -59,14 +74,12 @@ export default async function BillingPage() {
     })
     subscription = (
       await stripe.subscriptions.search({
-        query: `metadata["orgId"]:"${org.id}" AND status:"active"`,
+        query: `metadata["orgId"]:"${org._id}" AND status:"active"`,
       })
     ).data?.[0]
   }
 
-  const currentPlanProductId = (org?.publicMetadata?.plan as any)?.product as
-    | string
-    | undefined
+  const currentPlanProductId = billing?.stripeProductId
   let product:
     | (Stripe.Product & {
         default_price: Stripe.Price
@@ -86,7 +99,7 @@ export default async function BillingPage() {
 
     if (product)
       price = (await stripe.prices.retrieve(product.default_price.id, {
-        expand: ["tiers"], // To get tiered pricing details, if applicable
+        expand: ["tiers"],
       })) as Stripe.Price & { tiers?: Stripe.Price.Tier[] }
   }
 
@@ -109,18 +122,28 @@ export default async function BillingPage() {
                 Billing -
               </h1>
               <div className="flex items-center gap-4">
-                <Image
-                  src={org.imageUrl}
-                  alt={org.name}
-                  width={40}
-                  height={40}
-                  className="rounded-md"
-                />
+                {org.imageUrl ? (
+                  <Image
+                    src={org.imageUrl}
+                    alt={org.name}
+                    width={40}
+                    height={40}
+                    className="rounded-md"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-sm font-bold text-primary">
+                    {org.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <h1 className="text-2xl font-bold sm:text-4xl">{org.name}</h1>
               </div>
             </div>
             {customer && (
-              <ManageBillingButton orgId={org.id} customerId={customer.id} />
+              <ManageBillingButton
+                orgSlug={org.slug}
+                orgId={org._id}
+                customerId={customer.id}
+              />
             )}
           </CardTitle>
           <CardDescription>{product?.description}</CardDescription>
@@ -130,11 +153,11 @@ export default async function BillingPage() {
             <span className="border-b pb-2 text-xs font-normal text-muted-foreground">
               CURRENT PLAN
             </span>
-            {subscription && (
+            {subscription && getSubscriptionPeriodEnd(subscription) && (
               <Badge variant="secondary" className="w-min whitespace-nowrap">
                 {subscription.cancel_at_period_end ? "Cancels on" : "Renews on"}{" "}
                 {formatDate(
-                  new Date(subscription.current_period_end * 1000),
+                  new Date(getSubscriptionPeriodEnd(subscription)! * 1000),
                   "MMM dd",
                 )}
               </Badge>
@@ -190,13 +213,8 @@ export default async function BillingPage() {
               <Button asChild>
                 <Link href="/pricing">Change Plan</Link>
               </Button>
-              {/* {subscription && (
-                <Button variant="outline">
-                  {subscription.cancel_at_period_end ? "Renew" : "Cancel"} Plan
-                </Button>
-              )} */}
             </div>
-            {subscription && (
+            {subscription && getSubscriptionPeriodEnd(subscription) && (
               <div className="flex items-center gap-2 pt-4">
                 <LucideCalendarDays size={14} />
                 <span>
@@ -205,7 +223,7 @@ export default async function BillingPage() {
                     ? "canceled on"
                     : "renewed on"}{" "}
                   {formatDate(
-                    new Date(subscription.current_period_end * 1000),
+                    new Date(getSubscriptionPeriodEnd(subscription)! * 1000),
                     "MMM dd, yyyy",
                   )}
                 </span>

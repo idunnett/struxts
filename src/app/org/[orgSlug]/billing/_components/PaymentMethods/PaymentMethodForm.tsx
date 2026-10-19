@@ -1,29 +1,28 @@
-import { useOrganization } from "@clerk/nextjs"
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import { FormEvent, useState } from "react"
 import { toast } from "sonner"
 import Spinner from "../../../../../../components/Spinner"
 import { Button } from "../../../../../../components/ui/button"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 import { getOrigin } from "../../../../../../lib/utils"
 
 export default function PaymentMethodForm() {
   const stripe = useStripe()
   const elements = useElements()
-  const org = useOrganization()
+  const { org } = useCurrentOrg()
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!stripe || !elements || !org.organization) return
+    if (!stripe || !elements || !org) return
 
     const origin = getOrigin()
     setLoading(true)
-    // Confirm the SetupIntent to attach the payment method to the customer
     const { error } = await stripe.confirmSetup({
       elements,
       confirmParams: {
-        return_url: `${origin}/org/${org.organization.slug}/billing`, // Optional
+        return_url: `${origin}/org/${org.slug}/billing`,
       },
     })
 

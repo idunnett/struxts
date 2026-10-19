@@ -1,92 +1,104 @@
 "use client"
 
-import { useAuth, useOrganization } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
-import {
-  LucideArrowRight,
-  LucideChevronDown,
-  LucidePlus,
-  LucideWaypoints,
-} from "lucide-react"
+import { Check, ChevronsUpDown, Plus } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { useMemo, useState } from "react"
 import { api } from "../../../../convex/_generated/api"
-import { buttonVariants } from "../../../components/ui/button"
+import { buttonVariants } from "~/components/ui/button"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../../components/ui/popover"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
+import { cn } from "~/lib/utils"
 import { Skeleton } from "../../../components/ui/skeleton"
 
 export default function StructureSwitcher() {
-  const params = useParams()
-  const session = useAuth()
-  const { organization, isLoaded } = useOrganization()
-  const [popoverOpen, setPopoverOpen] = useState(false)
-
-  const orgId = organization?.id
-
-  const myStructures = useQuery(
+  const { org, orgSlug, role, isLoaded } = useCurrentOrg()
+  const params = useParams() as { structureId?: string }
+  const structures = useQuery(
     api.structures.getAllOfMyInOrgId,
-    isLoaded && orgId ? { orgId } : "skip",
+    org?._id ? { orgId: org._id } : "skip",
   )
 
-  const selectedStructure = useMemo(() => {
-    if (!params.structureId) return undefined
-    if (typeof params.structureId !== "string") return undefined
-    return myStructures?.find((s) => s._id === params.structureId)
-  }, [params.structureId, myStructures])
+  if (!isLoaded || !org || !orgSlug) return null
+  if (structures === undefined)
+    return <Skeleton className="h-8 w-44 rounded-md" />
 
-  if (!isLoaded || !organization) return null
+  const canCreate = role === "owner" || role === "admin"
+  const activeStructure =
+    structures.find((s) => s && s._id === params.structureId) ?? null
 
   return (
-    <>
-      <div className="h-1/2 w-px rotate-12 bg-muted-foreground" />
-      {myStructures ? (
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger className="flex h-7 max-w-96 items-center gap-2 rounded-sm border-none bg-transparent px-2 text-[13px] font-medium !text-muted-foreground !ring-0 hover:bg-[#00000008]">
-            <LucideWaypoints className="h-4 w-4 text-primary" />
-            {selectedStructure?.name ?? "Select a structure"}
-            <LucideChevronDown className="h-4 w-4" />
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="p-0">
-            {myStructures.map((structure) => (
-              <Link
-                key={structure._id}
-                href={`/org/${session.orgSlug}/structures/${structure._id}`}
-                className={buttonVariants({
-                  variant: "ghost",
-                  className:
-                    "group flex w-full !justify-between gap-2 rounded-none border-b text-left text-[13px] text-muted-foreground transition-all duration-300 ease-in-out hover:text-primary",
-                })}
-                onClick={() => setPopoverOpen(false)}
-              >
-                <div className="flex items-center gap-2">
-                  <LucideWaypoints className="h-4 w-4" />
-                  {structure.name}
-                </div>
-                <LucideArrowRight className="h-3 w-3 -translate-x-2 text-muted-foreground opacity-0 transition-all duration-300 ease-in-out group-hover:translate-x-0 group-hover:text-primary group-hover:opacity-100" />
-              </Link>
-            ))}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          buttonVariants({ variant: "ghost", size: "sm" }),
+          "h-8 max-w-52 gap-1.5 px-2 font-normal",
+        )}
+      >
+        <span className="truncate">
+          {activeStructure?.name ?? "Select structure"}
+        </span>
+        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Structures
+        </DropdownMenuLabel>
+        {structures.length === 0 ? (
+          <DropdownMenuItem disabled className="text-muted-foreground">
+            No structures yet
+          </DropdownMenuItem>
+        ) : (
+          structures.map(
+            (structure) =>
+              structure && (
+                <DropdownMenuItem key={structure._id} asChild>
+                  <Link
+                    href={`/org/${orgSlug}/structures/${structure._id}`}
+                    className="gap-2"
+                  >
+                    <Check
+                      className={cn(
+                        "h-4 w-4 shrink-0",
+                        structure._id === activeStructure?._id
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                    <span className="truncate">{structure.name}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ),
+          )
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/org/${orgSlug}/structures`}
+            className="text-muted-foreground"
+          >
+            All structures
+          </Link>
+        </DropdownMenuItem>
+        {canCreate && (
+          <DropdownMenuItem asChild>
             <Link
-              href={`/org/${session.orgSlug}/structures/new`}
-              className={buttonVariants({
-                variant: "ghost",
-                className:
-                  "flex w-full !justify-start gap-2 text-left text-[13px] text-muted-foreground transition-colors duration-300 ease-in-out hover:text-primary",
-              })}
-              onClick={() => setPopoverOpen(false)}
+              href={`/org/${orgSlug}/structures/new`}
+              className="gap-2"
             >
-              <LucidePlus className="h-4 w-4" />
-              New Structure
+              <Plus className="h-4 w-4 shrink-0" />
+              New structure
             </Link>
-          </PopoverContent>
-        </Popover>
-      ) : (
-        <Skeleton className="h-7 w-52 rounded-md" />
-      )}
-    </>
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

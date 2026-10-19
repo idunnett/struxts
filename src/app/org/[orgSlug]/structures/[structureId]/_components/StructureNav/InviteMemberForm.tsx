@@ -10,15 +10,15 @@ import {
 } from "../../../../../../../components/ui/popover"
 import { useDebounce } from "../../../../../../../hooks/useDebounce"
 import {
-  ClerkOrgStructureUser,
-  ClerkUserData,
+  StructureMemberUser,
+  OrgMemberUserData,
 } from "../../../../../../../types"
 import AddMember from "./MembersMenuItem/AddMember"
 
 interface Props {
   orgId: string
   structureId: string
-  orgStructureMembers: ClerkOrgStructureUser[]
+  orgStructureMembers: StructureMemberUser[]
 }
 
 export default function InviteMemberForm({
@@ -29,7 +29,7 @@ export default function InviteMemberForm({
   const [searchValue, setSearchValue] = useState("")
   const [isFetching, setIsFetching] = useState(false)
   const debouncedSearchValue = useDebounce(searchValue)
-  const [orgMembers, setOrgMembers] = useState<ClerkUserData[]>([])
+  const [orgMembers, setOrgMembers] = useState<OrgMemberUserData[]>([])
   const [searchResultsOpen, setSearchResultsOpen] = useState(false)
   const [inputIsFocused, setInputIsFocused] = useState(false)
 
@@ -37,7 +37,7 @@ export default function InviteMemberForm({
     if (debouncedSearchValue.length < 3) return setOrgMembers([])
     async function searchOrgMembers() {
       setIsFetching(true)
-      const data = await ky<ClerkUserData[]>(`/api/org/${orgId}/users/search`, {
+      const data = await ky<OrgMemberUserData[]>(`/api/org/${orgId}/users/search`, {
         searchParams: {
           query: debouncedSearchValue,
         },

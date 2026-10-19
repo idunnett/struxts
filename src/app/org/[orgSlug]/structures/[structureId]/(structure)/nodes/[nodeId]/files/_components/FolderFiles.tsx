@@ -1,6 +1,5 @@
-import { useAuth } from "@clerk/nextjs"
 import { UploadFileResponse, useUploadFiles } from "@xixixao/uploadstuff/react"
-import { useMutation } from "convex/react"
+import { useConvex, useMutation } from "convex/react"
 import { formatDate } from "date-fns"
 import {
   LucideChevronDown,
@@ -57,7 +56,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../../../../../../../../../../components/ui/tooltip"
-import { cn, downloadFile } from "../../../../../../../../../../lib/utils"
+import { cn, loadBlobFromUrl } from "../../../../../../../../../../lib/utils"
 import { StructureContext } from "../../../../../_components/StructureProvider"
 import StorageImage from "./StorageImage"
 
@@ -76,7 +75,7 @@ export default function FolderFiles({
   files,
   folder,
 }: Props) {
-  const session = useAuth()
+  const convex = useConvex()
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
   const saveFiles = useMutation(api.files.saveFiles)
   const deleteFile = useMutation(api.files.deleteFile)
@@ -133,14 +132,16 @@ export default function FolderFiles({
   })
   async function downloadFileToDisk(storageId: string, name: string) {
     const toastId = toast.loading("Downloading file...")
-    const token = await session.getToken({ template: "convex" })
     let file: {
       src: string
       width: number
       height: number
     } | null = null
     try {
-      file = await downloadFile(storageId, { token })
+      const download = await convex.query(api.files.getDownloadUrl, {
+        storageId,
+      })
+      file = await loadBlobFromUrl(download.url)
     } catch (error) {
       toast.error("Failed to download file", { id: toastId })
       throw error

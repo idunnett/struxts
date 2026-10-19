@@ -5,7 +5,7 @@ interface Props {
   onColourChoose: (colour: string) => void
 }
 
-const ColourPicker: React.FC<Props> = ({ onColourChoose }) => {
+export function ColourPicker({ onColourChoose }: Props) {
   return (
     <div className="flex w-full flex-wrap items-center justify-center gap-1">
       {colours.map((colour) => (
@@ -27,4 +27,3 @@ const ColourPicker: React.FC<Props> = ({ onColourChoose }) => {
     </div>
   )
 }
-export default ColourPicker

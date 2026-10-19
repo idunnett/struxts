@@ -1,14 +1,19 @@
-import { clerkClient } from "@clerk/nextjs/server"
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server"
+import { fetchQuery } from "convex/nextjs"
 import { NextRequest } from "next/server"
-import { ClerkUserData } from "../../../../../../types"
+import { api } from "../../../../../../../convex/_generated/api"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { orgId: string } },
+  { params }: { params: Promise<{ orgId: string }> },
 ) {
   const searchParams = req.nextUrl.searchParams
   const query = searchParams.get("query")
-  const orgId = params.orgId
+  const { orgId } = await params
+  const token = await convexAuthNextjsToken()
+
+  if (!token)
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
 
   if (!query)
     return Response.json({ error: "Query is required" }, { status: 400 })
@@ -18,22 +23,14 @@ export async function GET(
       { status: 400 },
     )
 
-  const clerkUsers = await clerkClient().users.getUserList({
-    organizationId: [orgId],
-    query,
-  })
-
-  return Response.json(
-    clerkUsers.data.map(
-      (user) =>
-        ({
-          firstName: user.firstName,
-          fullName: user.fullName,
-          imageUrl: user.imageUrl,
-          lastName: user.lastName,
-          primaryEmailAddress: user.primaryEmailAddress?.emailAddress ?? null,
-          userId: user.id,
-        }) satisfies ClerkUserData,
-    ),
-  )
+  try {
+    const users = await fetchQuery(
+      api.organizations.searchMembers,
+      { orgId, query },
+      { token },
+    )
+    return Response.json(users)
+  } catch {
+    return Response.json({ error: "Forbidden" }, { status: 403 })
+  }
 }

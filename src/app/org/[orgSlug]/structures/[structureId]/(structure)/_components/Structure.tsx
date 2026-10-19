@@ -7,21 +7,21 @@ import {
   Connection,
   ConnectionLineType,
   ConnectionMode,
-  ControlButton,
-  Controls,
   DefaultEdgeOptions,
   MarkerType,
+  OnSelectionChangeParams,
   Panel,
   ReactFlow,
   ReactFlowInstance,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { LucideLock, LucideUnlock } from "lucide-react"
 import {
+  Children,
   MouseEvent,
   ReactNode,
   use,
   useCallback,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -43,6 +43,7 @@ import BasicNode from "./BasicNode"
 import DownloadButton from "./DownloadButton"
 import FloatingConnectionLine from "./FloatingConnectionLine"
 import FloatingEdge from "./FloatingEdge"
+import StructureControls from "./StructureControls"
 
 interface Props {
   children?: ReactNode
@@ -55,7 +56,26 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   interactionWidth: 20,
 }
 
+function selectionIdsEqual(
+  prev: OnSelectionChangeParams,
+  next: OnSelectionChangeParams,
+) {
+  if (
+    prev.nodes.length !== next.nodes.length ||
+    prev.edges.length !== next.edges.length
+  )
+    return false
+  for (let i = 0; i < prev.nodes.length; i++) {
+    if (prev.nodes[i]?.id !== next.nodes[i]?.id) return false
+  }
+  for (let i = 0; i < prev.edges.length; i++) {
+    if (prev.edges[i]?.id !== next.edges[i]?.id) return false
+  }
+  return true
+}
+
 function Structure({ children }: Props) {
+  "use no memo"
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance<TBasicNode, TFloatingEdge>>()
@@ -81,33 +101,34 @@ function Structure({ children }: Props) {
     setLastUsedEdgeColour,
   } = use(StructureContext)
 
+  const canEdit = editable && !!reactFlowInstance && currentUserCanEdit
+  const activeNodeId = activeNode?.id ?? null
+
   const onNodeDataChange = useCallback(
     (id: string, newData: Partial<NodeData>) => {
-      const node = nodes.find((node) => node.id === id)
-      if (node && (!!newData.bgColour || !!newData.borderColour))
-        setLastUsedNodeColours((prevData) => {
-          if (newData.bgColour) prevData.bgColour = newData.bgColour
-          if (newData.borderColour) prevData.borderColour = newData.borderColour
-          return prevData
-        })
-      setNodes((nodes) =>
-        nodes.map((node) =>
+      if (newData.bgColour || newData.borderColour) {
+        setLastUsedNodeColours((prev) => ({
+          bgColour: newData.bgColour ?? prev.bgColour,
+          borderColour: newData.borderColour ?? prev.borderColour,
+        }))
+      }
+      setNodes((current) =>
+        current.map((node) =>
           node.id === id
             ? { ...node, data: { ...node.data, ...newData } }
             : node,
         ),
       )
     },
-    [nodes, setNodes],
+    [setNodes, setLastUsedNodeColours],
   )
 
   const onEdgeDataChange = useCallback(
     (id: string, newData: Partial<EdgeData>) => {
-      const edge = edges.find((edge) => edge.id === id)
-      if (edge && newData.colour) setLastUsedEdgeColour(newData.colour)
+      if (newData.colour) setLastUsedEdgeColour(newData.colour)
 
-      setEdges((edges) =>
-        edges.map((edge) =>
+      setEdges((current) =>
+        current.map((edge) =>
           edge.id === id
             ? {
                 ...edge,
@@ -117,18 +138,33 @@ function Structure({ children }: Props) {
                   strokeWidth: 1,
                   height: 16,
                   width: 16,
-                  colour: edge.data?.colour ?? "#000000",
+                  color: newData.colour ?? edge.data?.colour ?? "#000000",
                 },
               }
             : edge,
         ),
       )
     },
-    [edges, setEdges],
+    [setEdges, setLastUsedEdgeColour],
+  )
+
+  const onDeleteNode = useCallback(
+    (id: string) => {
+      removeNodes([id])
+    },
+    [removeNodes],
+  )
+
+  const onDeleteEdge = useCallback(
+    (id: string) => {
+      void reactFlowInstance?.deleteElements({ edges: [{ id }] })
+    },
+    [reactFlowInstance],
   )
 
   const onConnect = useCallback(
     (params: TFloatingEdge | Connection) => {
+      if (!canEdit) return
       setEdges((eds) =>
         addEdge<TFloatingEdge>(
           {
@@ -150,7 +186,75 @@ function Structure({ children }: Props) {
         ),
       )
     },
-    [lastUsedEdgeColour, setEdges],
+    [canEdit, lastUsedEdgeColour, setEdges],
+  )
+
+  const handleNodesChange = useCallback(
+    (nodeChanges: Parameters<typeof onNodesChange>[0]) => {
+      if (!canEdit) return
+      onNodesChange(nodeChanges)
+    },
+    [canEdit, onNodesChange],
+  )
+
+  const handleEdgesChange = useCallback(
+    (edgeChanges: Parameters<typeof onEdgesChange>[0]) => {
+      if (!canEdit) return
+      onEdgesChange(edgeChanges)
+    },
+    [canEdit, onEdgesChange],
+  )
+
+  const handleSelectionChange = useCallback(
+    (selection: OnSelectionChangeParams) => {
+      if (!canEdit) return
+      setSelectedNodesAndEdges((prev) =>
+        selectionIdsEqual(prev, selection) ? prev : selection,
+      )
+    },
+    [canEdit, setSelectedNodesAndEdges],
+  )
+
+  const flowNodes = useMemo(
+    () =>
+      nodes
+        .filter((node) => !!node.id)
+        .map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            editable: canEdit,
+            isActive: activeNodeId === node.id,
+            onNodeDataChange,
+            onDelete: onDeleteNode,
+          },
+        })),
+    [nodes, canEdit, activeNodeId, onNodeDataChange, onDeleteNode],
+  )
+
+  const flowEdges = useMemo(
+    () =>
+      edges
+        .filter((edge) => !!edge.id)
+        .map((edge) => ({
+          ...edge,
+          data: {
+            ...edge.data,
+            labels: edge.data?.labels ?? [],
+            editable: canEdit,
+            colour: edge.data?.colour ?? "#000000",
+            onEdgeDataChange,
+            onDelete: onDeleteEdge,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            strokeWidth: 1,
+            height: 16,
+            width: 16,
+            color: edge.data?.colour ?? "#000000",
+          },
+        })),
+    [edges, canEdit, onEdgeDataChange, onDeleteEdge],
   )
 
   function handleAddNode(e: MouseEvent<HTMLDivElement>) {
@@ -158,10 +262,7 @@ function Structure({ children }: Props) {
       x: e.clientX - 140,
       y: e.clientY - 30,
     }) ?? { x: 0, y: 0 }
-    addNode({
-      x,
-      y,
-    })
+    addNode({ x, y })
   }
 
   return (
@@ -174,52 +275,17 @@ function Structure({ children }: Props) {
         }}
       >
         <ContextMenu>
-          <ContextMenuTrigger>
+          <ContextMenuTrigger
+            disabled={!canEdit}
+            className="block h-full w-full"
+          >
             <ReactFlow<TBasicNode, TFloatingEdge>
               onlyRenderVisibleElements={false}
-              nodes={nodes.map((node) => ({
-                ...node,
-                data: {
-                  ...node.data,
-                  editable:
-                    editable && !!reactFlowInstance && currentUserCanEdit,
-                  isActive: activeNode?.id === node.id,
-                  onNodeDataChange,
-                  onDelete: (id: string) => removeNodes([id]),
-                },
-              }))}
-              edges={edges.map((edge) => ({
-                ...edge,
-                data: {
-                  ...edge.data,
-                  labels: edge.data?.labels ?? [],
-                  editable:
-                    editable && !!reactFlowInstance && currentUserCanEdit,
-                  colour: edge.data?.colour ?? "#000000",
-                  onEdgeDataChange,
-                  onDelete: (id: string) =>
-                    reactFlowInstance?.deleteElements({ edges: [{ id }] }),
-                },
-                markerEnd: {
-                  type: MarkerType.ArrowClosed,
-                  strokeWidth: 1,
-                  height: 16,
-                  width: 16,
-                  color: edge.data?.colour ?? "#000000",
-                },
-              }))}
-              onNodesChange={(nodeChanges) => {
-                if (editable && reactFlowInstance && currentUserCanEdit)
-                  onNodesChange(nodeChanges)
-              }}
-              onEdgesChange={(edgeChanges) => {
-                if (editable && reactFlowInstance && currentUserCanEdit)
-                  onEdgesChange(edgeChanges)
-              }}
-              onConnect={(connection) => {
-                if (editable && reactFlowInstance && currentUserCanEdit)
-                  onConnect(connection)
-              }}
+              nodes={flowNodes}
+              edges={flowEdges}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
+              onConnect={onConnect}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
               defaultEdgeOptions={defaultEdgeOptions}
@@ -235,28 +301,12 @@ function Structure({ children }: Props) {
               snapToGrid
               snapGrid={[12.5, 12.5]}
               fitView
-              edgesReconnectable={
-                editable && !!reactFlowInstance && currentUserCanEdit
-              }
-              nodesDraggable={
-                editable && !!reactFlowInstance && currentUserCanEdit
-              }
-              nodesConnectable={
-                editable && !!reactFlowInstance && currentUserCanEdit
-              }
-              // panOnScroll
-              // selectionOnDrag
-              // panOnDrag={false}
-              selectNodesOnDrag={
-                editable && !!reactFlowInstance && currentUserCanEdit
-              }
-              onSelectionChange={(selection) => {
-                if (editable && reactFlowInstance && currentUserCanEdit)
-                  setSelectedNodesAndEdges(selection)
-              }}
-              edgesFocusable={
-                editable && !!reactFlowInstance && currentUserCanEdit
-              }
+              edgesReconnectable={canEdit}
+              nodesDraggable={canEdit}
+              nodesConnectable={canEdit}
+              selectNodesOnDrag={canEdit}
+              onSelectionChange={handleSelectionChange}
+              edgesFocusable={canEdit}
               reconnectRadius={12.5}
               zoomOnDoubleClick={false}
               onInit={(instance) => {
@@ -264,57 +314,48 @@ function Structure({ children }: Props) {
                 setEditable(false)
               }}
               deleteKeyCode={null}
-              onNodesDelete={(_nodes) => {
-                // if (editable && reactFlowInstance && currentUserCanEdit)
-                //   removeNodes(nodes.map((node) => node.id))
+              onNodesDelete={() => {
                 return
               }}
-              // onEdgesDelete={(edges) => {
-              //   if (editable && reactFlowInstance && currentUserCanEdit)
-              //     onEdgesDelete(edges)
-              // }}
               onError={(code, msg) => {
                 if (code === "002") return
                 console.warn(code, msg)
               }}
             >
-              {reactFlowInstance && (
-                <Controls showInteractive={false}>
-                  <ControlButton
-                    onClick={() => {
-                      if (!currentUserCanEdit) return
-                      setEditable(!editable)
-                    }}
-                  >
-                    {editable ? <LucideUnlock /> : <LucideLock />}
-                  </ControlButton>
-                </Controls>
-              )}
-              {/* <MiniMap /> */}
-              {editable && reactFlowInstance && currentUserCanEdit && (
-                <Background
-                  variant={BackgroundVariant.Dots}
-                  gap={12.5}
-                  size={1}
+              {/* Single child into RF (it nests children into an array). */}
+              <>
+                <StructureControls
+                  editable={editable}
+                  currentUserCanEdit={currentUserCanEdit}
+                  onToggleEdit={() => {
+                    if (!currentUserCanEdit) return
+                    setEditable((prev) => !prev)
+                  }}
                 />
-              )}
-              <Panel position="top-right">
-                {!editable && reactFlowInstance && (
-                  <DownloadButton structureName={structure.name} />
-                )}
-              </Panel>
+                {canEdit ? (
+                  <Background
+                    variant={BackgroundVariant.Dots}
+                    gap={12.5}
+                    size={1}
+                  />
+                ) : null}
+                <Panel position="top-right">
+                  {!editable ? (
+                    <DownloadButton structureName={structure.name} />
+                  ) : null}
+                </Panel>
+              </>
             </ReactFlow>
-            {editable && reactFlowInstance && currentUserCanEdit && (
-              <ContextMenuContent>
-                <ContextMenuItem onClick={(e) => handleAddNode(e)}>
-                  + Add Node
-                </ContextMenuItem>
-              </ContextMenuContent>
-            )}
           </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onClick={(e) => handleAddNode(e)}>
+              + Add Node
+            </ContextMenuItem>
+          </ContextMenuContent>
         </ContextMenu>
       </div>
-      {children}
+      {/* App Router may pass children as an array; toArray assigns keys. */}
+      {Children.toArray(children)}
     </div>
   )
 }

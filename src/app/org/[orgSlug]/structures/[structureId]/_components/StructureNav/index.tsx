@@ -1,6 +1,5 @@
 "use client"
 
-import { useOrganization } from "@clerk/nextjs"
 import {
   LucideCircleCheck,
   LucideRefreshCcw,
@@ -21,30 +20,36 @@ import {
   DialogTrigger,
 } from "../../../../../../../components/ui/dialog"
 import { usePrefetchedAuthQuery } from "../../../../../../../hooks/usePrefetchedQuery"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 import { isOwner } from "../../../../../../../lib/utils"
-import { ClerkOrgStructureUser } from "../../../../../../../types"
+import { StructureMemberUser } from "../../../../../../../types"
 import { StructureContext } from "../StructureProvider"
 import MembersMenuItem from "./MembersMenuItem"
 import SettingsMenuItem from "./SettingsMenuItem"
 
 interface Props {
   prefetchedStructure: typeof api.structures.getById._returnType
-  orgStructureMembers: ClerkOrgStructureUser[]
+  orgStructureMembers: StructureMemberUser[]
   currentOrgStructureUser: Doc<"orgStructureUsers">
 }
 
 export default function StructureNav({
   prefetchedStructure,
-  orgStructureMembers,
+  orgStructureMembers: prefetchedMembers,
   currentOrgStructureUser,
 }: Props) {
-  const org = useOrganization()
+  const { orgId, isLoaded } = useCurrentOrg()
   const { structureId } = useParams() as { structureId: string }
   const structure = usePrefetchedAuthQuery(
     api.structures.getById,
     prefetchedStructure,
     { id: structureId },
   )
+  const orgStructureMembers = usePrefetchedAuthQuery(
+    api.structures.getMembers,
+    prefetchedMembers,
+    { structureId },
+  ) as StructureMemberUser[]
 
   const { isSaving } = use(StructureContext)
   const [manageMembersDialogOpen, setManageMembersDialogOpen] = useState(false)
@@ -75,9 +80,9 @@ export default function StructureNav({
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {org.isLoaded && org.organization && (
+            {isLoaded && orgId && (
               <MembersMenuItem
-                orgId={org.organization.id}
+                orgId={orgId}
                 structureId={structure._id}
                 orgStructureMembers={orgStructureMembers}
                 currentOrgStructureUser={currentOrgStructureUser}

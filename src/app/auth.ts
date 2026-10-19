@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server"
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server"
 
 export async function getAuthToken() {
-  return (await auth().getToken({ template: "convex" })) ?? undefined
+  return (await convexAuthNextjsToken()) ?? undefined
 }

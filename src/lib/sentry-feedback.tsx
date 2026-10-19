@@ -1,7 +1,7 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
 import * as Sentry from "@sentry/nextjs"
+import { useConvexAuth } from "convex/react"
 import { useEffect, useState } from "react"
 
 function createWidget() {
@@ -16,13 +16,11 @@ function useFeedbackWidget(shouldMount: boolean) {
     null,
   )
   useEffect(() => {
-    // Mount if true and no widget exists
     if (shouldMount && !widget) {
       const newWidget = createWidget()
       setWidget(newWidget)
     }
 
-    // Unmount if false and widget exists
     if (!shouldMount && widget) {
       widget.removeFromDom()
       setWidget(null)
@@ -31,9 +29,9 @@ function useFeedbackWidget(shouldMount: boolean) {
 }
 
 export default function SentryFeedbackWidget() {
-  const auth = useAuth()
+  const { isAuthenticated } = useConvexAuth()
   useFeedbackWidget(
-    !!auth?.isSignedIn && process.env.NEXT_PUBLIC_VERCEL_ENV === "production",
+    isAuthenticated && process.env.NEXT_PUBLIC_VERCEL_ENV === "production",
   )
 
   return null

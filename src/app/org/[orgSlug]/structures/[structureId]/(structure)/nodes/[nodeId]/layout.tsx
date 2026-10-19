@@ -1,6 +1,5 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
 import { LucideX } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -15,29 +14,28 @@ import { StructureContext } from "../../../_components/StructureProvider"
 
 interface Props {
   children: ReactNode
-  params: {
+  params: Promise<{
     orgSlug: string
     structureId: string
     nodeId: string
-  }
+  }>
 }
 
-export default function NodePage({
-  params: { orgSlug, structureId, nodeId },
-  children,
-}: Props) {
+export default function NodePage({ params, children }: Props) {
+  const { orgSlug, structureId, nodeId } = use(params)
   const {
     activeNode,
     resizable: { separatorProps, x },
     nodesInitialized,
   } = use(StructureContext)
-  const session = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
   if (!activeNode && !nodesInitialized) return null
-  if (!activeNode)
-    return router.replace(`/org/${orgSlug}/structures/${structureId}`)
+  if (!activeNode) {
+    router.replace(`/org/${orgSlug}/structures/${structureId}`)
+    return null
+  }
   return (
     <>
       <div
@@ -52,9 +50,7 @@ export default function NodePage({
           width: `${x}px`,
         }}
       >
-        {/* <div className="absolute  top-0">Hide Info</div> */}
         <div className="flex items-start justify-between gap-2">
-          {/* <h2 className="text-lg font-semibold">{activeNode.data.label}</h2> */}
           <h2 className="text-lg font-semibold">{activeNode.data.label}</h2>
           <Button variant="ghost" size="icon" className="h-8" asChild>
             <Link href={`/org/${orgSlug}/structures/${structureId}`}>

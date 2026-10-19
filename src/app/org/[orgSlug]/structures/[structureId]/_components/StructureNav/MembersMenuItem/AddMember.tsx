@@ -1,19 +1,18 @@
 import { useMutation } from "convex/react"
 import { Check, Plus } from "lucide-react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import Spinner from "~/components/Spinner"
 import { Button } from "~/components/ui/button"
-import { ClerkOrgStructureUser, ClerkUserData } from "~/types"
+import { UserAvatar } from "~/components/UserAvatar"
+import { StructureMemberUser, OrgMemberUserData } from "~/types"
 import { api } from "../../../../../../../../../convex/_generated/api"
-import { cn } from "../../../../../../../../lib/utils"
 
 interface Props {
   orgId: string
   structureId: string
-  orgMember: ClerkUserData
-  orgStructureMembers: ClerkOrgStructureUser[]
+  orgMember: OrgMemberUserData
+  orgStructureMembers: StructureMemberUser[]
   onAddMember: () => void
 }
 
@@ -31,19 +30,18 @@ export default function AddMember({
   return (
     <div className="flex w-full items-center justify-between gap-8 rounded-md border px-2 py-1.5 text-sm">
       <div className="flex items-center gap-2">
-        <Image
+        <UserAvatar
           src={orgMember.imageUrl}
-          alt={orgMember.fullName ?? "User Picture"}
-          className="h-6 w-6 rounded-full"
-          width={24}
-          height={24}
+          name={orgMember.fullName ?? orgMember.primaryEmailAddress}
         />
-        <div className="flex flex-col">
-          {orgMember.fullName && (
-            <span className="text-sm">{orgMember.fullName}</span>
-          )}
-          {orgMember.primaryEmailAddress && (
-            <span className={cn(orgMember.fullName ? "text-xs" : "text-sm")}>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm">
+            {orgMember.fullName ??
+              orgMember.primaryEmailAddress ??
+              "Unknown user"}
+          </span>
+          {orgMember.fullName && orgMember.primaryEmailAddress && (
+            <span className="truncate text-xs text-muted-foreground">
               {orgMember.primaryEmailAddress}
             </span>
           )}
@@ -66,12 +64,12 @@ export default function AddMember({
         disabled={
           isAddingMember ||
           !!orgStructureMembers.find(
-            (clerkUser) => clerkUser.userId === orgMember.userId,
+            (member) => member.userId === orgMember.userId,
           )
         }
       >
         {orgStructureMembers.find(
-          (clerkUser) => clerkUser.userId === orgMember.userId,
+          (member) => member.userId === orgMember.userId,
         ) ? (
           <div className="flex items-center gap-1">
             <Check className="h-3 w-3" /> Added

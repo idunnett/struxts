@@ -1,8 +1,8 @@
 "use client"
 
-import { useAuth } from "@clerk/nextjs"
 import { useMutation } from "convex/react"
 import { useRouter } from "next/navigation"
+import { useCurrentOrg } from "~/hooks/useCurrentOrg"
 import { useState, useTransition } from "react"
 import Spinner from "~/components/Spinner"
 import { Button } from "~/components/ui/button"
@@ -32,7 +32,7 @@ interface Props {
 }
 
 export default function DeleteStructureForm({ orgId, structureId }: Props) {
-  const session = useAuth()
+  const { orgSlug } = useCurrentOrg()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [verifyText, setVerifyText] = useState("")
@@ -85,7 +85,7 @@ export default function DeleteStructureForm({ orgId, structureId }: Props) {
                   startTransition(async () => {
                     if (!orgId) return
                     await deleteStructure({ orgId, structureId })
-                    router.replace(`/org/${session.orgSlug}/structures`)
+                    router.replace(`/org/${orgSlug}/structures`)
                     router.refresh()
                   })
                 }}

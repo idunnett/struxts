@@ -9,10 +9,15 @@ import { createCustomerPortalSession } from "./actions"
 
 interface Props {
   orgId: string
+  orgSlug: string
   customerId: string
 }
 
-export default function ManageBillingButton({ orgId, customerId }: Props) {
+export default function ManageBillingButton({
+  orgId,
+  orgSlug,
+  customerId,
+}: Props) {
   const [loading, setLoading] = useState(false)
 
   const handleRedirect = async () => {
@@ -20,11 +25,12 @@ export default function ManageBillingButton({ orgId, customerId }: Props) {
 
     const response = await createCustomerPortalSession({
       orgId,
+      orgSlug,
       customerId,
     })
 
     if (response.success && response.url) {
-      window.location.href = response.url // Redirect to Stripe portal
+      window.location.href = response.url
     } else {
       toast.error("Failed to redirect to the customer portal")
     }

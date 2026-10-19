@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { CustomConvexError } from "../src/lib/errors"
 import { Id } from "./_generated/dataModel"
 import { mutation, query, QueryCtx } from "./_generated/server"
+import { requireStructureMember, requireUserId } from "./lib/auth"
 
 export async function getNodeFolders(
   ctx: QueryCtx,
@@ -11,12 +12,7 @@ export async function getNodeFolders(
     nodeId: string
   },
 ) {
-  const currentUser = await ctx.auth.getUserIdentity()
-  if (!currentUser)
-    throw new CustomConvexError({
-      statusCode: 401,
-      message: "You must be logged in to view folders",
-    })
+  await requireUserId(ctx)
 
   const serializedNodeId = ctx.db.normalizeId("nodes", args.nodeId)
   if (!serializedNodeId)
@@ -35,21 +31,10 @@ export async function getNodeFolders(
       message: "Structure not found",
     })
 
-  const currentOrgStructureUser = await ctx.db
-    .query("orgStructureUsers")
-    .filter((q) =>
-      q.and(
-        q.eq(q.field("userId"), currentUser.subject),
-        q.eq(q.field("orgId"), args.orgId),
-        q.eq(q.field("structureId"), args.structureId),
-      ),
-    )
-    .first()
-  if (!currentOrgStructureUser)
-    throw new CustomConvexError({
-      statusCode: 403,
-      message: "You do not have permission to view folders in this structure",
-    })
+  await requireStructureMember(ctx, {
+    orgId: args.orgId,
+    structureId: serializedStructureId,
+  })
 
   return await ctx.db
     .query("folders")
@@ -80,12 +65,7 @@ export const create = mutation({
     orgId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({
-        statusCode: 401,
-        message: "You must be logged in to create a folder",
-      })
+    await requireUserId(ctx)
 
     const serializedStructureId = ctx.db.normalizeId(
       "structures",
@@ -97,22 +77,10 @@ export const create = mutation({
         message: "Structure not found",
       })
 
-    const currentOrgStructureUser = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), args.orgId),
-          q.eq(q.field("structureId"), args.structureId),
-        ),
-      )
-      .first()
-    if (!currentOrgStructureUser)
-      throw new CustomConvexError({
-        statusCode: 403,
-        message:
-          "You do not have permission to create a folder in this structure",
-      })
+    await requireStructureMember(ctx, {
+      orgId: args.orgId,
+      structureId: serializedStructureId,
+    })
 
     const serializedNodeId = ctx.db.normalizeId("nodes", args.nodeId)
     if (!serializedNodeId)
@@ -146,12 +114,7 @@ export const deleteFolder = mutation({
     folderId: v.string(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await ctx.auth.getUserIdentity()
-    if (!currentUser)
-      throw new CustomConvexError({
-        statusCode: 401,
-        message: "You must be logged in to remove a folder",
-      })
+    await requireUserId(ctx)
 
     const serializedFolderId = ctx.db.normalizeId("folders", args.folderId)
     if (!serializedFolderId)
@@ -167,22 +130,10 @@ export const deleteFolder = mutation({
         message: "Folder not found",
       })
 
-    const currentOrgStructureUser = await ctx.db
-      .query("orgStructureUsers")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), currentUser.subject),
-          q.eq(q.field("orgId"), folder.orgId),
-          q.eq(q.field("structureId"), folder.structureId),
-        ),
-      )
-      .first()
-
-    if (!currentOrgStructureUser)
-      throw new CustomConvexError({
-        statusCode: 403,
-        message: "You do not have permission to remove this folder",
-      })
+    await requireStructureMember(ctx, {
+      orgId: folder.orgId,
+      structureId: folder.structureId,
+    })
 
     const files = await ctx.db
       .query("files")

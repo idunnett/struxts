@@ -1,71 +1,94 @@
-// This pragma is important because Stripe's SDK currently
-// only works in the Node Runtime
 "use node"
 
-import { clerkClient } from "@clerk/clerk-sdk-node"
 import { v } from "convex/values"
 import Stripe from "stripe"
+import { internal } from "./_generated/api"
+import type { Id } from "./_generated/dataModel"
 import { internalAction } from "./_generated/server"
+
+function packageFromProductName(name: string | null | undefined) {
+  const n = (name ?? "").toLowerCase()
+  if (n.includes("enterprise")) return "enterprise" as const
+  if (n.includes("pro")) return "pro" as const
+  return "free" as const
+}
 
 export const fulfill = internalAction({
   args: { signature: v.string(), payload: v.string() },
-  handler: async (_ctx, { signature, payload }) => {
+  handler: async (ctx, { signature, payload }) => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
     try {
-      // This call verifies the request
       const event = stripe.webhooks.constructEvent(
         payload,
         signature,
         webhookSecret,
       )
 
-      if (event.type === "customer.subscription.updated") {
-        const orgId = event.data.object.metadata.orgId
-        const userId = event.data.object.metadata.userId
+      if (
+        event.type === "customer.subscription.updated" ||
+        event.type === "customer.subscription.created" ||
+        event.type === "customer.subscription.deleted"
+      ) {
+        const subscription = event.data.object as Stripe.Subscription & {
+          plan?: Stripe.Plan
+        }
+        const orgId = subscription.metadata.orgId as
+          | Id<"organizations">
+          | undefined
+        if (!orgId) throw new Error("Missing orgId in subscription metadata")
 
-        if (!orgId) throw new Error("Missing orgId in metadata")
-        if (!userId) throw new Error("Missing userId in metadata")
+        if (
+          event.type === "customer.subscription.deleted" ||
+          subscription.status === "canceled"
+        ) {
+          await ctx.runMutation(internal.billing.clearSubscription, { orgId })
+          return { success: true }
+        }
 
-        const user = await clerkClient.users.getUser(userId)
-        if (!user) throw new Error("User not found. userId: " + userId)
-        const organization = await clerkClient.organizations.getOrganization({
-          organizationId: orgId,
-        })
-        if (!organization)
-          throw new Error("Organization not found. orgId: " + orgId)
-
-        const currentOrgPlan = organization.publicMetadata?.plan
         const currentStripeSubscriptions = await stripe.subscriptions.search({
           query: `metadata["orgId"]:"${orgId}" AND status:"active"`,
         })
 
-        for (const subscription of currentStripeSubscriptions.data) {
-          if (subscription.id === event.data.object.id) continue
-          await stripe.subscriptions.cancel(subscription.id)
+        for (const other of currentStripeSubscriptions.data) {
+          if (other.id === subscription.id) continue
+          await stripe.subscriptions.cancel(other.id)
         }
 
-        const subscription = event.data.object as Stripe.Subscription & {
-          plan: Stripe.Plan
-        }
-        const product = await stripe.products.retrieve(
-          subscription.plan.product as string,
-        )
+        const priceId =
+          subscription.items.data[0]?.price.id ?? subscription.plan?.id
+        const productId =
+          (typeof subscription.items.data[0]?.price.product === "string"
+            ? subscription.items.data[0]?.price.product
+            : undefined) ??
+          (typeof subscription.plan?.product === "string"
+            ? subscription.plan.product
+            : undefined)
+
+        if (!productId) throw new Error("Missing product on subscription")
+
+        const product = await stripe.products.retrieve(productId)
         let maxAllowedMemberships = product.metadata.members
           ? Number(product.metadata.members)
           : 1
         if (isNaN(maxAllowedMemberships)) maxAllowedMemberships = 1
 
-        await clerkClient.organizations.updateOrganization(organization.id, {
+        const customerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id
+
+        await ctx.runMutation(internal.billing.upsertFromStripe, {
+          orgId,
+          stripeCustomerId: customerId,
+          package: packageFromProductName(product.name),
+          status: "active",
+          stripePriceId: priceId,
+          stripeProductId: productId,
+          nodesPerStructure: product.metadata.nodesPerStructure,
+          storage: product.metadata.storage,
+          structures: product.metadata.structures,
           maxAllowedMemberships,
-          publicMetadata: {
-            customer: subscription.customer,
-            plan: subscription.plan,
-            nodesPerStructure: product.metadata.nodesPerStructure,
-            storage: product.metadata.storage,
-            structures: product.metadata.structures,
-          },
         })
       }
       return { success: true }

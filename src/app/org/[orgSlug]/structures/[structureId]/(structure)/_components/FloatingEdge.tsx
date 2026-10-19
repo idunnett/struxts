@@ -86,7 +86,6 @@ export default function FloatingEdge({
   return (
     <>
       <path
-        key={markerEnd}
         id={id}
         fill="none"
         className={cn(
@@ -180,7 +179,7 @@ export default function FloatingEdge({
             </div>
             {data?.labels.map(({ label, offset }, index) => (
               <div
-                key={index}
+                key={`${id}-label-edit-${index}`}
                 className="flex flex-col gap-1 rounded-md border p-2"
               >
                 <div className="flex items-center justify-between">
@@ -247,7 +246,7 @@ export default function FloatingEdge({
           )
           return (
             <EdgeLabel
-              key={index}
+              key={`${id}-label-${index}`}
               id={`edge-${id}-label-${index}`}
               transform={`translate(-50%, -50%) translate(${offsetX}px,${offsetY}px)`}
               label={label ?? ""}
